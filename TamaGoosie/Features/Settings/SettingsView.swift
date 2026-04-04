@@ -81,6 +81,9 @@ struct SettingsView: View {
                         baselinesCard(profile: profile)
                     }
 
+                    // Duck History
+                    DuckHistoryCard()
+
                     // Notifications
                     GoosieCard {
                         VStack(alignment: .leading, spacing: 12) {
@@ -144,21 +147,6 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Distraction Apps
-                    GoosieCard {
-                        NavigationLink(destination: DistractionConfigView()) {
-                            HStack {
-                                Label("Distraction Apps", systemImage: "iphone.slash")
-                                    .font(GoosieTheme.bodyFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
-                            }
-                        }
-                    }
-
                     // Health
                     GoosieCard {
                         VStack(alignment: .leading, spacing: 8) {
@@ -173,6 +161,7 @@ struct SettingsView: View {
                                     .foregroundStyle(GoosieTheme.coralAccent)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     // Danger Zone
@@ -189,6 +178,7 @@ struct SettingsView: View {
                                     .foregroundStyle(GoosieTheme.coralAccent)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     // Debug Panel
