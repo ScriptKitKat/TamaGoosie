@@ -8,6 +8,7 @@ final class GoalViewModel {
     var editingGoal: Goal?
 
     func deleteGoal(_ goal: Goal, in context: ModelContext) {
+        NotificationManager.shared.cancelGoalReminder(goalID: goal.id)
         context.delete(goal)
     }
 
@@ -44,6 +45,22 @@ final class GoalViewModel {
     func incrementGoal(_ goal: Goal, gooseState: GooseState) {
         goal.incrementProgress()
         if goal.isCompleted {
+            GooseEngine.shared.completeGoal(goal, state: gooseState)
+        }
+    }
+
+    func incrementDeadlinePercentage(_ goal: Goal, gooseState: GooseState, amount: Double = 0.01) {
+        let wasCompleted = goal.isCompleted
+        goal.incrementPercentage(by: amount)
+        if goal.isCompleted && !wasCompleted {
+            GooseEngine.shared.completeGoal(goal, state: gooseState)
+        }
+    }
+
+    func setDeadlinePercentage(_ goal: Goal, gooseState: GooseState, to value: Double) {
+        let wasCompleted = goal.isCompleted
+        goal.setPercentage(value)
+        if goal.isCompleted && !wasCompleted {
             GooseEngine.shared.completeGoal(goal, state: gooseState)
         }
     }

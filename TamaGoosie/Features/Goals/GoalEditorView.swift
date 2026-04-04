@@ -4,6 +4,7 @@ import SwiftData
 struct GoalEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var gooseStates: [GooseState]
 
     var existingGoal: Goal?
 
@@ -11,16 +12,20 @@ struct GoalEditorView: View {
     @State private var goalType = "recurring"
     @State private var category: GoalCategory = .custom
     @State private var frequency: GoalFrequency = .daily
+    @State private var customDays: Set<Int> = []
     @State private var targetCount = 1
     @State private var happinessWeight: Double = 1.0
     @State private var dueDate = Date()
+    @State private var enableReminder = false
     @State private var preferredTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
-    @State private var showDueDatePicker = false
-    @State private var showPreferredTimePicker = false
+    @State private var notificationPermissionDenied = false
 
     var isEditing: Bool { existingGoal != nil }
 
     private let goalTypes = ["recurring", "deadline"]
+
+    // Weekday labels: index 0 → weekday 1 (Sun), index 6 → weekday 7 (Sat)
+    private let weekdayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
     var body: some View {
         NavigationStack {
@@ -86,12 +91,55 @@ struct GoalEditorView: View {
                                         .font(GoosieTheme.captionFont())
                                         .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
 
-                                    HStack(spacing: 8) {
-                                        ForEach(GoalFrequency.allCases, id: \.self) { freq in
-                                            frequencyChip(freq)
+                                    // Two-row layout to prevent overflow
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        HStack(spacing: 8) {
+                                            ForEach([GoalFrequency.daily, .weekdays, .weekends], id: \.self) { freq in
+                                                frequencyChip(freq)
+                                            }
+                                        }
+                                        HStack(spacing: 8) {
+                                            ForEach([GoalFrequency.weekly, .custom], id: \.self) { freq in
+                                                frequencyChip(freq)
+                                            }
                                         }
                                     }
+
+                                    // Custom day picker
+                                    if frequency == .custom {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Select days")
+                                                .font(GoosieTheme.captionFont(11))
+                                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+
+                                            HStack(spacing: 6) {
+                                                ForEach(0..<7, id: \.self) { index in
+                                                    let weekday = index + 1 // 1=Sun…7=Sat
+                                                    let isSelected = customDays.contains(weekday)
+                                                    Button {
+                                                        if isSelected {
+                                                            customDays.remove(weekday)
+                                                        } else {
+                                                            customDays.insert(weekday)
+                                                        }
+                                                    } label: {
+                                                        Text(weekdayLabels[index])
+                                                            .font(GoosieTheme.captionFont(12))
+                                                            .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
+                                                            .frame(width: 36, height: 36)
+                                                            .background(
+                                                                Circle()
+                                                                    .fill(isSelected ? GoosieTheme.coralAccent : GoosieTheme.coralAccent.opacity(0.12))
+                                                            )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        .padding(.top, 4)
+                                        .transition(.opacity.combined(with: .move(edge: .top)))
+                                    }
                                 }
+                                .animation(.easeInOut(duration: 0.2), value: frequency)
                             }
 
                             // Target count
@@ -108,18 +156,6 @@ struct GoalEditorView: View {
                                     }
                                 }
                             }
-
-                            // Preferred time
-                            GoosieCard {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Preferred Time")
-                                        .font(GoosieTheme.captionFont())
-                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-
-                                    DatePicker("Time", selection: $preferredTime, displayedComponents: .hourAndMinute)
-                                        .font(GoosieTheme.captionFont())
-                                }
-                            }
                         }
 
                         // Due date (deadline only)
@@ -134,6 +170,41 @@ struct GoalEditorView: View {
                                         .font(GoosieTheme.captionFont())
                                 }
                             }
+                        }
+
+                        // Preferred time / reminder (all goal types)
+                        GoosieCard {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Toggle(isOn: $enableReminder.animation()) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Set a reminder time")
+                                            .font(GoosieTheme.captionFont())
+                                            .foregroundStyle(GoosieTheme.charcoalOutline)
+                                        Text("Time I usually do this")
+                                            .font(GoosieTheme.captionFont(11))
+                                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                                    }
+                                }
+                                .tint(GoosieTheme.coralAccent)
+
+                                if enableReminder {
+                                    DatePicker("Time", selection: $preferredTime, displayedComponents: .hourAndMinute)
+                                        .font(GoosieTheme.captionFont())
+
+                                    if notificationPermissionDenied {
+                                        Text("Notifications are disabled. Enable them in Settings to receive reminders.")
+                                            .font(GoosieTheme.captionFont(11))
+                                            .foregroundStyle(.orange)
+                                    } else {
+                                        Text("You'll receive a daily reminder at this time.")
+                                            .font(GoosieTheme.captionFont(11))
+                                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                                    }
+                                }
+                            }
+                        }
+                        .onChange(of: enableReminder) { _, newValue in
+                            if newValue { requestNotificationPermissionIfNeeded() }
                         }
 
                         // Importance weight
@@ -182,7 +253,8 @@ struct GoalEditorView: View {
             Text(label)
                 .font(GoosieTheme.captionFont(12))
                 .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
-                .padding(.horizontal, 12)
+                .fixedSize()
+                .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
@@ -223,12 +295,28 @@ struct GoalEditorView: View {
             Text(freq.displayName)
                 .font(GoosieTheme.captionFont(12))
                 .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
-                .padding(.horizontal, 12)
+                .fixedSize()
+                .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
                         .fill(isSelected ? GoosieTheme.coralAccent : GoosieTheme.coralAccent.opacity(0.15))
                 )
+        }
+    }
+
+    private func requestNotificationPermissionIfNeeded() {
+        Task {
+            do {
+                let granted = try await NotificationManager.shared.requestAuthorization()
+                await MainActor.run {
+                    notificationPermissionDenied = !granted
+                }
+            } catch {
+                await MainActor.run {
+                    notificationPermissionDenied = true
+                }
+            }
         }
     }
 
@@ -238,25 +326,33 @@ struct GoalEditorView: View {
         goalType = goal.type
         category = goal.goalCategory
         frequency = goal.goalFrequency
+        customDays = goal.customDaysSet
         targetCount = goal.targetCount
         happinessWeight = goal.happinessWeight
         if let due = goal.dueDate { dueDate = due }
-        if let pref = goal.preferredTime { preferredTime = pref }
+        if let pref = goal.preferredTime {
+            preferredTime = pref
+            enableReminder = true
+        }
     }
 
     private func save() {
         let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
         guard !trimmedTitle.isEmpty else { return }
 
+        let resolvedPreferredTime: Date? = enableReminder ? preferredTime : nil
+
         if let goal = existingGoal {
             goal.title = trimmedTitle
             goal.type = goalType
             goal.category = category.rawValue
             goal.frequency = frequency.rawValue
+            goal.customDaysSet = customDays
             goal.targetCount = targetCount
             goal.happinessWeight = happinessWeight
             goal.dueDate = goalType == "deadline" ? dueDate : nil
-            goal.preferredTime = goalType == "recurring" ? preferredTime : nil
+            goal.preferredTime = resolvedPreferredTime
+            scheduleReminderIfNeeded(for: goal)
         } else {
             let goal = Goal(
                 title: trimmedTitle,
@@ -267,9 +363,21 @@ struct GoalEditorView: View {
                 happinessWeight: happinessWeight
             )
             goal.dueDate = goalType == "deadline" ? dueDate : nil
-            goal.preferredTime = goalType == "recurring" ? preferredTime : nil
+            goal.preferredTime = resolvedPreferredTime
+            goal.customDaysSet = customDays
             modelContext.insert(goal)
+            scheduleReminderIfNeeded(for: goal)
         }
+        try? modelContext.save()
         dismiss()
+    }
+
+    private func scheduleReminderIfNeeded(for goal: Goal) {
+        let gooseName = gooseStates.first?.name ?? "your goose"
+        if goal.preferredTime != nil {
+            NotificationManager.shared.scheduleGoalReminder(goal, gooseName: gooseName)
+        } else {
+            NotificationManager.shared.cancelGoalReminder(goalID: goal.id)
+        }
     }
 }

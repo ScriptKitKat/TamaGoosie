@@ -155,10 +155,97 @@ final class NotificationManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    // MARK: - Schedule Single Goal Reminder
+
+    /// Schedules (or replaces) a repeating reminder for any goal type that has a preferredTime set.
+    /// For custom-frequency goals, schedules one request per selected weekday. For all others, schedules a single daily request.
+    func scheduleGoalReminder(_ goal: Goal, gooseName: String) {
+        guard let preferredTime = goal.preferredTime else {
+            cancelGoalReminder(goalID: goal.id)
+            return
+        }
+
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: preferredTime)
+        let minute = calendar.component(.minute, from: preferredTime)
+
+        guard !isQuietHour(hour) else { return }
+
+        // Remove old requests for this goal before adding new ones
+        let oldIDs = (0...7).map { "goal_\(goal.id.uuidString)_\($0)" } + ["goal_\(goal.id.uuidString)"]
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: oldIDs)
+
+        let content = UNMutableNotificationContent()
+        content.title = "🪿 \(gooseName) reminder"
+        content.body = "Don't forget about '\(goal.title)' today! I'm counting on you 🪿"
+        content.sound = .default
+
+        switch goal.goalFrequency {
+        case .custom:
+            let days = goal.customDaysSet.isEmpty ? Set(1...7) : goal.customDaysSet
+            for weekday in days {
+                var comps = DateComponents()
+                comps.hour = hour
+                comps.minute = minute
+                comps.weekday = weekday
+                let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+                let req = UNNotificationRequest(
+                    identifier: "goal_\(goal.id.uuidString)_\(weekday)",
+                    content: content,
+                    trigger: trigger
+                )
+                UNUserNotificationCenter.current().add(req)
+            }
+
+        case .weekdays:
+            for weekday in 2...6 { // Mon–Fri
+                var comps = DateComponents()
+                comps.hour = hour
+                comps.minute = minute
+                comps.weekday = weekday
+                let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+                let req = UNNotificationRequest(
+                    identifier: "goal_\(goal.id.uuidString)_\(weekday)",
+                    content: content,
+                    trigger: trigger
+                )
+                UNUserNotificationCenter.current().add(req)
+            }
+
+        case .weekends:
+            for weekday in [1, 7] { // Sun, Sat
+                var comps = DateComponents()
+                comps.hour = hour
+                comps.minute = minute
+                comps.weekday = weekday
+                let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+                let req = UNNotificationRequest(
+                    identifier: "goal_\(goal.id.uuidString)_\(weekday)",
+                    content: content,
+                    trigger: trigger
+                )
+                UNUserNotificationCenter.current().add(req)
+            }
+
+        default: // daily, weekly — single daily repeating trigger
+            var comps = DateComponents()
+            comps.hour = hour
+            comps.minute = minute
+            let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+            let req = UNNotificationRequest(
+                identifier: "goal_\(goal.id.uuidString)",
+                content: content,
+                trigger: trigger
+            )
+            UNUserNotificationCenter.current().add(req)
+        }
+    }
+
     // MARK: - Remove
 
     func cancelGoalReminder(goalID: UUID) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["goal_\(goalID.uuidString)"])
+        let ids = (0...7).map { "goal_\(goalID.uuidString)_\($0)" } + ["goal_\(goalID.uuidString)"]
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
     }
 
     // MARK: - Helpers

@@ -11,11 +11,15 @@ final class Goal {
 
     // Deadline goals
     var dueDate: Date?
+    var percentageProgress: Double = 0.0  // 0.0–1.0; default required for SwiftData migration
 
     // Recurring goals
     var preferredTime: Date?
     var targetCount: Int
     var currentCount: Int
+
+    // Custom frequency: comma-separated Calendar weekday numbers (1=Sun … 7=Sat)
+    var customDays: String = ""           // default required for SwiftData migration
 
     // Tracking
     var isCompleted: Bool
@@ -45,6 +49,8 @@ final class Goal {
         self.frequency = frequency.rawValue
         self.targetCount = targetCount
         self.currentCount = 0
+        self.percentageProgress = 0.0
+        self.customDays = ""
         self.isCompleted = false
         self.currentStreak = 0
         self.isActive = true
@@ -64,8 +70,21 @@ final class Goal {
     }
 
     var progress: Double {
+        if type == "deadline" {
+            return percentageProgress
+        }
         guard targetCount > 0 else { return 0 }
         return Double(currentCount) / Double(targetCount)
+    }
+
+    /// Parsed custom days as a Set of Calendar weekday integers (1=Sun … 7=Sat).
+    var customDaysSet: Set<Int> {
+        get {
+            Set(customDays.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) })
+        }
+        set {
+            customDays = newValue.sorted().map(String.init).joined(separator: ",")
+        }
     }
 
     func toSummary() -> GoalSummary {
@@ -89,6 +108,29 @@ final class Goal {
         currentCount = min(currentCount + 1, targetCount)
         if currentCount >= targetCount {
             complete()
+        }
+    }
+
+    func incrementPercentage(by amount: Double = 0.01) {
+        guard type == "deadline", !isCompleted else { return }
+        percentageProgress = min(1.0, percentageProgress + amount)
+        if percentageProgress >= 1.0 {
+            isCompleted = true
+            completedAt = .now
+            lastCompletedDate = .now
+        }
+    }
+
+    func setPercentage(_ value: Double) {
+        guard type == "deadline" else { return }
+        percentageProgress = min(1.0, max(0.0, value))
+        if percentageProgress >= 1.0 {
+            isCompleted = true
+            completedAt = .now
+            lastCompletedDate = .now
+        } else {
+            isCompleted = false
+            completedAt = nil
         }
     }
 

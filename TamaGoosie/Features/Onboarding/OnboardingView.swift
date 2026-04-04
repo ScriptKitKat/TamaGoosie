@@ -300,6 +300,7 @@ struct OnboardingView: View {
         // Schedule morning reminder
         NotificationManager.shared.scheduleMorningReminder(gooseName: goose.name, healthiness: goose.healthiness)
 
+        try? modelContext.save()
         hasCompletedOnboarding = true
     }
 }
