@@ -2,7 +2,9 @@ import SwiftUI
 import SwiftData
 
 struct HealthDashboard: View {
+    @Environment(\.modelContext) private var modelContext
     @Query private var gooseStates: [GooseState]
+    @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @State private var healthManager = HealthKitManager.shared
     @State private var snapshot: HealthSnapshot?
     @State private var isLoading = false
@@ -154,15 +156,41 @@ struct HealthDashboard: View {
 
         if let data = try? await healthManager.fetchTodayStats() {
             snapshot = data
+            let log = fetchOrCreateTodayLog()
             if let state = gooseState, !data.wasProcessed {
                 GooseEngine.shared.processHealthData(
                     steps: data.steps,
                     exerciseMinutes: data.exerciseMinutes,
                     sleepHours: data.sleepHours,
-                    state: state
+                    activeCalories: data.activeCalories,
+                    standHours: data.standHours,
+                    state: state,
+                    dailyLog: log
                 )
                 data.wasProcessed = true
+            } else {
+                // Already processed rewards; just refresh the cache + DailyLog
+                GooseEngine.shared.refreshHealthCache(
+                    steps: data.steps,
+                    exerciseMinutes: data.exerciseMinutes,
+                    sleepHours: data.sleepHours,
+                    activeCalories: data.activeCalories,
+                    standHours: data.standHours,
+                    dailyLog: log
+                )
             }
+            GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
         }
+    }
+
+    private func fetchOrCreateTodayLog() -> DailyLog {
+        let today = Calendar.current.startOfDay(for: .now)
+        let descriptor = FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date == today })
+        if let existing = try? modelContext.fetch(descriptor).first {
+            return existing
+        }
+        let log = DailyLog(date: .now)
+        modelContext.insert(log)
+        return log
     }
 }

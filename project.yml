@@ -24,10 +24,11 @@ targets:
       - target: TamaGoosieWidgets
       - target: TamaGoosieWatch
         embed: true
-      - target: TamaGoosieDeviceActivity
-        embed: true
-      - sdk: FamilyControls.framework
-      - sdk: DeviceActivity.framework
+      # Screen Time disabled — uncomment when re-enabling
+      # - target: TamaGoosieDeviceActivity
+      #   embed: true
+      # - sdk: FamilyControls.framework
+      # - sdk: DeviceActivity.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app
@@ -39,8 +40,7 @@ targets:
         com.apple.security.application-groups:
           - group.com.tamagoosie
         com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
-        com.apple.developer.family-controls: true
+        # com.apple.developer.family-controls: true  # Screen Time disabled
 
   TamaGoosieWatch:
     type: application
@@ -76,23 +76,24 @@ targets:
         com.apple.security.application-groups:
           - group.com.tamagoosie
 
-  TamaGoosieDeviceActivity:
-    type: app-extension
-    platform: iOS
-    sources:
-      - TamaGoosieDeviceActivity
-    dependencies:
-      - sdk: DeviceActivity.framework
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.deviceactivity
-        INFOPLIST_FILE: TamaGoosieDeviceActivity/Info.plist
-    entitlements:
-      path: TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.tamagoosie
-        com.apple.developer.family-controls: true
+  # Screen Time extension disabled — uncomment when re-enabling
+  # TamaGoosieDeviceActivity:
+  #   type: app-extension
+  #   platform: iOS
+  #   sources:
+  #     - TamaGoosieDeviceActivity
+  #   dependencies:
+  #     - sdk: DeviceActivity.framework
+  #   settings:
+  #     base:
+  #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.deviceactivity
+  #       INFOPLIST_FILE: TamaGoosieDeviceActivity/Info.plist
+  #   entitlements:
+  #     path: TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements
+  #     properties:
+  #       com.apple.security.application-groups:
+  #         - group.com.tamagoosie
+  #       com.apple.developer.family-controls: true
 
   TamaGoosieTests:
     type: bundle.unit-test

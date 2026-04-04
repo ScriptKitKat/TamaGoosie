@@ -22,7 +22,8 @@ struct OnboardingView: View {
         ("Practice a skill", .learning),
         ("Complete top 3 tasks", .productivity),
         ("Daily exercise routine", .exercise),
-        ("Limit screen time", .screentime),
+        // Screen time tracking disabled — will re-enable later
+        // ("Limit screen time", .screentime),
     ]
 
     var body: some View {

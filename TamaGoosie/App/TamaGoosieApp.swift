@@ -34,6 +34,10 @@ struct TamaGoosieApp: App {
             // Recreate — guaranteed to succeed on a clean store
             container = try! ModelContainer(for: schema)
         }
+
+        // Activate WatchConnectivity early so the session is ready
+        // before any GooseEngine updates try to send payloads.
+        WatchSyncService.shared.activate()
     }
 
     var body: some Scene {
