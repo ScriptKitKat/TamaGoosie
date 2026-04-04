@@ -1,199 +1,110 @@
 import SwiftUI
 
+// MARK: - Goose Display State
+
+enum GooseDisplayState {
+    case sleeping
+    case happy
+    case tired
+    case normal
+
+    var imageName: String {
+        switch self {
+        case .sleeping: return "goose_sleep"
+        case .happy:    return "goose_happy"
+        case .tired:    return "goose_tired"
+        case .normal:   return "goose_normal"
+        }
+    }
+
+    enum AuraStyle {
+        case stars
+        case zzz
+        case drops
+    }
+
+    var auraStyle: (style: AuraStyle, color: Color)? {
+        switch self {
+        case .sleeping: return (.zzz, .indigo.opacity(0.8))
+        case .happy:    return (.stars, .yellow)
+        case .tired:    return (.drops, Color(red: 0.7, green: 0.4, blue: 1.0).opacity(0.85))
+        case .normal:   return nil
+        }
+    }
+}
+
 // MARK: - Goose Character View
 
 struct GooseCharacterView: View {
     let mood: GooseMood
     var showReaction: GooseReaction = .none
+    var healthiness: Double = 50
+    var happiness: Double = 50
 
+    @State private var isSleeping: Bool = false
     @State private var bobOffset: CGFloat = 0
-    @State private var isBlinking = false
-    @State private var blinkTimer: Timer?
     @State private var reactionScale: CGFloat = 1.0
     @State private var wobbleAngle: Double = 0
 
+    private var displayState: GooseDisplayState {
+        if isSleeping { return .sleeping }
+        if happiness >= 70 && healthiness >= 70 { return .happy }
+        if happiness < 40 || healthiness < 40 { return .tired }
+        return .normal
+    }
+
     var body: some View {
         ZStack {
-            gooseBody
+            auraLayer
+
+            Image(displayState.imageName)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(y: bobOffset)
                 .rotationEffect(.degrees(wobbleAngle))
                 .scaleEffect(reactionScale)
-
-            faceOverlay
-                .offset(y: bobOffset - 20)
-
-            moodOverlay
-                .offset(y: bobOffset)
-
-            reactionOverlay
         }
-        .onAppear { startIdleAnimation() }
-        .onDisappear { blinkTimer?.invalidate() }
+        .onAppear {
+            isSleeping = Int.random(in: 0..<5) == 0
+            startIdleAnimation()
+        }
         .onChange(of: showReaction) { _, reaction in
             playReaction(reaction)
         }
     }
 
-    // MARK: - Goose Body
+    // MARK: - Aura
 
-    private var gooseBody: some View {
-        ZStack {
-            Ellipse()
-                .fill(GoosieTheme.creamWhite)
-                .frame(width: 160, height: 140)
-                .overlay(
-                    Ellipse()
-                        .stroke(GoosieTheme.charcoalOutline, lineWidth: 3.5)
-                )
+    private let auraPositions: [(CGFloat, CGFloat)] = [(-65, -100), (65, -95), (-50, -55), (60, -60)]
 
-            Ellipse()
-                .fill(.white.opacity(0.4))
-                .frame(width: 80, height: 60)
-                .offset(y: 10)
-
-            wing(flipped: false)
-                .offset(x: -70, y: 10)
-
-            wing(flipped: true)
-                .offset(x: 70, y: 10)
-
-            HStack(spacing: 30) {
-                foot
-                foot
-            }
-            .offset(y: 60)
-        }
-    }
-
-    private func wing(flipped: Bool) -> some View {
-        Ellipse()
-            .fill(GoosieTheme.creamWhite)
-            .frame(width: 35, height: 50)
-            .overlay(
-                Ellipse()
-                    .stroke(GoosieTheme.charcoalOutline, lineWidth: 2.5)
-            )
-            .scaleEffect(x: flipped ? -1 : 1)
-    }
-
-    private var foot: some View {
-        Ellipse()
-            .fill(GoosieTheme.warmOrange)
-            .frame(width: 28, height: 12)
-            .overlay(
-                Ellipse()
-                    .stroke(GoosieTheme.charcoalOutline, lineWidth: 2)
-            )
-    }
-
-    // MARK: - Face
-
-    private var faceOverlay: some View {
-        ZStack {
-            HStack(spacing: 24) {
-                eye
-                eye
-            }
-
-            beak
-                .offset(y: 16)
-
-            if mood == .happy || mood == .ecstatic {
-                HStack(spacing: 50) {
-                    blushMark
-                    blushMark
+    @ViewBuilder
+    private var auraLayer: some View {
+        if let aura = displayState.auraStyle {
+            ZStack {
+                ForEach(Array(auraPositions.enumerated()), id: \.offset) { i, pos in
+                    AuraParticleView(
+                        style: aura.style,
+                        color: aura.color,
+                        index: i,
+                        x: pos.0,
+                        y: pos.1
+                    )
                 }
-                .offset(y: 8)
             }
-        }
-    }
-
-    private var eye: some View {
-        Group {
-            if isBlinking || mood == .sick {
-                Capsule()
-                    .fill(GoosieTheme.charcoalOutline)
-                    .frame(width: 10, height: 2.5)
-            } else {
-                Circle()
-                    .fill(GoosieTheme.charcoalOutline)
-                    .frame(width: 8, height: 8)
-            }
-        }
-    }
-
-    private var beak: some View {
-        Ellipse()
-            .fill(GoosieTheme.sunYellow)
-            .frame(width: 20, height: 12)
-            .overlay(
-                Ellipse()
-                    .stroke(GoosieTheme.charcoalOutline, lineWidth: 2)
-            )
-    }
-
-    private var blushMark: some View {
-        Circle()
-            .fill(GoosieTheme.softPink)
-            .frame(width: 14, height: 14)
-            .opacity(0.7)
-    }
-
-    // MARK: - Mood Overlays
-
-    @ViewBuilder
-    private var moodOverlay: some View {
-        switch mood {
-        case .sad:
-            SweatDrop()
-                .offset(x: 50, y: -40)
-        case .ecstatic:
-            SparkleParticles()
-                .offset(y: -80)
-        case .sick:
-            SickOverlay()
-        default:
-            EmptyView()
-        }
-    }
-
-    @ViewBuilder
-    private var reactionOverlay: some View {
-        switch showReaction {
-        case .goalComplete:
-            SparkleParticles()
-                .offset(y: -80)
-        case .feed:
-            EmptyView()
-        default:
-            EmptyView()
         }
     }
 
     // MARK: - Animations
 
     private func startIdleAnimation() {
-        let duration: Double = mood == .sad ? 3.0 : 2.0
+        let duration: Double = displayState == .tired ? 3.0 : displayState == .sleeping ? 4.0 : 2.0
+        let bobAmount: CGFloat = displayState == .sleeping ? -3 : displayState == .tired ? -4 : -8
+
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
-            bobOffset = mood == .sad ? -3 : -8
+            bobOffset = bobAmount
         }
 
-        scheduleNextBlink()
-    }
-
-    private func scheduleNextBlink() {
-        let interval = Double.random(in: 3...6)
-        blinkTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { _ in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isBlinking = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                withAnimation(.easeInOut(duration: 0.15)) {
-                    isBlinking = false
-                }
-                scheduleNextBlink()
-            }
-        }
     }
 
     private func playReaction(_ reaction: GooseReaction) {
@@ -220,6 +131,55 @@ struct GooseCharacterView: View {
     }
 }
 
+// MARK: - Aura Particle View
+
+private struct AuraParticleView: View {
+    let style: GooseDisplayState.AuraStyle
+    let color: Color
+    let index: Int
+    let x: CGFloat
+    let y: CGFloat
+
+    @State private var floating = false
+    @State private var visible = false
+
+    private var delay: Double { Double(index) * 0.3 }
+
+    var body: some View {
+        particle
+            .offset(x: x, y: y + (floating ? -6 : 6))
+            .opacity(visible ? 1 : 0)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    withAnimation(.easeIn(duration: 0.4)) { visible = true }
+                    withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
+                        floating = true
+                    }
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var particle: some View {
+        switch style {
+        case .stars:
+            Image(systemName: index % 2 == 0 ? "sparkle" : "star.fill")
+                .font(.system(size: index % 2 == 0 ? 16 : 11))
+                .foregroundStyle(color)
+        case .zzz:
+            let sizes: [CGFloat] = [10, 14, 12, 16]
+            let letters = ["z", "z", "Z", "Z"]
+            Text(letters[index])
+                .font(.system(size: sizes[index], weight: .bold, design: .rounded))
+                .foregroundStyle(color)
+        case .drops:
+            Image(systemName: index % 2 == 0 ? "dizzy" : "star.fill")
+                .font(.system(size: 15))
+                .foregroundStyle(color)
+        }
+    }
+}
+
 // MARK: - Reaction Type
 
 enum GooseReaction: Equatable {
@@ -228,7 +188,7 @@ enum GooseReaction: Equatable {
     case feed
 }
 
-// MARK: - Mood Overlay Components
+// MARK: - Mood Overlay Components (kept for potential reuse)
 
 struct SweatDrop: View {
     @State private var opacity: Double = 0.8
