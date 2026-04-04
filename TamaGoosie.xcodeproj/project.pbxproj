@@ -48,6 +48,7 @@
 		9A59252343D4DAFFA8EEED20 /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
 		9BEC36EB4116237BBFE97F12 /* OnboardingHatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7418A207CA04634F5B2B18 /* OnboardingHatchView.swift */; };
 		9C4A5FC197A58EF9EC6D0790 /* GooseLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */; };
+		A8053C8E49F344A5A99CEF7A /* GooseLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */; };
 		9F3E5B523369CD8D8A13383C /* GooseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7119B3A0869220100DF3B9D /* GooseWidget.swift */; };
 		9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A07D96450F3E9A494C35A911 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94FB212D9417DF655E2DFA09 /* OnboardingCompleteView.swift */; };
@@ -584,6 +585,7 @@
 				73F5C4177F088E9FCF42BE18 /* GoosePhase.swift in Sources */,
 				DE551AED1717A85D2F0D8F8D /* GooseStats.swift in Sources */,
 				9F3E5B523369CD8D8A13383C /* GooseWidget.swift in Sources */,
+				A8053C8E49F344A5A99CEF7A /* GooseLiveActivity.swift in Sources */,
 				A76416F6B06ECCFAA06F0439 /* SyncPayload.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -60,6 +60,7 @@ targets:
     sources:
       - TamaGoosieWidgets
       - Shared
+      - path: TamaGoosie/Features/Goose/GooseLiveActivity.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.widgets

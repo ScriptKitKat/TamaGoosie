@@ -85,6 +85,15 @@ final class GoalViewModel {
         }
     }
 
+    func uncompleteGoal(_ goal: Goal, gooseState: GooseState) {
+        GooseEngine.shared.uncompleteGoal(goal, state: gooseState)
+    }
+
+    func startEditing(_ goal: Goal) {
+        editingGoal = goal
+        showEditor  = true
+    }
+
     func startCreating() {
         editingGoal = nil
         showEditor = true

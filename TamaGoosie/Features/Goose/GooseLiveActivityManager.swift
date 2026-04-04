@@ -8,6 +8,14 @@ final class GooseLiveActivityManager {
     private(set) var currentActivity: Activity<GoosePetActivity>?
     private(set) var isActive = false
 
+    // MARK: - Wandering state
+    private var gooseX: Double = 0.3
+    private var isMovingRight: Bool = true
+    private var wanderTimer: Timer?
+
+    // Last known ContentState — wander timer updates just the position fields
+    private var cachedContentState: GoosePetActivity.ContentState?
+
     private init() {}
 
     // MARK: - Start
@@ -18,7 +26,10 @@ final class GooseLiveActivityManager {
         let attributes = GoosePetActivity(gooseName: gooseName)
         let contentState = makeContentState(from: state, currentGoal: currentGoal)
 
-        let content = ActivityContent(state: contentState, staleDate: Date.now.addingTimeInterval(GoosieConstants.liveActivityMaxHours * 3600))
+        let content = ActivityContent(
+            state: contentState,
+            staleDate: Date.now.addingTimeInterval(GoosieConstants.liveActivityMaxHours * 3600)
+        )
 
         do {
             currentActivity = try Activity.request(
@@ -26,7 +37,9 @@ final class GooseLiveActivityManager {
                 content: content,
                 pushType: nil
             )
+            cachedContentState = contentState
             isActive = true
+            startWandering()
         } catch {
             print("Failed to start Live Activity: \(error)")
         }
@@ -35,14 +48,8 @@ final class GooseLiveActivityManager {
     // MARK: - Update
 
     func updateStats(state: GooseState, currentGoal: Goal? = nil) {
-        guard let activity = currentActivity else { return }
-
-        let contentState = makeContentState(from: state, currentGoal: currentGoal)
-        let content = ActivityContent(state: contentState, staleDate: nil)
-
-        Task {
-            await activity.update(content)
-        }
+        cachedContentState = makeContentState(from: state, currentGoal: currentGoal)
+        updateCurrentActivity()
     }
 
     func startFocusMode(state: GooseState, minutesRemaining: Int) {
@@ -51,12 +58,10 @@ final class GooseLiveActivityManager {
         var contentState = makeContentState(from: state)
         contentState.isFocusing = true
         contentState.focusMinutesRemaining = minutesRemaining
+        cachedContentState = contentState
 
         let content = ActivityContent(state: contentState, staleDate: nil)
-
-        Task {
-            await activity.update(content)
-        }
+        Task { await activity.update(content) }
     }
 
     func endFocusMode(state: GooseState, currentGoal: Goal? = nil) {
@@ -66,6 +71,7 @@ final class GooseLiveActivityManager {
     // MARK: - End
 
     func endActivity() {
+        stopWandering()
         guard let activity = currentActivity else { return }
 
         Task {
@@ -75,7 +81,43 @@ final class GooseLiveActivityManager {
         }
     }
 
+    // MARK: - Wandering
+
+    private func startWandering() {
+        wanderTimer?.invalidate()
+        wanderTimer = Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            advanceGoose()
+            updateCurrentActivity()
+        }
+    }
+
+    private func stopWandering() {
+        wanderTimer?.invalidate()
+        wanderTimer = nil
+    }
+
+    private func advanceGoose() {
+        let step = Double.random(in: 0.10...0.20)
+        if isMovingRight {
+            gooseX = min(0.85, gooseX + step)
+            if gooseX >= 0.85 { isMovingRight = false }
+        } else {
+            gooseX = max(0.15, gooseX - step)
+            if gooseX <= 0.15 { isMovingRight = true }
+        }
+    }
+
     // MARK: - Helpers
+
+    private func updateCurrentActivity() {
+        guard let activity = currentActivity, var cs = cachedContentState else { return }
+        cs.gooseX = gooseX
+        cs.isMovingRight = isMovingRight
+        cachedContentState = cs
+        let content = ActivityContent(state: cs, staleDate: nil)
+        Task { await activity.update(content) }
+    }
 
     private func makeContentState(from state: GooseState, currentGoal: Goal? = nil) -> GoosePetActivity.ContentState {
         GoosePetActivity.ContentState(
@@ -87,7 +129,23 @@ final class GooseLiveActivityManager {
             currentGoalTitle: currentGoal?.title,
             currentGoalProgress: currentGoal?.progress,
             isFocusing: false,
-            focusMinutesRemaining: nil
+            focusMinutesRemaining: nil,
+            gooseX: gooseX,
+            isMovingRight: isMovingRight,
+            spriteKey: spriteKey(for: state)
         )
+    }
+
+    private func spriteKey(for state: GooseState) -> String {
+        let phase = state.currentPhase.rawValue  // "egg" / "baby" / "teen" / "adult"
+        let bucket: String
+        switch state.currentMood {
+        case .ecstatic, .happy:   bucket = "happy"
+        case .content, .bored:    bucket = "neutral"
+        case .sad:                bucket = "sad"
+        case .sick:               bucket = "sick"
+        case .dead:               bucket = "dead"
+        }
+        return "\(phase)_\(bucket)"
     }
 }

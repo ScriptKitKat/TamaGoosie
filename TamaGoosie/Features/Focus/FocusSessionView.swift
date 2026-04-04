@@ -129,6 +129,26 @@ struct FocusSessionView: View {
         .fullScreenCover(isPresented: $showDistractionOverlay) {
             DistractionOverlay()
         }
+        // Start Live Activity when timer begins, end when session ends
+        .onChange(of: timer.isRunning) { _, isRunning in
+            guard let state = gooseState else { return }
+            let manager = GooseLiveActivityManager.shared
+            if isRunning {
+                if !manager.isActive {
+                    manager.startPetActivity(gooseName: state.name, state: state)
+                }
+                manager.startFocusMode(state: state, minutesRemaining: timer.remainingSeconds / 60)
+            }
+        }
+        // Update the minute countdown every minute
+        .onChange(of: timer.remainingSeconds / 60) { _, minutes in
+            guard timer.isRunning, let state = gooseState else { return }
+            GooseLiveActivityManager.shared.startFocusMode(state: state, minutesRemaining: minutes)
+        }
+        // End when session completes
+        .onChange(of: timer.isCompleted) { _, completed in
+            if completed { GooseLiveActivityManager.shared.endActivity() }
+        }
     }
 
     // MARK: - Duration Picker
@@ -176,6 +196,7 @@ struct FocusSessionView: View {
             GooseEngine.shared.completeFocusSession(minutes: timer.elapsedMinutes, state: state)
         }
 
+        GooseLiveActivityManager.shared.endActivity()
         timer.reset()
     }
 }

@@ -10,6 +10,8 @@ struct GoalListView: View {
 
     private var goals: [Goal] { allGoals.filter { $0.isActive } }
 
+    @State private var confettiBursts: [ConfettiBurst] = []
+
     @State private var viewModel = GoalViewModel()
 
     private var gooseState: GooseState? {
@@ -74,9 +76,18 @@ struct GoalListView: View {
                                             viewModel.setDeadlinePercentage(goal, gooseState: state, to: value)
                                         }
                                     },
-                                    onDelete: {
-                                        viewModel.deleteGoal(goal, in: modelContext)
-                                    }
+                                    onCelebration: { origin in
+                                        let burst = ConfettiBurst(origin: origin)
+                                        confettiBursts.append(burst)
+                                        Task {
+                                            try? await Task.sleep(for: .seconds(2.5))
+                                            await MainActor.run {
+                                                confettiBursts.removeAll { $0.id == burst.id }
+                                            }
+                                        }
+                                    },
+                                    onEdit: { viewModel.startEditing(goal) },
+                                    onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
                                 )
                                 .padding(.horizontal, GoosieTheme.padding)
                             } else if goal.isHealthKitTracked {
@@ -95,14 +106,18 @@ struct GoalListView: View {
                                             viewModel.completeGoal(goal, gooseState: state)
                                         }
                                     },
+                                    onUncomplete: {
+                                        if let state = gooseState {
+                                            viewModel.uncompleteGoal(goal, gooseState: state)
+                                        }
+                                    },
                                     onIncrement: {
                                         if let state = gooseState {
                                             viewModel.incrementGoal(goal, gooseState: state)
                                         }
                                     },
-                                    onDelete: {
-                                        viewModel.deleteGoal(goal, in: modelContext)
-                                    }
+                                    onEdit: { viewModel.startEditing(goal) },
+                                    onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
                                 )
                                 .padding(.horizontal, GoosieTheme.padding)
                             }
@@ -110,6 +125,13 @@ struct GoalListView: View {
                     }
                 }
                 .padding(.vertical)
+            }
+
+            // Full-screen confetti bursts — multiple can stack simultaneously
+            ForEach(confettiBursts) { burst in
+                ConfettiView(origin: burst.origin)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
         }
         .sheet(isPresented: $viewModel.showEditor) {
@@ -168,7 +190,9 @@ struct GoalListView: View {
 struct GoalCardView: View {
     let goal: Goal
     var onComplete: () -> Void
+    var onUncomplete: () -> Void
     var onIncrement: () -> Void
+    var onEdit: () -> Void
     var onDelete: () -> Void
 
     private var categoryColor: Color {
@@ -215,18 +239,29 @@ struct GoalCardView: View {
                 } else {
                     checkButton
                 }
+
+                // Kebab menu
+                Menu {
+                    Button { onEdit() } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) { onDelete() } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
             }
         }
         .opacity(goal.isCompleted ? 0.7 : 1)
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) { onDelete() } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
     }
 
     private var progressRing: some View {
-        Button(action: onIncrement) {
+        Button(action: goal.isCompleted ? onUncomplete : onIncrement) {
             ZStack {
                 Circle()
                     .stroke(categoryColor.opacity(0.2), lineWidth: 3)
@@ -234,7 +269,8 @@ struct GoalCardView: View {
 
                 Circle()
                     .trim(from: 0, to: goal.progress)
-                    .stroke(categoryColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .stroke(goal.isCompleted ? categoryColor.opacity(0.5) : categoryColor,
+                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .frame(width: 40, height: 40)
                     .rotationEffect(.degrees(-90))
 
@@ -246,12 +282,11 @@ struct GoalCardView: View {
     }
 
     private var checkButton: some View {
-        Button(action: onComplete) {
+        Button(action: goal.isCompleted ? onUncomplete : onComplete) {
             Image(systemName: goal.isCompleted ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 28))
-                .foregroundStyle(goal.isCompleted ? categoryColor : GoosieTheme.charcoalOutline.opacity(0.3))
+                .foregroundStyle(goal.isCompleted ? categoryColor.opacity(0.6) : GoosieTheme.charcoalOutline.opacity(0.3))
         }
-        .disabled(goal.isCompleted)
     }
 }
 
@@ -261,15 +296,17 @@ struct DeadlineGoalCardView: View {
     let goal: Goal
     var onIncrement: () -> Void
     var onSetPercentage: (Double) -> Void
+    var onCelebration: (CGPoint) -> Void   // passes card center in screen coords
+    var onEdit: () -> Void
     var onDelete: () -> Void
 
     @State private var showSlider = false
     @State private var sliderValue: Double = 0
-    @State private var showConfetti = false
     @State private var bounceScale: CGFloat = 1.0
     @State private var tapCount = 0
     @State private var tapResetTask: Task<Void, Never>? = nil
     @State private var cardGlow = false
+    @State private var cardCenter: CGPoint = .zero
 
     private var categoryColor: Color {
         Color(hex: UInt(goal.goalCategory.color, radix: 16) ?? 0xFFD93D)
@@ -332,6 +369,22 @@ struct DeadlineGoalCardView: View {
                                 .font(GoosieTheme.captionFont(10))
                                 .foregroundStyle(GoosieTheme.charcoalOutline)
                         }
+
+                        // Kebab menu
+                        Menu {
+                            Button { onEdit() } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+                            Button(role: .destructive) { onDelete() } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                                .frame(width: 28, height: 28)
+                                .contentShape(Rectangle())
+                        }
                     }
 
                     // Progress bar
@@ -384,14 +437,16 @@ struct DeadlineGoalCardView: View {
                     .animation(.easeOut(duration: 0.4), value: cardGlow)
             )
 
-            // Confetti overlay
-            if showConfetti {
-                ConfettiView()
-                    .allowsHitTesting(false)
-            }
         }
         .opacity(goal.isCompleted ? 0.8 : 1)
         .contentShape(Rectangle())
+        // Track card position for confetti burst origin
+        .onGeometryChange(for: CGPoint.self) { geo in
+            let f = geo.frame(in: .global)
+            return CGPoint(x: f.midX, y: f.midY)
+        } action: { center in
+            cardCenter = center
+        }
         .onTapGesture {
             guard !goal.isCompleted else { return }
             handleTap()
@@ -402,40 +457,32 @@ struct DeadlineGoalCardView: View {
                 showSlider.toggle()
             }
         }
-        .swipeActions(edge: .trailing) {
-            Button(role: .destructive) { onDelete() } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
     }
 
     private func handleTap() {
         onIncrement()
-
         tapCount += 1
-        tapResetTask?.cancel()
-        tapResetTask = Task {
-            try? await Task.sleep(for: .seconds(1.5))
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                if tapCount >= 5 {
-                    triggerCelebration()
-                }
-                tapCount = 0
+
+        // Fire celebration immediately on the 5th tap — no delay
+        if tapCount >= 5 {
+            triggerCelebration()
+            tapCount = 0
+            tapResetTask?.cancel()
+        } else {
+            // Reset counter if user stops tapping for 1.5 s
+            tapResetTask?.cancel()
+            tapResetTask = Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                guard !Task.isCancelled else { return }
+                await MainActor.run { tapCount = 0 }
             }
         }
-
-        // Small bounce on every tap
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) {
-            bounceScale = 1.05
-        }
-        withAnimation(.spring(response: 0.2, dampingFraction: 0.5).delay(0.1)) {
-            bounceScale = 1.0
-        }
+        // No per-tap bounce — the ring percentage is the right visual feedback.
+        // Only the celebration (5th tap) triggers the big bounce below.
     }
 
     private func triggerCelebration() {
-        showConfetti = true
+        onCelebration(cardCenter)  // full-screen confetti bursts from the card center
         withAnimation(.spring(response: 0.15, dampingFraction: 0.4)) { bounceScale = 1.12 }
         withAnimation(.spring(response: 0.15, dampingFraction: 0.4).delay(0.15)) { bounceScale = 0.96 }
         withAnimation(.spring(response: 0.15, dampingFraction: 0.4).delay(0.25)) { bounceScale = 1.0 }
@@ -443,8 +490,6 @@ struct DeadlineGoalCardView: View {
         Task {
             try? await Task.sleep(for: .seconds(0.5))
             await MainActor.run { cardGlow = false }
-            try? await Task.sleep(for: .seconds(2.0))
-            await MainActor.run { showConfetti = false }
         }
     }
 }
@@ -534,23 +579,32 @@ struct HealthKitGoalCardView: View {
     }
 }
 
+// MARK: - Confetti Models
+
+private struct ConfettiBurst: Identifiable {
+    let id = UUID()
+    let origin: CGPoint
+}
+
 // MARK: - Confetti View
 
 struct ConfettiView: View {
+    /// Burst origin in global screen coordinates (points).
+    let origin: CGPoint
+
     @State private var particles: [ConfettiParticle] = []
 
     var body: some View {
-        Canvas { context, size in
+        Canvas { context, _ in
             for p in particles {
-                let rect = CGRect(
-                    x: p.x * size.width - p.size / 2,
-                    y: p.y * size.height - p.size / 2,
-                    width: p.size,
-                    height: p.size * 0.6
-                )
-                var contextCopy = context
-                contextCopy.rotate(by: .degrees(p.rotation))
-                contextCopy.fill(Path(ellipseIn: rect), with: .color(p.color))
+                var ctx = context
+                // Translate to particle center, rotate, then draw centered at origin
+                ctx.translateBy(x: p.x, y: p.y)
+                ctx.rotate(by: .degrees(p.rotation))
+                let rect = CGRect(x: -p.size / 2, y: -p.size * 0.3,
+                                  width: p.size, height: p.size * 0.6)
+                ctx.fill(Path(ellipseIn: rect),
+                         with: .color(p.color.opacity(p.opacity)))
             }
         }
         .onAppear {
@@ -562,32 +616,38 @@ struct ConfettiView: View {
     private func spawnParticles() {
         let colors: [Color] = [
             .red, .orange, .yellow, .green, .blue, .purple, .pink,
-            GoosieTheme.coralAccent, GoosieTheme.mintBackground
+            GoosieTheme.coralAccent, GoosieTheme.sunYellow
         ]
-        particles = (0..<50).map { _ in
-            ConfettiParticle(
-                x: Double.random(in: 0.1...0.9),
-                y: Double.random(in: -0.2...0.2),
-                size: Double.random(in: 6...12),
+        particles = (0..<90).map { _ in
+            let angle = Double.random(in: 0...(2 * .pi))
+            let speed = Double.random(in: 5...18)
+            return ConfettiParticle(
+                x: origin.x,
+                y: origin.y,
+                vx: cos(angle) * speed,
+                vy: sin(angle) * speed,
+                size: Double.random(in: 7...13),
                 color: colors.randomElement()!,
-                speed: Double.random(in: 0.003...0.007),
                 rotation: Double.random(in: 0...360),
-                rotationSpeed: Double.random(in: -8...8),
-                drift: Double.random(in: -0.002...0.002)
+                rotationSpeed: Double.random(in: -10...10),
+                opacity: 1.0
             )
         }
     }
 
     private func animateParticles() {
         Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { timer in
-            var allGone = true
+            var allFaded = true
             for i in particles.indices {
-                particles[i].y += particles[i].speed
-                particles[i].x += particles[i].drift
+                particles[i].x  += particles[i].vx
+                particles[i].y  += particles[i].vy
+                particles[i].vy += 0.4          // gravity pulls down
+                particles[i].vx *= 0.98         // light air resistance
                 particles[i].rotation += particles[i].rotationSpeed
-                if particles[i].y < 1.3 { allGone = false }
+                particles[i].opacity  -= 0.012  // fade out over ~83 frames ≈ 1.4 s
+                if particles[i].opacity > 0 { allFaded = false }
             }
-            if allGone { timer.invalidate() }
+            if allFaded { timer.invalidate() }
         }
     }
 }
@@ -595,10 +655,11 @@ struct ConfettiView: View {
 private struct ConfettiParticle {
     var x: Double
     var y: Double
+    var vx: Double          // horizontal velocity (pts/frame)
+    var vy: Double          // vertical velocity (pts/frame)
     var size: Double
     var color: Color
-    var speed: Double
     var rotation: Double
     var rotationSpeed: Double
-    var drift: Double
+    var opacity: Double
 }
