@@ -115,6 +115,7 @@ struct DistractionOverlay: View {
             if elapsedSeconds % 60 == 0 {
                 let log = fetchOrCreateTodayLog()
                 log.distractionMinutes += 1
+                GooseEngine.shared.updateDistractMinutes(log.distractionMinutes)
             }
         }
     }

@@ -7,8 +7,14 @@ struct GoalListView: View {
     // Filter to active goals in Swift instead.
     @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @Query private var gooseStates: [GooseState]
+    @Query private var profiles: [UserProfile]
 
-    private var goals: [Goal] { allGoals.filter { $0.isActive } }
+    private var goals: [Goal] {
+        let active   = allGoals.filter { $0.isActive }
+        let builtins = active.filter { $0.type == "builtin" }.sorted { $0.sortOrder < $1.sortOrder }
+        let others   = active.filter { $0.type != "builtin" }.sorted { $0.sortOrder < $1.sortOrder }
+        return builtins + others
+    }
 
     @State private var confettiBursts: [ConfettiBurst] = []
 
@@ -18,20 +24,30 @@ struct GoalListView: View {
         gooseStates.first
     }
 
+    private var isWatchPaired: Bool { profiles.first?.watchPaired ?? false }
+
+    private var hasUserGoals: Bool {
+        goals.contains { $0.type != "builtin" }
+    }
+
     private func hkProgress(for goal: Goal) -> Double {
         if goal.title.localizedCaseInsensitiveContains("steps") {
-            return min(Double(GooseEngine.shared.cachedSteps) / 10_000, 1.0)
+            return min(Double(GooseEngine.shared.cachedSteps) / Double(goal.targetCount), 1.0)
+        } else if goal.title.localizedCaseInsensitiveContains("screen time") {
+            return min(Double(GooseEngine.shared.cachedDistractMinutes) / Double(goal.targetCount), 1.0)
         } else {
-            return min(GooseEngine.shared.cachedSleepHours / 8.0, 1.0)
+            return min(GooseEngine.shared.cachedSleepHours / Double(goal.targetCount), 1.0)
         }
     }
 
     private func hkLabel(for goal: Goal) -> String {
         if goal.title.localizedCaseInsensitiveContains("steps") {
-            return "\(GooseEngine.shared.cachedSteps.formatted()) / 10,000 steps"
+            return "\(GooseEngine.shared.cachedSteps.formatted()) / \(goal.targetCount.formatted()) steps"
+        } else if goal.title.localizedCaseInsensitiveContains("screen time") {
+            return "\(GooseEngine.shared.cachedDistractMinutes) / \(goal.targetCount) mins used"
         } else {
             let h = GooseEngine.shared.cachedSleepHours
-            return String(format: "%.1f / 8 hrs", h)
+            return String(format: "%.1f / %d hrs", h, goal.targetCount)
         }
     }
 
@@ -122,6 +138,19 @@ struct GoalListView: View {
                                 .padding(.horizontal, GoosieTheme.padding)
                             }
                         }
+
+                        if !hasUserGoals {
+                            VStack(spacing: 8) {
+                                Text("Ready to set your own goals?")
+                                    .font(GoosieTheme.bodyFont(15))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                                PillButton(title: "Add Your First Goal", icon: "plus", color: GoosieTheme.coralAccent) {
+                                    viewModel.startCreating()
+                                }
+                            }
+                            .padding(.horizontal, GoosieTheme.padding)
+                            .padding(.top, 8)
+                        }
                     }
                 }
                 .padding(.vertical)
@@ -138,7 +167,7 @@ struct GoalListView: View {
             GoalEditorView(existingGoal: viewModel.editingGoal)
         }
         .onAppear {
-            viewModel.seedBuiltinGoalsIfNeeded(in: modelContext)
+            viewModel.seedBuiltinGoalsIfNeeded(in: modelContext, isWatchPaired: isWatchPaired)
             viewModel.resetDailyGoals(goals)
             GooseEngine.shared.refreshGoals(goals)
         }
@@ -164,6 +193,9 @@ struct GoalListView: View {
                     state: state
                 )
             }
+        }
+        .onChange(of: GooseEngine.shared.cachedDistractMinutes) { _, _ in
+            // Screen time goal is display-only — progress refreshes automatically via @Observable
         }
     }
 

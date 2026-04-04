@@ -98,6 +98,11 @@ public enum GoosieConstants {
     public static let appGroupID = "group.com.tamagoosie"
     public static let gooseStatsKey = "gooseStats"
 
+    // MARK: - Screen Time
+    public static let screenTimeSelectionKey = "screenTimeSelection"
+    public static let screenTimeThresholdEventsKey = "screenTimeThresholdEvents"
+    public static let screenTimeThresholdMinutes: Int = 30
+
     // MARK: - Live Activity
     public static let liveActivityMaxHours: Double = 8
 }

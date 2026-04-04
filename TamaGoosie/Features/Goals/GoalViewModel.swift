@@ -12,30 +12,42 @@ final class GoalViewModel {
         context.delete(goal)
     }
 
-    /// Seeds 4 built-in goals if none of type "builtin" exist yet.
-    func seedBuiltinGoalsIfNeeded(in context: ModelContext) {
-        let descriptor = FetchDescriptor<Goal>(predicate: #Predicate { $0.type == "builtin" })
-        guard (try? context.fetch(descriptor))?.isEmpty != false else { return }
-
-        let builtin: [(String, GoalCategory, GoalFrequency, Double)] = [
-            ("Daily walk (10,000 steps)", .health, .daily, 1.2),
-            ("8 hours of sleep", .health, .daily, 1.2),
-            ("Drink 8 glasses of water", .health, .daily, 1.0),
-            ("No screens after 9pm", .mindfulness, .daily, 1.0),
+    /// Seeds built-in goals if they don't already exist.
+    /// Sleep goal is only seeded when a Watch is paired (sleep data comes from Watch).
+    func seedBuiltinGoalsIfNeeded(in context: ModelContext, isWatchPaired: Bool) {
+        // (title, category, frequency, happinessWeight, targetCount, sortOrder)
+        let alwaysGoals: [(String, GoalCategory, GoalFrequency, Double, Int, Int)] = [
+            ("Daily walk (10,000 steps)", .health,     .daily, 1.2, 10_000, 0),
+            ("Limit screen time to 2 hrs", .screentime, .daily, 1.0, 120,   1),
+        ]
+        let watchGoals: [(String, GoalCategory, GoalFrequency, Double, Int, Int)] = [
+            ("8 hours of sleep", .health, .daily, 1.2, 8, 2),
         ]
 
-        for (index, (title, category, frequency, weight)) in builtin.enumerated() {
-            let goal = Goal(
-                title: title,
-                type: "builtin",
-                category: category,
-                frequency: frequency,
-                targetCount: 1,
-                happinessWeight: weight,
-                sortOrder: index
-            )
-            context.insert(goal)
+        for (title, category, frequency, weight, count, order) in alwaysGoals {
+            guard !goalExists(title: title, in: context) else { continue }
+            context.insert(Goal(
+                title: title, type: "builtin",
+                category: category, frequency: frequency,
+                targetCount: count, happinessWeight: weight, sortOrder: order
+            ))
         }
+
+        if isWatchPaired {
+            for (title, category, frequency, weight, count, order) in watchGoals {
+                guard !goalExists(title: title, in: context) else { continue }
+                context.insert(Goal(
+                    title: title, type: "builtin",
+                    category: category, frequency: frequency,
+                    targetCount: count, happinessWeight: weight, sortOrder: order
+                ))
+            }
+        }
+    }
+
+    private func goalExists(title: String, in context: ModelContext) -> Bool {
+        let descriptor = FetchDescriptor<Goal>(predicate: #Predicate { $0.title == title })
+        return (try? context.fetch(descriptor))?.isEmpty == false
     }
 
     func completeGoal(_ goal: Goal, gooseState: GooseState) {
@@ -68,9 +80,9 @@ final class GoalViewModel {
     /// Call when fresh HealthKit values arrive. Completes walk/sleep goals if threshold met.
     func autoCompleteHealthKitGoals(goals: [Goal], steps: Int, sleepHours: Double, state: GooseState) {
         for goal in goals where goal.isHealthKitTracked && !goal.isCompleted {
-            if goal.title.localizedCaseInsensitiveContains("steps"), steps >= 10_000 {
+            if goal.title.localizedCaseInsensitiveContains("steps"), steps >= goal.targetCount {
                 completeGoal(goal, gooseState: state)
-            } else if goal.title.localizedCaseInsensitiveContains("sleep"), sleepHours >= 8.0 {
+            } else if goal.title.localizedCaseInsensitiveContains("sleep"), sleepHours >= Double(goal.targetCount) {
                 completeGoal(goal, gooseState: state)
             }
         }

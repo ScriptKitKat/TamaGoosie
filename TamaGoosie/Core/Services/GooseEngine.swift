@@ -13,6 +13,8 @@ final class GooseEngine {
     private var cachedExerciseMinutes: Int = 0
     private(set) var cachedSleepHours: Double = 0.0
     private var cachedStandHours: Int = 0
+    // Cached distraction minutes updated by DistractionOverlay each minute
+    private(set) var cachedDistractMinutes: Int = 0
 
     // Cached goals populated by refreshGoals(_:); included in every sync payload
     private var cachedTopGoals: [GoalSummary] = []
@@ -265,6 +267,11 @@ final class GooseEngine {
         DecayEngine.applyDecay(to: state)
         state.updateMood()
         saveStatsToAppGroup(state.toSyncPayload())
+    }
+
+    /// Call this from DistractionOverlay each time distractionMinutes increments.
+    func updateDistractMinutes(_ minutes: Int) {
+        cachedDistractMinutes = minutes
     }
 
     // MARK: - Goals Cache

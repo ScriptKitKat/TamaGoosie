@@ -94,11 +94,12 @@ final class Goal {
         }
     }
 
-    /// True for the two built-in goals driven by HealthKit (steps, sleep).
+    /// True for built-in goals that are auto-tracked (HealthKit or internal screen time).
     var isHealthKitTracked: Bool {
         guard type == "builtin" else { return false }
         return title.localizedCaseInsensitiveContains("steps") ||
-               title.localizedCaseInsensitiveContains("sleep")
+               title.localizedCaseInsensitiveContains("sleep") ||
+               title.localizedCaseInsensitiveContains("screen time")
     }
 
     func toSummary() -> GoalSummary {

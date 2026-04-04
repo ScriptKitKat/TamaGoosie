@@ -108,6 +108,7 @@ HealthKitManager → GooseEngine → GooseState (SwiftData @Model)
 **TamaGoosie/Core/Models/** — SwiftData `@Model` classes:
 - `GooseState` — the single goose instance (one row in DB)
 - `Goal` — user goals; `type` is `"recurring" | "deadline" | "builtin"`
+  - **Built-in goals** (`type == "builtin"`) are never manually checked off by the user — their progress is tracked automatically. This includes HealthKit-driven goals (step count, sleep hours) and internally-tracked goals (screen time via `GooseEngine.shared.cachedDistractMinutes`, updated by `DistractionOverlay`). Goals that require user action to complete must be `"recurring"` type and chosen explicitly by the user.
 - `DailyLog` — one row per calendar day, accumulates HealthKit + distraction data
 - `DistractionApp` — user-configured distraction apps
 - `UserProfile` — user baselines (auto-updated after 7 days of logs) and settings
