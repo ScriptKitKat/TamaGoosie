@@ -110,6 +110,14 @@ struct GooseChatPanel: View {
                 .focused($isInputFocused)
                 .submitLabel(.send)
                 .onSubmit { sendMessage() }
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") { isInputFocused = false }
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.coralAccent)
+                    }
+                }
 
             Button(action: sendMessage) {
                 Image(systemName: "arrow.up.circle.fill")
