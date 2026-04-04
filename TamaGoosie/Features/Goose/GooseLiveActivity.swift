@@ -15,6 +15,10 @@ struct GoosePetActivity: ActivityAttributes {
         var currentGoalProgress: Double?
         var isFocusing: Bool
         var focusMinutesRemaining: Int?
+        // Wandering goose
+        var gooseX: Double        // 0.0–1.0 horizontal position across the stage
+        var isMovingRight: Bool   // true = facing right
+        var spriteKey: String     // e.g. "adult_happy", "baby_sick" — drives MiniGooseView
     }
 
     var gooseName: String
@@ -29,48 +33,40 @@ struct GooseLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    moodEmoji(context.state.mood)
-                        .font(.system(size: 32))
+                    if context.state.streakDays > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "flame.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.orange)
+                            Text("\(context.state.streakDays)")
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .foregroundStyle(.orange)
+                        }
+                    } else {
+                        Image(systemName: "flame")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 DynamicIslandExpandedRegion(.trailing) {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Lv.\(context.state.level)")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                        if context.state.streakDays > 0 {
-                            HStack(spacing: 2) {
-                                Image(systemName: "flame.fill")
-                                    .font(.system(size: 10))
-                                Text("\(context.state.streakDays)")
-                                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                            }
-                            .foregroundStyle(.orange)
-                        }
-                    }
+                    Text("Lv.\(context.state.level)")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary)
                 }
 
                 DynamicIslandExpandedRegion(.center) {
                     if context.state.isFocusing, let minutes = context.state.focusMinutesRemaining {
-                        Text("\(minutes)m left")
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                        Text("Focusing — \(minutes)m")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                     } else {
                         Text(context.attributes.gooseName)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
                     }
                 }
 
                 DynamicIslandExpandedRegion(.bottom) {
-                    if context.state.isFocusing {
-                        Text("Focusing...")
-                            .font(.system(size: 12, design: .rounded))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        HStack(spacing: 12) {
-                            miniStatBar(value: context.state.healthiness, color: .red, icon: "heart.fill")
-                            miniStatBar(value: context.state.happiness, color: .yellow, icon: "face.smiling.fill")
-                        }
-                        .padding(.horizontal, 4)
-                    }
+                    walkingStage(context: context)
                 }
             } compactLeading: {
                 moodEmoji(context.state.mood)
@@ -91,6 +87,48 @@ struct GooseLiveActivityWidget: Widget {
         }
     }
 
+    // MARK: - Walking Stage (bottom region)
+
+    @ViewBuilder
+    private func walkingStage(context: ActivityViewContext<GoosePetActivity>) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .center) {
+                // Left: health bar
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.red)
+                    miniStatBar(value: context.state.healthiness, color: .red)
+                }
+                .frame(width: 60)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Right: happiness bar
+                HStack(spacing: 4) {
+                    miniStatBar(value: context.state.happiness, color: .yellow)
+                    Image(systemName: "face.smiling.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.yellow)
+                }
+                .frame(width: 60)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+
+                // Goose walks in the center stage (between the two bars)
+                let stageWidth = geo.size.width - 140  // 70pt margin each side
+                let offset = (context.state.gooseX - 0.5) * stageWidth
+
+                MiniGooseView(
+                    spriteKey: context.state.spriteKey,
+                    isFlipped: !context.state.isMovingRight
+                )
+                .offset(x: offset)
+                .animation(.linear(duration: 2.3), value: context.state.gooseX)
+            }
+        }
+        .frame(height: 42)
+        .padding(.horizontal, 4)
+    }
+
     // MARK: - Lock Screen Banner
 
     @ViewBuilder
@@ -109,7 +147,7 @@ struct GooseLiveActivityWidget: Widget {
                 }
 
                 if context.state.isFocusing, let minutes = context.state.focusMinutesRemaining {
-                    Text("Focusing - \(minutes)m remaining")
+                    Text("Focusing — \(minutes)m remaining")
                         .font(.system(size: 13, design: .rounded))
                         .foregroundStyle(.secondary)
                 } else if let goal = context.state.currentGoalTitle {
@@ -147,22 +185,135 @@ struct GooseLiveActivityWidget: Widget {
         return Text(mood?.emoji ?? "😌")
     }
 
-    /// Display a mini stat bar for 0.0–1.0 values
-    private func miniStatBar(value: Double, color: Color, icon: String) -> some View {
-        VStack(spacing: 2) {
-            Image(systemName: icon)
-                .font(.system(size: 8))
-                .foregroundStyle(color)
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(color.opacity(0.2))
-                    Capsule()
-                        .fill(color)
-                        .frame(width: max(0, geo.size.width * value))
-                }
+    private func miniStatBar(value: Double, color: Color) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(color.opacity(0.2))
+                Capsule()
+                    .fill(color)
+                    .frame(width: max(0, geo.size.width * value))
             }
-            .frame(height: 4)
+        }
+        .frame(height: 4)
+    }
+}
+
+// MARK: - Mini Goose View
+
+/// Compact procedural goose for the Dynamic Island walking stage.
+/// Appearance driven entirely by `spriteKey` (e.g. "adult_happy", "baby_sick").
+private struct MiniGooseView: View {
+    let spriteKey: String
+    let isFlipped: Bool
+
+    private var isEgg: Bool { spriteKey.hasPrefix("egg") }
+    private var isDead: Bool { spriteKey.hasSuffix("dead") }
+
+    private var bodyColor: Color {
+        if spriteKey.hasSuffix("happy")   { return .white }
+        if spriteKey.hasSuffix("neutral") { return Color(white: 0.88) }
+        if spriteKey.hasSuffix("sad")     { return Color(red: 0.78, green: 0.87, blue: 1.0) }
+        if spriteKey.hasSuffix("sick")    { return Color(red: 0.80, green: 0.95, blue: 0.80) }
+        if spriteKey.hasSuffix("dead")    { return Color(white: 0.50) }
+        return .white
+    }
+
+    // Baby is smaller than teen/adult
+    private var scale: CGFloat {
+        if spriteKey.hasPrefix("baby") { return 0.75 }
+        if spriteKey.hasPrefix("teen") { return 0.88 }
+        return 1.0
+    }
+
+    var body: some View {
+        ZStack {
+            if isEgg {
+                eggBody
+            } else {
+                gooseBody
+            }
+        }
+        .scaleEffect(x: isFlipped ? -1 : 1, y: 1)
+        .scaleEffect(scale)
+        .frame(width: 28, height: 32)
+    }
+
+    // MARK: Egg
+
+    private var eggBody: some View {
+        Ellipse()
+            .fill(Color(white: 0.97))
+            .overlay(Ellipse().stroke(Color(white: 0.75), lineWidth: 0.5))
+            .frame(width: 18, height: 24)
+    }
+
+    // MARK: Goose
+
+    private var gooseBody: some View {
+        ZStack {
+            // Body
+            Ellipse()
+                .fill(bodyColor)
+                .frame(width: 20, height: 16)
+                .offset(y: 6)
+
+            // Neck
+            Capsule()
+                .fill(bodyColor)
+                .frame(width: 7, height: 12)
+                .offset(x: 4, y: -2)
+
+            // Head
+            Circle()
+                .fill(bodyColor)
+                .frame(width: 11, height: 11)
+                .offset(x: 6, y: -8)
+
+            // Beak
+            if !isDead {
+                Triangle()
+                    .fill(Color.orange)
+                    .frame(width: 6, height: 4)
+                    .offset(x: 12, y: -8)
+            }
+
+            // Eyes
+            if isDead {
+                // X eyes
+                Text("×")
+                    .font(.system(size: 6, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.7))
+                    .offset(x: 7, y: -9)
+            } else {
+                Circle()
+                    .fill(Color.black)
+                    .frame(width: 3, height: 3)
+                    .offset(x: 8, y: -9)
+            }
+
+            // Feet
+            HStack(spacing: 4) {
+                Capsule()
+                    .fill(Color.orange.opacity(0.8))
+                    .frame(width: 5, height: 3)
+                Capsule()
+                    .fill(Color.orange.opacity(0.8))
+                    .frame(width: 5, height: 3)
+            }
+            .offset(y: 14)
+        }
+    }
+}
+
+// MARK: - Triangle Shape
+
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { p in
+            p.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            p.closeSubpath()
         }
     }
 }

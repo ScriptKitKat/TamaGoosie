@@ -145,7 +145,6 @@ struct GooseWidgetMedium: View {
 
 // MARK: - Widget Configuration
 
-@main
 struct GooseWidget: Widget {
     let kind = "GooseWidget"
 
@@ -156,6 +155,16 @@ struct GooseWidget: Widget {
         .configurationDisplayName("TamaGoosie")
         .description("Keep an eye on your goose!")
         .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+// MARK: - Widget Bundle
+
+@main
+struct TamaGoosieWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        GooseWidget()
+        GooseLiveActivityWidget()
     }
 }
 
