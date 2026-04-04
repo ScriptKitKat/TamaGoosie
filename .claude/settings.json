@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "apple-kit-skills@swift-ios-skills": true,
+    "everything-claude-code@everything-claude-code": true
+  }
+}

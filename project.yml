@@ -1,0 +1,88 @@
+name: TamaGoosie
+options:
+  bundleIdPrefix: com.tamagoosie
+  deploymentTarget:
+    iOS: "17.0"
+    watchOS: "10.0"
+  xcodeVersion: "15.0"
+  groupSortPosition: top
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  TamaGoosie:
+    type: application
+    platform: iOS
+    sources:
+      - TamaGoosie
+      - Shared
+    dependencies:
+      - target: TamaGoosieWidgets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app
+        INFOPLIST_FILE: TamaGoosie/Info.plist
+        SUPPORTS_LIVE_ACTIVITIES: true
+    entitlements:
+      path: TamaGoosie/TamaGoosie.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+
+  TamaGoosieWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - TamaGoosieWatch
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.watch
+        INFOPLIST_FILE: TamaGoosieWatch/Info.plist
+    entitlements:
+      path: TamaGoosieWatch/TamaGoosieWatch.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+        com.apple.developer.healthkit: true
+
+  TamaGoosieWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - TamaGoosieWidgets
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.widgets
+        INFOPLIST_FILE: ""
+        GENERATE_INFOPLIST_FILE: true
+    entitlements:
+      path: TamaGoosieWidgets/TamaGoosieWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+
+schemes:
+  TamaGoosie:
+    build:
+      targets:
+        TamaGoosie: all
+        TamaGoosieWidgets: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+
+  TamaGoosieWatch:
+    build:
+      targets:
+        TamaGoosieWatch: all
+    run:
+      config: Debug
