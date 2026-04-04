@@ -63,6 +63,7 @@ struct GooseView: View {
             ensureGooseExists()
             let log = ensureTodayLogExists()
             viewModel.onAppear(state: gooseState, log: log, profile: profile, goals: activeGoals)
+            chatService.refreshAvailability()
             syncChatService()
         }
         .onDisappear {

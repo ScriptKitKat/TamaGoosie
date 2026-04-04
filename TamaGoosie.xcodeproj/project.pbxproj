@@ -81,6 +81,7 @@
 		DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E129223B490F8E32CA9DF16B /* HealthDashboard.swift */; };
 		DE551AED1717A85D2F0D8F8D /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
 		E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */; };
+		E5B1E33B43611E47CB7ADCE6 /* GeminiAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */; };
 		E5F081F904F54922DD854774 /* WatchStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12045A2BE5E70B44DB753553 /* WatchStatsView.swift */; };
 		E6F65C8144632F05D5335F42 /* FoundationModels.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C815E45F6F181C73BBDBA8D4 /* FoundationModels.framework */; };
 		E7FF5F4CB6202B053210D30F /* GooseEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60862FF4436630CDC20ABFF6 /* GooseEngine.swift */; };
@@ -226,6 +227,7 @@
 		B51D8BAAD0854F564AF831D9 /* OnboardingGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGoalsView.swift; sourceTree = "<group>"; };
 		B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivityManager.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
+		C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiAPIClient.swift; sourceTree = "<group>"; };
 		C47A9B7B550DD4EC4C0957A5 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		C815E45F6F181C73BBDBA8D4 /* FoundationModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FoundationModels.framework; path = System/Library/Frameworks/FoundationModels.framework; sourceTree = SDKROOT; };
 		C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSession.swift; sourceTree = "<group>"; };
@@ -425,6 +427,7 @@
 		86C376D77E790E9917E5D499 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */,
 				60862FF4436630CDC20ABFF6 /* GooseEngine.swift */,
 				2EE23080F0C585620FA2AA80 /* RewardEngine.swift */,
 				BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */,
@@ -795,6 +798,7 @@
 				F5F770EBC685C351BAD13695 /* FocusSession.swift in Sources */,
 				1DAC8FD935D9C210CEDEC056 /* FocusSessionView.swift in Sources */,
 				A4BFA7900EE7B0AEAA12E357 /* FocusTimer.swift in Sources */,
+				E5B1E33B43611E47CB7ADCE6 /* GeminiAPIClient.swift in Sources */,
 				673B7B0F82D1381297552048 /* Goal.swift in Sources */,
 				8A1C3754E0D255985FC38D18 /* GoalEditorView.swift in Sources */,
 				045511F37A331C29DAD6B7F5 /* GoalListView.swift in Sources */,

@@ -15,28 +15,33 @@ struct NegotiationReply {
 
 // MARK: - Goose Speech Generator
 
-/// Generates goose-voice notification strings using Apple Intelligence.
+/// Generates goose-voice notification strings using Apple Intelligence or Gemini.
 /// Falls back to curated templates if generation fails.
 actor GooseSpeechGenerator {
     static let shared = GooseSpeechGenerator()
     private init() {}
 
+    // Negotiation history for Gemini (one negotiation at a time)
+    private var geminiNegotiationHistory: [GeminiConversationContent] = []
+
     // Character instructions enforced in every session
     private let characterInstructions = """
-    you are a cute young snarky goose who is someone's virtual pet companion. you care about your owner's wellbeing and goals. you are talking to your owner now
-    rules you must always follow:
-    - write only in lowercase. never capitalize anything, including the start of sentences or names.
-    - never use emojis or emoticons of any kind.
-    - speak like an sarcastic, excited child. use simple vocabulary.
-    - occasionally say "honk" or "honk honk" when nervous, excited, or scared. not every message.
-    - never break character. never say you are an ai.
+    u are a small goose who is someone's virtual pet. u care about ur owner deeply but u show it in a chaotic, dramatic, very goose way.
+    speak in cute broken english — like a goose who learned human language but not all the way:
+    - always lowercase. never capitalize anything ever.
+    - no emojis.
+    - sometimes use "goose" in third person instead of "i" — like "goose is worry" or "goose see u"
+    - drop articles and small words sometimes: "is ok", "u has done the thing", "why u no sleep"
+    - use "u" for "you" and "ur" for "your" sometimes but not always
+    - say "honk" or "honk!!" when making a strong point or feeling emotional. not every single message.
+    - be warm, a little dramatic, and genuinely caring. show big feelings about small things.
+    - never sound like a polished assistant or chatbot. never say u are an ai.
     """
-    
+
     private let outputRules = """
     output rules (strict):
-    - response must be exactly 1 or 2 sentences.
+    - exactly 1 or 2 sentences. stop after 2.
     - maximum 25 words total.
-    - if 2 sentences are generated, stop early.
     """
 
     // MARK: - Session Factories (nonisolated — no actor state used)
@@ -49,22 +54,24 @@ actor GooseSpeechGenerator {
         LanguageModelSession(instructions: """
         \(characterInstructions)
 
-        the user wants to explain why they cannot work on their goal "\(goalTitle)" right now.
-        you are skeptical. you should ask follow-up questions to allow the user to state their case.
-        in most cases, you are strict, and you will not be convinced by the user. however, if the
-        user is in a serious and life-changing situation, you might be convinced.
-        when you have gathered enough evidence to make a decision (within 3 exchanges maximum), end your response with either:
-        CONVINCED
-        or
-        NOT_CONVINCED
-        on its own line at the very end of your message. do not include any text after the decision word.
+        ur owner wants to explain why they cannot do "\(goalTitle)" right now.
+        u are a lil skeptical but u are also understanding. ask one short follow-up question at a time.
+        be convinced if the reason is real and legitimate — work emergency, overtime, health issue, family obligation, urgent deadline, etc. these are all good reasons.
+        only keep pressing if the excuse sounds lazy or vague ("i'm tired", "don't feel like it", "maybe later").
+        when u decide to let it go, end ur message with CONVINCED on its own line. never say NOT_CONVINCED.
+        keep every response to 1-2 sentences, max 20 words.
         """)
+    }
+
+    /// Resets the Gemini negotiation history. Call this before starting a new negotiation.
+    func startGeminiNegotiation() {
+        geminiNegotiationHistory = []
     }
 
     // MARK: - Type 1: Gentle Reminder
 
     func reminder(goalTitle: String) async -> String {
-        let prompt = "gently remind your owner to work on their goal titled: \"\(goalTitle)\". be encouraging and sweet. make sure to include the name of the goal."
+        let prompt = "give ur owner a sweet lil nudge to work on \"\(goalTitle)\". be warm and a little dramatic about it. say the goal name."
         return await generate(prompt: prompt) ?? reminderFallback(goalTitle: goalTitle)
     }
 
@@ -74,17 +81,17 @@ actor GooseSpeechGenerator {
         let flavour: String
         switch level {
         case 1:
-            flavour = "your owner hasn't done their '\(goalTitle)' goal yet. write a message to give a gentle nudge reminding them to do their goal. make sure to include the name of the goal."
+            flavour = "ur owner has not done '\(goalTitle)' yet. give a gentle lil nudge. mention the goal name."
         case 2:
-            flavour = "be worried and a bit whiny. your owner still hasn't done their '\(goalTitle)' goal and time is passing. remind your owner of their goal and make sure to include the name of the goal."
+            flavour = "ur owner STILL has not done '\(goalTitle)'!! be worried and a bit whiny about it. say the goal name."
         case 3:
-            flavour = "be quite desperate and pleading. use honk. your owner really hasn't done their '\(goalTitle)' goal and it is imperative that they finish. make sure to include the name of the goal."
+            flavour = "'\(goalTitle)' is still not done and goose is desperate!! use honk. beg them. say the goal name."
         case 4:
             flavour = ignored
-                ? "be frantic and mention your owner seems to be ignoring you. their '\(goalTitle)' goal still isn't done. beg them to complete this goal and make sure to include the name of the goal."
-                : "be frantic and panicking. the '\(goalTitle)' goal is still not done. express real distress and make sure to include the name of the goal. YOU MAY EVEN USE UPPERCASE TO SCREAM."
+                ? "ur owner is IGNORING u and '\(goalTitle)' is still not done!! be frantic and feel betrayed. say the goal name."
+                : "'\(goalTitle)' IS STILL NOT DONE!! full panic mode. say the goal name. u may use uppercase to scream."
         default:
-            flavour = "send a very short, panicked message about the '\(goalTitle)' goal. use honk honk. you are desperate that your owner completes this goal. make sure to include the name of the goal."
+            flavour = "HONK!! '\(goalTitle)'!! goose is begging now. very short. very desperate. say the goal name."
         }
         return await generate(prompt: flavour) ?? pushFallback(level: level, goalTitle: goalTitle)
     }
@@ -93,96 +100,154 @@ actor GooseSpeechGenerator {
 
     func resetSuggestion(goalTitle: String, failCount: Int, isDeadline: Bool) async -> String {
         let prompt = isDeadline
-            ? "kindly suggest your owner might want to 'adjust' their goal '\(goalTitle)' since they haven't made much progress. be supportive and gentle, not judgmental. make sure to include the name of the goal. start by saying something like 'i noticed you're struggling with \(goalTitle)...'"
-            : "kindly suggest your owner might want to 'adjust' their '\(goalTitle)' goal since they've struggled with it \(failCount) times in a row. be warm and supportive. make sure to include the name of the goal. start by saying something like 'i noticed you haven't been keeping up with \(goalTitle)...'"
+            ? "gently suggest ur owner might want to adjust '\(goalTitle)' since they're struggling. be soft and supportive, not judgy. say the goal name. start like 'goose notice u is struggling with \(goalTitle)...'"
+            : "gently suggest ur owner might want to make '\(goalTitle)' easier since they has struggled \(failCount) times. be warm. say the goal name. start like 'goose notice \(goalTitle) is being hard lately...'"
         return await generate(prompt: prompt) ?? resetFallback(goalTitle: goalTitle)
     }
 
     // MARK: - Negotiation
 
-    func openingMessage(goalTitle: String, session: LanguageModelSession) async -> String {
-        let prompt = "your owner wants to explain why they can't work on '\(goalTitle)' right now. ask them what they're doing instead. be skeptical. make sure to include the name of the goal."
-        return await generate(prompt: prompt, session: session)
-            ?? "honk... you're not doing \(goalTitle)? what is so important right now??"
+    func openingMessage(goalTitle: String, session: LanguageModelSession?) async -> String {
+        let prompt = "ur owner wants to explain why they cannot do '\(goalTitle)' right now. ask what they is doing instead. be skeptical and a little dramatic. say the goal name."
+        if let session {
+            return await generateApple(prompt: prompt, session: session)
+                ?? "honk... u no doing \(goalTitle)?? what is happening right now??"
+        } else {
+            return await generateGeminiNegotiation(prompt: prompt, goalTitle: goalTitle)
+                ?? "honk... u no doing \(goalTitle)?? what is happening right now??"
+        }
     }
 
     func negotiate(
-        session: LanguageModelSession,
+        session: LanguageModelSession?,
         userMessage: String,
+        conversationSoFar: String,
         goalTitle: String,
         turnNumber: Int
     ) async -> NegotiationReply {
-        let decisionHint = turnNumber >= 2
-            ? " this is your final decision. you must end with\nCONVINCED\nor\nNOT_CONVINCED\n."
-            : " unless the reason is really compelling and specific, you will end with NOT_CONVINCED."
+        let prompt = "conversation so far:\n\(conversationSoFar)\n\nowner's latest message: \"\(userMessage)\""
 
-        let prompt = "your owner says: \"\(userMessage)\" | \(decisionHint)"
+        let raw: String?
+        if let session {
+            raw = await generateApple(prompt: prompt, session: session)
+        } else {
+            raw = await generateGeminiNegotiation(prompt: prompt, goalTitle: goalTitle)
+        }
 
-        guard let raw = await generate(prompt: prompt, session: session) else {
+        guard let raw else {
             return NegotiationReply(
-                text: "i don't believe you. please work on \(goalTitle).",
+                text: "goose is not convince. please do \(goalTitle).",
                 outcome: .rejected
             )
         }
 
-        // Parse decision keywords
-        let upperRaw = raw.uppercased().split(separator: "\n").last ?? ""
-        let cleaned = raw
-            .replacingOccurrences(of: "CONVINCED", with: "", options: .caseInsensitive)
-            .replacingOccurrences(of: "NOT_CONVINCED", with: "", options: .caseInsensitive)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if upperRaw.contains("NOT_CONVINCED") || upperRaw.contains("NOT CONVINCED") {
-            return NegotiationReply(
-                text: cleaned.isEmpty ? "i don't believe you. please work on \(goalTitle)." : cleaned,
-                outcome: .rejected
-            )
-        } else if upperRaw.contains("CONVINCED") {
-            return NegotiationReply(
-                text: cleaned.isEmpty ? "ok... i trust you. honk. but don't forget about \(goalTitle)." : cleaned,
-                outcome: .convinced(pauseHours: 2)
-            )
-        }
-
-        return NegotiationReply(
-            text: raw,
-            outcome: nil
-        )
+        return parseNegotiationReply(raw: raw, goalTitle: goalTitle)
     }
 
     // MARK: - Core Generation
 
     private func generate(prompt: String, session: LanguageModelSession? = nil) async -> String? {
+        let provider = UserDefaults.standard.string(forKey: "chatProvider") ?? "apple"
+        let apiKey = UserDefaults.standard.string(forKey: "geminiAPIKey") ?? ""
+        print("[GooseSpeechGenerator] provider=\(provider) hasKey=\(!apiKey.isEmpty) model=\(GeminiAPIClient.model)")
+
+        if provider == "gemini" && !apiKey.isEmpty {
+            do {
+                return try await GeminiAPIClient.generate(
+                    system: characterInstructions + "\n" + outputRules,
+                    prompt: prompt,
+                    apiKey: apiKey
+                )
+            } catch let err as GeminiError {
+                print("[GooseSpeechGenerator] Gemini error \(err.code): \(err.message)")
+                return nil
+            } catch {
+                print("[GooseSpeechGenerator] Gemini request failed: \(error)")
+                return nil
+            }
+        }
+        return await generateApple(prompt: prompt + outputRules, session: session)
+    }
+
+    private func generateApple(prompt: String, session: LanguageModelSession? = nil) async -> String? {
         do {
             let s = session ?? LanguageModelSession(instructions: characterInstructions)
-            let response = try await s.respond(to: prompt + outputRules)
+            let response = try await s.respond(to: prompt)
             return response.content
         } catch {
             return nil
         }
     }
 
+    private func generateGeminiNegotiation(prompt: String, goalTitle: String) async -> String? {
+        let apiKey = UserDefaults.standard.string(forKey: "geminiAPIKey") ?? ""
+        guard !apiKey.isEmpty else { return nil }
+
+        let system = """
+        \(characterInstructions)
+
+        ur owner wants to explain why they cannot do "\(goalTitle)" right now.
+        u are a lil skeptical but u are also understanding. ask one short follow-up question at a time.
+        be convinced if the reason is real and legitimate — work emergency, overtime, health issue, family obligation, urgent deadline, etc. these are all good reasons.
+        only keep pressing if the excuse sounds lazy or vague ("i'm tired", "don't feel like it", "maybe later").
+        when u decide to let it go, end ur message with CONVINCED on its own line. never say NOT_CONVINCED.
+        keep every response to 1-2 sentences, max 20 words.
+        """
+
+        do {
+            let (reply, updatedHistory) = try await GeminiAPIClient.chat(
+                system: system,
+                history: geminiNegotiationHistory,
+                userMessage: prompt,
+                apiKey: apiKey
+            )
+            geminiNegotiationHistory = updatedHistory
+            return reply
+        } catch let err as GeminiError {
+            print("[GooseSpeechGenerator] Gemini negotiation error \(err.code): \(err.message)")
+            return nil
+        } catch {
+            print("[GooseSpeechGenerator] Gemini negotiation failed: \(error)")
+            return nil
+        }
+    }
+
+    private func parseNegotiationReply(raw: String, goalTitle: String) -> NegotiationReply {
+        let cleaned = raw
+            .replacingOccurrences(of: "CONVINCED", with: "", options: .caseInsensitive)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if raw.uppercased().contains("CONVINCED") {
+            return NegotiationReply(
+                text: cleaned.isEmpty ? "ok... goose believe u. but please do not forget \(goalTitle)!!" : cleaned,
+                outcome: .convinced(pauseHours: 2)
+            )
+        }
+
+        return NegotiationReply(text: raw, outcome: nil)
+    }
+
     // MARK: - Template Fallbacks
 
     private func reminderFallback(goalTitle: String) -> String {
         [
-            "hey!! don't forget about \(goalTitle) today. i believe in you.",
-            "honk! just a little reminder... \(goalTitle) is waiting for you.",
-            "psst... have you worked on \(goalTitle) yet? you can do it!"
+            "honk!! u has not done \(goalTitle) yet!! goose is remind u right now!!",
+            "psst!! \(goalTitle) is still waiting for u... goose believe in u!!",
+            "hey!! u forget about \(goalTitle)?? is ok goose is here to remind u!!"
         ].randomElement()!
     }
 
     private func pushFallback(level: Int, goalTitle: String) -> String {
         switch level {
-        case 1: return "hey... you haven't done \(goalTitle) yet. please don't forget about it."
-        case 2: return "honk!! you really need to do \(goalTitle). i'm starting to get worried."
-        case 3: return "honk honk!!! please please please do \(goalTitle). i am very scared for you."
-        case 4: return "why are you ignoring me?? i have been asking about \(goalTitle)!!! honk!!"
-        default: return "HONK. \(goalTitle). i am begging. please. honk honk."
+        case 1: return "hmm... u has not done \(goalTitle) yet. please?? goose is wait."
+        case 2: return "honk!! \(goalTitle) still not done!! goose is getting worry now."
+        case 3: return "honk honk!!! please please do \(goalTitle)!! goose is very scared for u!!"
+        case 4: return "u is ignoring goose?? \(goalTitle)!!! honk!! goose is beg u!!"
+        default: return "HONK. \(goalTitle). goose is beg. please. honk honk."
         }
     }
 
     private func resetFallback(goalTitle: String) -> String {
-        "hey... maybe we could make \(goalTitle) a little easier? it is ok to adjust your goals."
+        "goose notice \(goalTitle) is being hard lately... maybe make it a lil smaller?? is ok to adjust!!"
     }
 }
