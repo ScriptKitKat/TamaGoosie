@@ -12,6 +12,7 @@ struct ContentView: View {
     @StateObject private var watchSync = WatchSyncService.shared
     @State private var selectedTab = 0
     @State private var showOnboarding = false
+    @State private var showAccountCreation = false
     /// Tracks whether we've applied one-time health rewards this session
     @State private var healthProcessedThisSession = false
 
@@ -22,6 +23,7 @@ struct ContentView: View {
                     showOnboarding = true
                 } else {
                     HealthKitManager.shared.enableBackgroundDelivery()
+                    checkAccountStatus()
                 }
                 scheduleNotifications()
             }
@@ -36,10 +38,11 @@ struct ContentView: View {
                 }
             }
             .onChange(of: showOnboarding) { _, isShowing in
-                // After onboarding completes, kick off health sync
+                // After onboarding completes, kick off health sync + account check
                 if !isShowing {
                     HealthKitManager.shared.enableBackgroundDelivery()
                     Task { await syncHealthData() }
+                    checkAccountStatus()
                 }
             }
             .onChange(of: watchSync.isPaired) { _, paired in
@@ -60,6 +63,22 @@ struct ContentView: View {
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingContainerView { showOnboarding = false }
             }
+            .fullScreenCover(isPresented: $showAccountCreation) {
+                AccountCreationView {
+                    showAccountCreation = false
+                }
+            }
+    }
+
+    // MARK: - Account Check
+
+    private func checkAccountStatus() {
+        Task {
+            let authenticated = await ConvexManager.shared.loadIdentity()
+            if !authenticated {
+                await MainActor.run { showAccountCreation = true }
+            }
+        }
     }
 
     private func scheduleNotifications() {
@@ -86,10 +105,10 @@ struct ContentView: View {
                 }
                 .tag(1)
 
-            FocusSessionView()
+            FriendsView()
                 .tabItem {
-                    Image(systemName: "timer")
-                    Text("Focus")
+                    Image(systemName: "person.2.fill")
+                    Text("Friends")
                 }
                 .tag(2)
 

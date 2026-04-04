@@ -23,34 +23,6 @@
          </BuildActionEntry>
          <BuildActionEntry
             buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "9E9022483AE9A7FF06F6AFA3"
-               BuildableName = "TamaGoosieReport.appex"
-               BlueprintName = "TamaGoosieReport"
-               ReferencedContainer = "container:TamaGoosie.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D2388AC1D58B7EAEDE83FEA0"
-               BuildableName = "TamaGoosieShield.appex"
-               BlueprintName = "TamaGoosieShield"
-               ReferencedContainer = "container:TamaGoosie.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
             buildForRunning = "NO"
             buildForProfiling = "NO"
             buildForArchiving = "NO"
