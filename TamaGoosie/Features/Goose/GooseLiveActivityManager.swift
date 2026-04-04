@@ -52,6 +52,20 @@ final class GooseLiveActivityManager {
         updateCurrentActivity()
     }
 
+    /// Updates stats from a sync payload — used by GooseEngine.saveStatsToAppGroup
+    /// so the Live Activity reflects the latest healthiness/happiness/mood/spriteKey
+    /// without needing a full GooseState reference.
+    func updateStats(payload: GooseSyncPayload) {
+        guard var cs = cachedContentState else { return }
+        cs.healthiness = payload.healthiness
+        cs.happiness = payload.happiness
+        cs.mood = payload.mood
+        cs.streakDays = payload.streakDays
+        cs.spriteKey = spriteKey(for: payload.moodEnum)
+        cachedContentState = cs
+        updateCurrentActivity()
+    }
+
     func startFocusMode(state: GooseState, minutesRemaining: Int) {
         guard let activity = currentActivity else { return }
 
@@ -136,7 +150,11 @@ final class GooseLiveActivityManager {
     }
 
     private func spriteKey(for state: GooseState) -> String {
-        switch state.currentMood {
+        spriteKey(for: state.currentMood)
+    }
+
+    private func spriteKey(for mood: GooseMood) -> String {
+        switch mood {
         case .ecstatic, .happy:   return "happy"
         case .content, .bored:    return "neutral"
         case .sad:                return "sad"

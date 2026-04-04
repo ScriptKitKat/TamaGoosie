@@ -75,20 +75,30 @@ struct GooseLiveActivityWidget: Widget {
                     walkingStage(context: context)
                 }
             } compactLeading: {
-                moodEmoji(context.state.mood)
-                    .font(.system(size: 16))
+                MiniGooseView(
+                    spriteKey: context.state.spriteKey,
+                    isFlipped: !context.state.isMovingRight
+                )
+                .scaleEffect(0.72)
+                .frame(width: 20, height: 23)
             } compactTrailing: {
                 if context.state.isFocusing, let minutes = context.state.focusMinutesRemaining {
                     Text("\(minutes)m")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                 } else {
-                    Text("\(Int(context.state.healthiness * 100))%")
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(context.state.healthiness > 0.3 ? Color.primary : Color.red)
+                    StatRingsView(
+                        healthiness: context.state.healthiness,
+                        happiness: context.state.happiness
+                    )
+                    .frame(width: 22, height: 22)
                 }
             } minimal: {
-                moodEmoji(context.state.mood)
-                    .font(.system(size: 14))
+                MiniGooseView(
+                    spriteKey: context.state.spriteKey,
+                    isFlipped: !context.state.isMovingRight
+                )
+                .scaleEffect(0.60)
+                .frame(width: 17, height: 19)
             }
         }
     }
@@ -201,10 +211,44 @@ struct GooseLiveActivityWidget: Widget {
     }
 }
 
+// MARK: - Stat Rings View
+
+/// Two concentric Activity-ring-style circles: outer = healthiness, inner = happiness.
+private struct StatRingsView: View {
+    let healthiness: Double
+    let happiness: Double
+
+    private let ringWidth: CGFloat = 3.5
+    private let gap: CGFloat = 2
+
+    var body: some View {
+        ZStack {
+            // Outer ring — healthiness (red)
+            Circle()
+                .stroke(Color.red.opacity(0.25), lineWidth: ringWidth)
+            Circle()
+                .trim(from: 0, to: CGFloat(min(healthiness, 1.0)))
+                .stroke(Color.red, style: StrokeStyle(lineWidth: ringWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+
+            // Inner ring — happiness (yellow)
+            let inset = ringWidth + gap
+            Circle()
+                .stroke(Color.yellow.opacity(0.25), lineWidth: ringWidth)
+                .padding(inset)
+            Circle()
+                .trim(from: 0, to: CGFloat(min(happiness, 1.0)))
+                .stroke(Color.yellow, style: StrokeStyle(lineWidth: ringWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .padding(inset)
+        }
+    }
+}
+
 // MARK: - Mini Goose View
 
-/// Compact procedural goose for the Dynamic Island walking stage.
-/// Appearance driven entirely by `spriteKey` (e.g. "happy", "sad", "sick").
+/// Compact procedural goose for the Dynamic Island.
+/// Appearance driven entirely by `spriteKey`: "happy", "neutral", "sad", "sick".
 private struct MiniGooseView: View {
     let spriteKey: String
     let isFlipped: Bool
@@ -227,31 +271,60 @@ private struct MiniGooseView: View {
 
     private var gooseBody: some View {
         ZStack {
+            // Body
             Ellipse()
                 .fill(bodyColor)
                 .frame(width: 20, height: 16)
                 .offset(y: 6)
 
+            // Neck
             Capsule()
                 .fill(bodyColor)
                 .frame(width: 7, height: 12)
                 .offset(x: 4, y: -2)
 
+            // Head
             Circle()
                 .fill(bodyColor)
                 .frame(width: 11, height: 11)
                 .offset(x: 6, y: -8)
 
+            // Beak — droops slightly when sad
             Triangle()
-                .fill(Color.orange)
+                .fill(spriteKey == "sick" ? Color.green.opacity(0.8) : Color.orange)
                 .frame(width: 6, height: 4)
-                .offset(x: 12, y: -8)
+                .rotationEffect(spriteKey == "sad" ? .degrees(15) : .degrees(0))
+                .offset(x: 12, y: spriteKey == "sad" ? -7 : -8)
 
-            Circle()
-                .fill(Color.black)
-                .frame(width: 3, height: 3)
+            // Eye — X for sick, normal for others
+            if spriteKey == "sick" {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.black)
+                        .frame(width: 4, height: 1.5)
+                        .rotationEffect(.degrees(45))
+                    Rectangle()
+                        .fill(Color.black)
+                        .frame(width: 4, height: 1.5)
+                        .rotationEffect(.degrees(-45))
+                }
                 .offset(x: 8, y: -9)
+            } else {
+                Circle()
+                    .fill(Color.black)
+                    .frame(width: 3, height: 3)
+                    .offset(x: 8, y: -9)
+            }
 
+            // Teardrop for sad
+            if spriteKey == "sad" {
+                Ellipse()
+                    .fill(Color.blue.opacity(0.6))
+                    .frame(width: 2, height: 3)
+                    .offset(x: 8, y: -6)
+            }
+
+            // Feet
             HStack(spacing: 4) {
                 Capsule()
                     .fill(Color.orange.opacity(0.8))

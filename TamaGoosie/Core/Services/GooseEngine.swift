@@ -258,6 +258,7 @@ final class GooseEngine {
             defaults.set(data, forKey: GoosieConstants.gooseStatsKey)
         }
         WatchSyncService.shared.sendPayload(enrichedPayload)
+        GooseLiveActivityManager.shared.updateStats(payload: enrichedPayload)
 
         // Sync to Convex (social backend)
         GooseSyncService.shared.syncToConvex(

@@ -19,13 +19,15 @@ struct SettingsView: View {
     @State private var morningReminderTime = Calendar.current.date(from: DateComponents(hour: 8, minute: 0))!
     @State private var decayWarningsEnabled = true
     @State private var goalRemindersEnabled = true
-    @State private var focusModeEnabled = false
     @State private var showResetConfirmation = false
     @State private var debugGoalTitle = "Read for 30 minutes"
     @State private var debugPushLevel = 1
     @State private var debugPushSent = false
     @State private var debugReminderSent = false
     @State private var debugResetSent = false
+    @State private var debugStatOverrideEnabled = false
+    @State private var debugHealthSlider: Double = 1.0
+    @State private var debugHappinessSlider: Double = 1.0
 
     private var gooseState: GooseState? { gooseStates.first }
     private var profile: UserProfile? { profiles.first }
@@ -114,32 +116,31 @@ struct SettingsView: View {
                     // AI Model
                     aiModelCard
 
-                    // Focus Mode (Dynamic Island)
-                    GoosieCard {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Focus Mode", systemImage: "timer")
-                                .font(GoosieTheme.bodyFont())
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                    // Live Activity
+                    if let profile {
+                        GoosieCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Live Activity")
+                                    .font(GoosieTheme.bodyFont())
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
 
-                            Text("Show a focus timer in the Dynamic Island while you concentrate.")
-                                .font(GoosieTheme.captionFont(11))
-                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-
-                            Toggle("Enable Focus Dynamic Island", isOn: $focusModeEnabled)
+                                Toggle("Show Goose in Dynamic Island", isOn: Binding(
+                                    get: { profile.liveActivityEnabled },
+                                    set: { enabled in
+                                        profile.liveActivityEnabled = enabled
+                                        let manager = GooseLiveActivityManager.shared
+                                        if enabled {
+                                            if !manager.isActive, let state = gooseState {
+                                                manager.startPetActivity(gooseName: state.name, state: state)
+                                            }
+                                        } else {
+                                            manager.endActivity()
+                                        }
+                                    }
+                                ))
                                 .font(GoosieTheme.captionFont())
                                 .tint(GoosieTheme.mintBackground)
-                                .onChange(of: focusModeEnabled) { _, enabled in
-                                    if enabled {
-                                        guard let state = gooseState else { return }
-                                        let manager = GooseLiveActivityManager.shared
-                                        if !manager.isActive {
-                                            manager.startPetActivity(gooseName: state.name, state: state)
-                                        }
-                                        manager.startFocusMode(state: state, minutesRemaining: GoosieConstants.focusDefaultMinutes)
-                                    } else {
-                                        GooseLiveActivityManager.shared.endActivity()
-                                    }
-                                }
+                            }
                         }
                     }
 
@@ -226,9 +227,67 @@ struct SettingsView: View {
     private var debugPanel: some View {
         GoosieCard {
             VStack(alignment: .leading, spacing: 12) {
-                Label("Notification Debug", systemImage: "ant.fill")
+                Label("Debug", systemImage: "ant.fill")
                     .font(GoosieTheme.bodyFont())
                     .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                // Stat Override
+                Toggle("Override Stats", isOn: $debugStatOverrideEnabled)
+                    .font(GoosieTheme.captionFont())
+                    .tint(GoosieTheme.coralAccent)
+                    .onChange(of: debugStatOverrideEnabled) { _, enabled in
+                        if enabled, let state = gooseState {
+                            debugHealthSlider = state.healthiness
+                            debugHappinessSlider = state.happiness
+                        } else if !enabled, let state = gooseState {
+                            GooseEngine.shared.update(state: state, log: nil, profile: profile, goals: [])
+                        }
+                    }
+
+                if debugStatOverrideEnabled, let state = gooseState {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Health")
+                                .font(GoosieTheme.captionFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                                .frame(width: 70, alignment: .leading)
+                            Slider(value: $debugHealthSlider, in: 0...1)
+                                .tint(.red)
+                                .onChange(of: debugHealthSlider) { _, val in
+                                    state.healthiness = val
+                                    state.updateMood()
+                                    GooseLiveActivityManager.shared.updateStats(state: state)
+                                }
+                            Text("\(Int(debugHealthSlider * 100))%")
+                                .font(GoosieTheme.captionFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                                .frame(width: 36, alignment: .trailing)
+                        }
+                        HStack {
+                            Text("Happiness")
+                                .font(GoosieTheme.captionFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                                .frame(width: 70, alignment: .leading)
+                            Slider(value: $debugHappinessSlider, in: 0...1)
+                                .tint(.yellow)
+                                .onChange(of: debugHappinessSlider) { _, val in
+                                    state.happiness = val
+                                    state.updateMood()
+                                    GooseLiveActivityManager.shared.updateStats(state: state)
+                                }
+                            Text("\(Int(debugHappinessSlider * 100))%")
+                                .font(GoosieTheme.captionFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                                .frame(width: 36, alignment: .trailing)
+                        }
+                    }
+                }
+
+                Divider()
+
+                Text("Notifications")
+                    .font(GoosieTheme.captionFont())
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
 
                 TextField("Goal title", text: $debugGoalTitle)
                     .font(GoosieTheme.captionFont())

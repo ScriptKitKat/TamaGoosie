@@ -18,6 +18,7 @@ final class UserProfile {
     var vacationMode: Bool
     var watchPaired: Bool
     var hasCompletedOnboarding: Bool
+    var liveActivityEnabled: Bool
 
     // MARK: - Relationships (1:1 and 1:many owned by UserProfile)
 
@@ -42,7 +43,8 @@ final class UserProfile {
         notificationsEnabled: Bool = true,
         vacationMode: Bool = false,
         watchPaired: Bool = false,
-        hasCompletedOnboarding: Bool = false
+        hasCompletedOnboarding: Bool = false,
+        liveActivityEnabled: Bool = false
     ) {
         self.id = UUID()
         self.joinDate = .now
@@ -55,5 +57,6 @@ final class UserProfile {
         self.vacationMode = vacationMode
         self.watchPaired = watchPaired
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.liveActivityEnabled = liveActivityEnabled
     }
 }
