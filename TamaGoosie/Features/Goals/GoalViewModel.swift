@@ -8,7 +8,7 @@ final class GoalViewModel {
     var editingGoal: Goal?
 
     func deleteGoal(_ goal: Goal, in context: ModelContext) {
-        NotificationManager.shared.cancelGoalReminder(goalID: goal.id)
+        GooseNotificationSystem.shared.cancelPushes(for: goal.id)
         context.delete(goal)
     }
 
