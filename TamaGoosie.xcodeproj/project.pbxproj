@@ -18,19 +18,26 @@
 		254A18A38E738D541F60B840 /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		27B01CCD612F6AA99A180327 /* GooseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117B204C5AA42A37727CDF30 /* GooseState.swift */; };
 		2967D41799C4AF2113970315 /* GooseLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */; };
-		2F3E292F809B7EE6E15DD73E /* DistractionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */; };
+		3A24313AAF0FA6F43F6C8CC7 /* ShieldConfigurationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A538E34D97F4AE7F789DD632 /* ShieldConfigurationProvider.swift */; };
 		3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */; };
+		3CA325057E189E76BD5351E9 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 86D98E002FB589C7E6874069 /* UserNotifications.framework */; };
+		3F5A1C0F9DD55FF2E4DAE47B /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		40BE637AD47A09F5CDFBBC89 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
 		45A0AB0B4C6AD741A245043E /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9F686670F7CA74D19AB1BD /* WatchApp.swift */; };
 		4641DE71A6A7AAD75B9019C2 /* TamaGoosieWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		48444724C3D21789368ECF65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		4870F5458C5868D1EA3FB4E8 /* DecayEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B4DBB787504B206C0A8B90 /* DecayEngine.swift */; };
 		4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A088FE71FAEE764B51B4E397 /* UserProfile.swift */; };
+		4D1AF7EDF505BBF57F0FBFA5 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */; };
+		4D31E6B1F1B96627FD1BEAF3 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */; };
 		52F4FC49B90EEB650F9239AA /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */; };
+		535278C8DE40469DC8AF65E9 /* DistractionReportScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE58A1E0C6C3B1107F0946 /* DistractionReportScene.swift */; };
+		539A65BB18109DDC5FB9F92D /* TamaGoosieReport.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		53DBD07D153F7C6D7307CEB6 /* OnboardingNameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */; };
 		54FD6A457C1A94A50F640084 /* OnboardingHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5B641705B00F4C590ADEA2 /* OnboardingHealthView.swift */; };
 		5AFCF8E96FB304949AEC57D9 /* GooseNotificationSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */; };
+		5DB11E1A6531567ADBF33AF4 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
 		601C0BC4F1BCD2C082CCE95C /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */; };
 		62FEE01D7B201E49F60BB363 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		6518F54CF53495BE62C6735E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D59F30ADA27A66E78D15370 /* Assets.xcassets */; };
@@ -64,9 +71,12 @@
 		A6E6155AC727190C85E539D8 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
 		A76416F6B06ECCFAA06F0439 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A9716F03CD5E2418FDD90778 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2E274D0CC79E9693624851 /* OnboardingView.swift */; };
+		AA921F9410E758F638E1F8F3 /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		AB40350E5C8FFE9BA4D73EFB /* OnboardingGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51D8BAAD0854F564AF831D9 /* OnboardingGoalsView.swift */; };
 		ABF9CF827C3739BE790208A4 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
+		ACDC9A32AB4FAC485190FD1D /* TamaGoosieShield.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B0544B8CEC98A4FB74057644 /* OnboardingNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */; };
+		B5E7D7CEA8CEB76189E6CD87 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		B6078E1137C1C8D10610DF42 /* GoalProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DF8D904D7E63E9887D5341 /* GoalProgress.swift */; };
 		BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5121AC95426E42B580756F /* SyncPayloadTests.swift */; };
 		C20ECD2853A27096D410D90A /* TamaGoosieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20817DC434F39927E7A30358 /* TamaGoosieApp.swift */; };
@@ -96,12 +106,26 @@
 			remoteGlobalIDString = CC28230EF5A0A7CF4F72B801;
 			remoteInfo = TamaGoosieDeviceActivity;
 		};
+		5415D6388501E16A7DB3E3D9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50A12A259610BBAA13A0734 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2388AC1D58B7EAEDE83FEA0;
+			remoteInfo = TamaGoosieShield;
+		};
 		58738941CDEC79CF3E43744E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B50A12A259610BBAA13A0734 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 828D1BDA4ABFF8D091834CB1;
 			remoteInfo = TamaGoosie;
+		};
+		97EC00A4398A958DFBE1D3B0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50A12A259610BBAA13A0734 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9E9022483AE9A7FF06F6AFA3;
+			remoteInfo = TamaGoosieReport;
 		};
 		BC047214C522378186FA936B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -139,6 +163,8 @@
 			files = (
 				4641DE71A6A7AAD75B9019C2 /* TamaGoosieWidgets.appex in Embed Foundation Extensions */,
 				8331597DC4B19B13BCDCE64E /* TamaGoosieDeviceActivity.appex in Embed Foundation Extensions */,
+				ACDC9A32AB4FAC485190FD1D /* TamaGoosieShield.appex in Embed Foundation Extensions */,
+				539A65BB18109DDC5FB9F92D /* TamaGoosieReport.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -153,15 +179,16 @@
 		117B204C5AA42A37727CDF30 /* GooseState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseState.swift; sourceTree = "<group>"; };
 		12045A2BE5E70B44DB753553 /* WatchStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStatsView.swift; sourceTree = "<group>"; };
 		138F5488540DB4113C8BBD66 /* DuckFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuckFaceView.swift; sourceTree = "<group>"; };
+		1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		17261D1A6061032AE35D42C6 /* TamaGoosieWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieWatch.entitlements; sourceTree = "<group>"; };
 		17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
 		185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseNotificationSystem.swift; sourceTree = "<group>"; };
+		1D41C0C8BE0C119347619889 /* ManagedSettings.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettings.framework; path = System/Library/Frameworks/ManagedSettings.framework; sourceTree = SDKROOT; };
 		1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNameView.swift; sourceTree = "<group>"; };
 		20817DC434F39927E7A30358 /* TamaGoosieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamaGoosieApp.swift; sourceTree = "<group>"; };
 		220BD24CBD965B1825F27DF4 /* FocusSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionView.swift; sourceTree = "<group>"; };
 		27B4DBB787504B206C0A8B90 /* DecayEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecayEngine.swift; sourceTree = "<group>"; };
-		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionApp.swift; sourceTree = "<group>"; };
+		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseStats.swift; sourceTree = "<group>"; };
 		2EE23080F0C585620FA2AA80 /* RewardEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardEngine.swift; sourceTree = "<group>"; };
 		2F4E8216FE4F12721B999D82 /* SyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayload.swift; sourceTree = "<group>"; };
@@ -170,8 +197,10 @@
 		3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3DDC68452E992AE126D3FFFF /* GooseComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseComplication.swift; sourceTree = "<group>"; };
 		45E891BC9D028499BD9C7AF7 /* HealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSnapshot.swift; sourceTree = "<group>"; };
+		47220455B4791AD4855D1EC8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		484BBB124DE9BDCACB850932 /* EscalationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationTracker.swift; sourceTree = "<group>"; };
 		491D1D469575C32BD7F539CC /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
+		4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5026E30DB88C09161C315739 /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
 		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		53B20907C2511E6CD56CC290 /* GooseSpeechGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSpeechGenerator.swift; sourceTree = "<group>"; };
@@ -186,10 +215,12 @@
 		623B6AAB6F88CC9EAE2E0A37 /* QuickLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLogView.swift; sourceTree = "<group>"; };
 		6A1CD1FB33CE72E4D48E8EA0 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BCA0686348168B60F7AB827 /* GoalListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalListView.swift; sourceTree = "<group>"; };
+		737D9D9590B52AD6B590C972 /* TamaGoosieShield.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieShield.entitlements; sourceTree = "<group>"; };
 		7BCCD8F66DA7FD994B77CB86 /* TamaGoosieDeviceActivity.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieDeviceActivity.entitlements; sourceTree = "<group>"; };
 		7D5B641705B00F4C590ADEA2 /* OnboardingHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthView.swift; sourceTree = "<group>"; };
 		7D7418A207CA04634F5B2B18 /* OnboardingHatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHatchView.swift; sourceTree = "<group>"; };
 		7E44C8076495B92B17387492 /* GoalEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorView.swift; sourceTree = "<group>"; };
+		86D98E002FB589C7E6874069 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseAnimations.swift; sourceTree = "<group>"; };
 		8954547141902CE3FC703601 /* DailyLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLog.swift; sourceTree = "<group>"; };
 		8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseEngineTests.swift; sourceTree = "<group>"; };
@@ -198,19 +229,24 @@
 		941895C46340D7F63726C6F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		94FB212D9417DF655E2DFA09 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
 		952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
+		96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ManagedSettingsUI.framework; path = System/Library/Frameworks/ManagedSettingsUI.framework; sourceTree = SDKROOT; };
+		96CCBF59902950CE34C3A77F /* TamaGoosieReport.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieReport.entitlements; sourceTree = "<group>"; };
 		9A2E274D0CC79E9693624851 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9B880E96B410E34DD097D19C /* GooseGlanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseGlanceView.swift; sourceTree = "<group>"; };
 		9EDDD2DC5109B05AB1A3A6BE /* Goal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal.swift; sourceTree = "<group>"; };
 		A088FE71FAEE764B51B4E397 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivity.swift; sourceTree = "<group>"; };
 		A47CB8B4BE05AD7BADEE3357 /* GoosieComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosieComponents.swift; sourceTree = "<group>"; };
+		A538E34D97F4AE7F789DD632 /* ShieldConfigurationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldConfigurationProvider.swift; sourceTree = "<group>"; };
 		ABF97FF359441B0799D8CB3D /* GoosieTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosieTheme.swift; sourceTree = "<group>"; };
 		AE9FF2C893266ED149C99A6F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B0C409473141F7BF33953458 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B51D8BAAD0854F564AF831D9 /* OnboardingGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGoalsView.swift; sourceTree = "<group>"; };
 		B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivityManager.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
 		C47A9B7B550DD4EC4C0957A5 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSession.swift; sourceTree = "<group>"; };
+		C8FE58A1E0C6C3B1107F0946 /* DistractionReportScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionReportScene.swift; sourceTree = "<group>"; };
 		CB4CACEEBC80172D8086631A /* DeviceActivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DeviceActivity.framework; path = System/Library/Frameworks/DeviceActivity.framework; sourceTree = SDKROOT; };
 		CB6F6E769C5BFA19F71041A3 /* TamaGoosieTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TamaGoosieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D16C84C36F09317E8C15BBCC /* WatchSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncService.swift; sourceTree = "<group>"; };
@@ -233,6 +269,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				40BE637AD47A09F5CDFBBC89 /* DeviceActivity.framework in Frameworks */,
+				3F5A1C0F9DD55FF2E4DAE47B /* ManagedSettings.framework in Frameworks */,
+				3CA325057E189E76BD5351E9 /* UserNotifications.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C5332450D5A1E003E720DF9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5DB11E1A6531567ADBF33AF4 /* DeviceActivity.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,12 +288,33 @@
 			files = (
 				254A18A38E738D541F60B840 /* FamilyControls.framework in Frameworks */,
 				A6E6155AC727190C85E539D8 /* DeviceActivity.framework in Frameworks */,
+				B5E7D7CEA8CEB76189E6CD87 /* ManagedSettings.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C3C605BBF94DD4DDBA58CDA9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D31E6B1F1B96627FD1BEAF3 /* ManagedSettings.framework in Frameworks */,
+				4D1AF7EDF505BBF57F0FBFA5 /* ManagedSettingsUI.framework in Frameworks */,
+				AA921F9410E758F638E1F8F3 /* FamilyControls.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		00B7E0BE06E5E97AB768201D /* Shield */ = {
+			isa = PBXGroup;
+			children = (
+				B0C409473141F7BF33953458 /* Info.plist */,
+				A538E34D97F4AE7F789DD632 /* ShieldConfigurationProvider.swift */,
+				737D9D9590B52AD6B590C972 /* TamaGoosieShield.entitlements */,
+			);
+			path = Shield;
+			sourceTree = "<group>";
+		};
 		05E4BD8E7C0524D456EFC5D6 /* Goals */ = {
 			isa = PBXGroup;
 			children = (
@@ -272,6 +339,7 @@
 		14F08DE11D47958E84F034BF = {
 			isa = PBXGroup;
 			children = (
+				2595499B7A1A459B2ACEE598 /* Extensions */,
 				CF2565352B123876F9BC1F94 /* Shared */,
 				F1243059AAF610040F5A0EBE /* TamaGoosie */,
 				F828C84A18D0E53705271CDD /* TamaGoosieDeviceActivity */,
@@ -295,6 +363,15 @@
 			path = Goose;
 			sourceTree = "<group>";
 		};
+		2595499B7A1A459B2ACEE598 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				72118DBE7763E52D56393A4F /* Report */,
+				00B7E0BE06E5E97AB768201D /* Shield */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		2B22E48DC91A055D63904ACF /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
@@ -316,6 +393,8 @@
 			children = (
 				5147463B115B9A90E0D53823 /* TamaGoosie.app */,
 				2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */,
+				4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */,
+				1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */,
 				CB6F6E769C5BFA19F71041A3 /* TamaGoosieTests.xctest */,
 				594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */,
 				E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */,
@@ -358,6 +437,16 @@
 				5C031B61EC6D7BE366BE5676 /* SettingsView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		72118DBE7763E52D56393A4F /* Report */ = {
+			isa = PBXGroup;
+			children = (
+				C8FE58A1E0C6C3B1107F0946 /* DistractionReportScene.swift */,
+				47220455B4791AD4855D1EC8 /* Info.plist */,
+				96CCBF59902950CE34C3A77F /* TamaGoosieReport.entitlements */,
+			);
+			path = Report;
 			sourceTree = "<group>";
 		};
 		86C376D77E790E9917E5D499 /* Services */ = {
@@ -431,6 +520,9 @@
 			children = (
 				CB4CACEEBC80172D8086631A /* DeviceActivity.framework */,
 				5026E30DB88C09161C315739 /* FamilyControls.framework */,
+				1D41C0C8BE0C119347619889 /* ManagedSettings.framework */,
+				96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */,
+				86D98E002FB589C7E6874069 /* UserNotifications.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -457,7 +549,6 @@
 			isa = PBXGroup;
 			children = (
 				8954547141902CE3FC703601 /* DailyLog.swift */,
-				2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */,
 				C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */,
 				9EDDD2DC5109B05AB1A3A6BE /* Goal.swift */,
 				D1DF8D904D7E63E9887D5341 /* GoalProgress.swift */,
@@ -571,6 +662,8 @@
 				A28F78F3DB943A1A64D346CD /* PBXTargetDependency */,
 				9BD0C60C0CC1B48EA52CFE05 /* PBXTargetDependency */,
 				D2C1C499BD9E09AA000F2628 /* PBXTargetDependency */,
+				6953103269C3BE297B2AD585 /* PBXTargetDependency */,
+				A8B683933618E62330083F65 /* PBXTargetDependency */,
 			);
 			name = TamaGoosie;
 			packageProductDependencies = (
@@ -578,6 +671,24 @@
 			productName = TamaGoosie;
 			productReference = 5147463B115B9A90E0D53823 /* TamaGoosie.app */;
 			productType = "com.apple.product-type.application";
+		};
+		9E9022483AE9A7FF06F6AFA3 /* TamaGoosieReport */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01547C0BCCD545F9A6C971B2 /* Build configuration list for PBXNativeTarget "TamaGoosieReport" */;
+			buildPhases = (
+				4A70886B517C266F56ACE917 /* Sources */,
+				7C5332450D5A1E003E720DF9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TamaGoosieReport;
+			packageProductDependencies = (
+			);
+			productName = TamaGoosieReport;
+			productReference = 4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		CC28230EF5A0A7CF4F72B801 /* TamaGoosieDeviceActivity */ = {
 			isa = PBXNativeTarget;
@@ -595,6 +706,24 @@
 			);
 			productName = TamaGoosieDeviceActivity;
 			productReference = 2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		D2388AC1D58B7EAEDE83FEA0 /* TamaGoosieShield */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2E5EC17278B0D12BA3B3674D /* Build configuration list for PBXNativeTarget "TamaGoosieShield" */;
+			buildPhases = (
+				8C297376F55641C4106C6CF6 /* Sources */,
+				C3C605BBF94DD4DDBA58CDA9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TamaGoosieShield;
+			packageProductDependencies = (
+			);
+			productName = TamaGoosieShield;
+			productReference = 1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		F328FFA5B3C55DB8650693FC /* TamaGoosieWatch */ = {
@@ -632,10 +761,10 @@
 					828D1BDA4ABFF8D091834CB1 = {
 						DevelopmentTeam = "";
 					};
-					CC28230EF5A0A7CF4F72B801 = {
+					9E9022483AE9A7FF06F6AFA3 = {
 						DevelopmentTeam = "";
 					};
-					F328FFA5B3C55DB8650693FC = {
+					D2388AC1D58B7EAEDE83FEA0 = {
 						DevelopmentTeam = "";
 					};
 				};
@@ -656,6 +785,8 @@
 			targets = (
 				828D1BDA4ABFF8D091834CB1 /* TamaGoosie */,
 				CC28230EF5A0A7CF4F72B801 /* TamaGoosieDeviceActivity */,
+				9E9022483AE9A7FF06F6AFA3 /* TamaGoosieReport */,
+				D2388AC1D58B7EAEDE83FEA0 /* TamaGoosieShield */,
 				2967A832F6E06D9198E4D9D3 /* TamaGoosieTests */,
 				F328FFA5B3C55DB8650693FC /* TamaGoosieWatch */,
 				3212585604C1E2524B96F439 /* TamaGoosieWidgets */,
@@ -698,6 +829,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		4A70886B517C266F56ACE917 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				535278C8DE40469DC8AF65E9 /* DistractionReportScene.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4FEFD46A9BDAECF31479C58C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -714,7 +853,6 @@
 				1344CABD800068004099CC07 /* ContentView.swift in Sources */,
 				75DD0AC472950585037683BF /* DailyLog.swift in Sources */,
 				4870F5458C5868D1EA3FB4E8 /* DecayEngine.swift in Sources */,
-				2F3E292F809B7EE6E15DD73E /* DistractionApp.swift in Sources */,
 				50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */,
 				CF2A2DA87AA6A0F57E753A5E /* DistractionOverlay.swift in Sources */,
 				F5F423CF6403344DEF0857A4 /* EscalationTracker.swift in Sources */,
@@ -763,6 +901,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8C297376F55641C4106C6CF6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3A24313AAF0FA6F43F6C8CC7 /* ShieldConfigurationProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A5925855D5940DAA6C69947D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -790,6 +936,11 @@
 			target = 828D1BDA4ABFF8D091834CB1 /* TamaGoosie */;
 			targetProxy = 58738941CDEC79CF3E43744E /* PBXContainerItemProxy */;
 		};
+		6953103269C3BE297B2AD585 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2388AC1D58B7EAEDE83FEA0 /* TamaGoosieShield */;
+			targetProxy = 5415D6388501E16A7DB3E3D9 /* PBXContainerItemProxy */;
+		};
 		9BD0C60C0CC1B48EA52CFE05 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F328FFA5B3C55DB8650693FC /* TamaGoosieWatch */;
@@ -799,6 +950,11 @@
 			isa = PBXTargetDependency;
 			target = 3212585604C1E2524B96F439 /* TamaGoosieWidgets */;
 			targetProxy = F58D691EDA08BF73434B9F7B /* PBXContainerItemProxy */;
+		};
+		A8B683933618E62330083F65 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9E9022483AE9A7FF06F6AFA3 /* TamaGoosieReport */;
+			targetProxy = 97EC00A4398A958DFBE1D3B0 /* PBXContainerItemProxy */;
 		};
 		D2C1C499BD9E09AA000F2628 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -865,6 +1021,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -873,10 +1030,27 @@
 			};
 			name = Debug;
 		};
+		2D8D0AD2BFD33EB184D3A72C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Extensions/Shield/TamaGoosieShield.entitlements;
+				INFOPLIST_FILE = Extensions/Shield/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.shield;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		40EA7C22FCA1F49A4BA3BEF5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieDeviceActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -901,6 +1075,22 @@
 				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Release;
+		};
+		6399A492DA383A12762DEB50 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Extensions/Report/TamaGoosieReport.entitlements;
+				INFOPLIST_FILE = Extensions/Report/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.report;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		84C3227E10E7D799138C5F41 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -973,6 +1163,38 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		C7BC4D4329FAA71DC4626E48 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Extensions/Report/TamaGoosieReport.entitlements;
+				INFOPLIST_FILE = Extensions/Report/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.report;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D62DA0F651EE73ECD529906D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Extensions/Shield/TamaGoosieShield.entitlements;
+				INFOPLIST_FILE = Extensions/Shield/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.shield;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1092,11 +1314,29 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		01547C0BCCD545F9A6C971B2 /* Build configuration list for PBXNativeTarget "TamaGoosieReport" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6399A492DA383A12762DEB50 /* Debug */,
+				C7BC4D4329FAA71DC4626E48 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		0D81DAAEA8035567DDE74FA0 /* Build configuration list for PBXNativeTarget "TamaGoosieDeviceActivity" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				40EA7C22FCA1F49A4BA3BEF5 /* Debug */,
 				EAC96F68E163A4C5B342F71B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2E5EC17278B0D12BA3B3674D /* Build configuration list for PBXNativeTarget "TamaGoosieShield" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D8D0AD2BFD33EB184D3A72C /* Debug */,
+				D62DA0F651EE73ECD529906D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

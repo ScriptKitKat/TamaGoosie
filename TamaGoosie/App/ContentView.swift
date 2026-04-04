@@ -82,19 +82,26 @@ struct ContentView: View {
 
     private func processScreenTimeEvents() {
         guard let state = gooseStates.first, !state.isDead else { return }
-        let events = ScreenTimeManager.shared.consumePendingThresholdEvents()
-        guard events > 0 else { return }
+        let approxMinutes = ScreenTimeManager.shared.approxMinutesToday
+        guard approxMinutes > 0 else { return }
 
-        let minutesAdded = events * GoosieConstants.screenTimeThresholdMinutes
         let log = fetchOrCreateTodayLog()
-        log.distractionMinutes += minutesAdded
+        log.distractionMinutes = max(log.distractionMinutes, approxMinutes)
         GooseEngine.shared.updateDistractMinutes(log.distractionMinutes)
 
-        let penalty = RewardEngine.penaltyForDistractionOpen()
-        for _ in 0..<events {
-            RewardEngine.applyDelta(penalty, to: state)
-        }
+        let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID)!
+        let lastPenalized = defaults.integer(forKey: GoosieConstants.screenTimeLastPenaltyMinutesKey)
+        guard approxMinutes > lastPenalized else { return }
+
+        let deltaMinutes = approxMinutes - lastPenalized
+        let penaltyMultiplier = Double(deltaMinutes) / 30.0
+        let penalty = RewardEngine.StatDelta(
+            happiness: -GoosieConstants.distractionOpenPenalty * penaltyMultiplier
+        )
+        RewardEngine.applyDelta(penalty, to: state)
         GooseEngine.shared.update(state: state)
+
+        defaults.set(approxMinutes, forKey: GoosieConstants.screenTimeLastPenaltyMinutesKey)
     }
 
     private func fetchOrCreateTodayLog() -> DailyLog {

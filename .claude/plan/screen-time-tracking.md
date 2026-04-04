@@ -25,6 +25,7 @@ stacked threshold events, app shielding, and rendered usage reports.
 4. **Limit editor UI** — user-configurable threshold slider in DistractionConfigView
 5. **Notifications from extension** — Harold warns when thresholds are crossed
 6. **App Group key alignment** — use `distractionApproxMinutes` / `distractionHitsToday` keys
+7. **Delete `DistractionApp` model** — dead model after Screen Time replaces manual tracking (no users yet, no migration concern)
 
 ---
 
@@ -62,9 +63,20 @@ public static let screenTimeThresholdEventsKey = "distractionHitsToday"
 public static let screenTimeApproxMinutesKey = "distractionApproxMinutes"
 public static let screenTimeLastHitKey = "lastDistractionHit"
 public static let screenTimeLimitKey = "distractionLimitMinutes"
+public static let screenTimeLastPenaltyMinutesKey = "lastPenaltyApproxMinutes"
 public static let screenTimeDefaultLimitMinutes: Int = 30
 public static let screenTimeThresholds: [Int] = [15, 30, 45, 60]
 ```
+
+### Step 1.5: Delete DistractionApp Model
+
+**Delete file:** `TamaGoosie/Core/Models/DistractionApp.swift`
+
+No users yet → no SwiftData migration concern. Remove all references:
+- Remove `DistractionApp` from any `@Query` or `FetchDescriptor` usage
+- Remove `var distractionApps: [DistractionApp]?` relationship from `UserProfile` if present
+- Remove any `import` or usage in `DistractionConfigView.swift` (replaced entirely by FamilyActivityPicker)
+- Verify no other files reference the model (`grep -r DistractionApp`)
 
 ### Step 2: Rewrite ScreenTimeManager with Stacked Thresholds
 
@@ -163,6 +175,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         store.shield.applicationCategories = nil
         defaults.set(0, forKey: "distractionHitsToday")
         defaults.set(0, forKey: "distractionApproxMinutes")
+        defaults.set(0, forKey: "lastPenaltyApproxMinutes")
     }
 
     private func sendNotification(approxMinutes: Int) {
@@ -189,7 +202,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 **Extension point:** `com.apple.deviceactivity.shield-configuration`
 
 This controls the UI shown when a shielded app is opened. Very limited API —
-title, subtitle, icon, two buttons, colors. No arbitrary SwiftUI.
+title, subtitle, icon, buttons, colors. No arbitrary SwiftUI.
+
+**No bypass button.** The `secondaryButtonLabel` is optional in `ShieldConfiguration` —
+omitting it means the user can ONLY tap "Back to Harold" with no way to bypass.
+Stronger product statement for a hackathon demo. Can add bypass back later if
+user testing shows people hate being fully blocked.
 
 **Files:**
 - `Extensions/Shield/ShieldConfigurationProvider.swift`
@@ -215,11 +233,8 @@ class ShieldConfigurationProvider: ShieldConfigurationDataSource {
                 color: UIColor(red: 0.45, green: 0.45, blue: 0.45, alpha: 1.0)
             ),
             primaryButtonLabel: .init(text: "Back to Harold", color: .white),
-            primaryButtonBackgroundColor: UIColor(red: 0.72, green: 0.91, blue: 0.82, alpha: 1.0), // mintBackground
-            secondaryButtonLabel: .init(
-                text: "Use anyway (1 min)",
-                color: UIColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0)
-            )
+            primaryButtonBackgroundColor: UIColor(red: 0.72, green: 0.91, blue: 0.82, alpha: 1.0) // mintBackground
+            // secondaryButtonLabel intentionally omitted — no bypass
         )
     }
 }
@@ -374,7 +389,13 @@ DeviceActivityReport(.init(rawValue: "distraction_summary"))
 **File:** `TamaGoosie/App/ContentView.swift`
 
 Change `processScreenTimeEvents()` to read `distractionApproxMinutes`
-(the highest threshold reached) instead of counting threshold events:
+(the highest threshold reached) instead of counting threshold events.
+
+**Anti-double-dipping:** Track `lastPenaltyApproxMinutes` in App Group UserDefaults.
+The penalty is only applied for the *delta* between the current threshold bracket
+and the last bracket we already penalized. If the user opens the app 5 times at
+the 30-minute bracket, the penalty fires only once (on the first foreground after
+crossing 30). The next penalty fires only when a *new* bracket is crossed (e.g., 45).
 
 ```swift
 private func processScreenTimeEvents() {
@@ -383,20 +404,30 @@ private func processScreenTimeEvents() {
     guard approxMinutes > 0 else { return }
 
     let log = fetchOrCreateTodayLog()
-    // Only update if new data is higher (thresholds only go up within a day)
-    guard approxMinutes > log.distractionMinutes else { return }
-    log.distractionMinutes = approxMinutes
-    GooseEngine.shared.updateDistractMinutes(approxMinutes)
+    log.distractionMinutes = max(log.distractionMinutes, approxMinutes)
+    GooseEngine.shared.updateDistractMinutes(log.distractionMinutes)
 
-    // Apply escalating penalty based on approximate bracket
-    let penaltyMultiplier = Double(approxMinutes) / 30.0
+    // Only penalize for NEW threshold brackets not yet penalized
+    let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID)!
+    let lastPenalized = defaults.integer(forKey: GoosieConstants.screenTimeLastPenaltyMinutesKey)
+    guard approxMinutes > lastPenalized else { return }
+
+    // Penalty scales with the delta since last penalized bracket
+    let deltaMinutes = approxMinutes - lastPenalized
+    let penaltyMultiplier = Double(deltaMinutes) / 30.0
     let penalty = RewardEngine.StatDelta(
         happiness: -GoosieConstants.distractionOpenPenalty * penaltyMultiplier
     )
     RewardEngine.applyDelta(penalty, to: state)
     GooseEngine.shared.update(state: state)
+
+    // Record that we've penalized up to this bracket
+    defaults.set(approxMinutes, forKey: GoosieConstants.screenTimeLastPenaltyMinutesKey)
 }
 ```
+
+The monitor extension's `intervalDidEnd` must also reset `lastPenaltyApproxMinutes`
+at midnight alongside the other counters.
 
 ### Step 8: Update project.yml — Full Extension Manifest
 
@@ -450,7 +481,9 @@ schemes:
 
 | File | Operation | Description |
 |------|-----------|-------------|
-| `Shared/Constants.swift` | Modify | Replace 3 screen time keys with 7 (thresholds, limits, keys) |
+| `Shared/Constants.swift` | Modify | Replace 3 screen time keys with 8 (thresholds, limits, penalty tracking) |
+| `TamaGoosie/Core/Models/DistractionApp.swift` | Delete | Dead model replaced by FamilyActivityPicker; no users → no migration |
+| `TamaGoosie/Core/Models/UserProfile.swift` | Modify | Remove `distractionApps` relationship if present |
 | `TamaGoosie/Core/Services/ScreenTimeManager.swift` | Rewrite | Stacked 4-threshold monitoring, limit management, approxMinutes |
 | `TamaGoosieDeviceActivity/DeviceActivityMonitorExtension.swift` | Rewrite | Parse event names, shield apps at limit, send Harold notifications |
 | `Extensions/Shield/ShieldConfigurationProvider.swift` | Create | Harold-themed shield UI when blocked app is opened |
@@ -473,10 +506,11 @@ schemes:
 | DeviceActivityMonitor extension has 6MB memory limit | Keep extension code minimal — no SwiftData, no heavy imports |
 | `FamilyActivitySelection` encoding may break across iOS versions | Use `PropertyListEncoder` (Apple's recommended approach), not JSONEncoder |
 | Stacked thresholds only give 15-min granularity | Sufficient for happiness penalty; could add 5-min increments later |
-| Shield "Use anyway" button bypasses the block | This is Apple's design — cannot be removed; the 1-min cooldown is mandatory |
+| Users may want a bypass option on the shield | `secondaryButtonLabel` can be re-added later; omitted for v1 to be a stronger demo |
 | `DeviceActivityReport.totalActivityDuration` may be empty if no usage | Show placeholder text "No data yet" when duration is zero |
 | Notification from extension may not fire if notification permission not granted | Request notification permission during onboarding (already done via NotificationManager) |
-| Existing `DistractionApp` SwiftData model becomes unused | Keep model in schema to avoid SwiftData migration issues; deprecate in code |
+| Removing `DistractionApp` model changes SwiftData schema | No users yet — no migration needed; delete cleanly in Step 1.5 |
+| Penalty double-dipping on repeated foreground | `lastPenaltyApproxMinutes` in App Group tracks last penalized bracket; reset at midnight |
 
 ---
 
@@ -504,7 +538,8 @@ Main App (TamaGoosie)
     ├── distractionLimitMinutes (Int, user-configured)
     ├── distractionHitsToday (Int, incremented by monitor)
     ├── distractionApproxMinutes (Int, highest threshold hit today)
-    └── lastDistractionHit (TimeInterval, timestamp)
+    ├── lastDistractionHit (TimeInterval, timestamp)
+    └── lastPenaltyApproxMinutes (Int, last bracket penalized — prevents double-dipping)
 ```
 
 ---

@@ -1,12 +1,14 @@
 import SwiftUI
 import SwiftData
 import FamilyControls
+import DeviceActivity
 
 struct DistractionConfigView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var screenTimeManager = ScreenTimeManager.shared
     @State private var showPicker = false
     @State private var draftSelection = FamilyActivitySelection()
+    @State private var limitMinutes: Int = ScreenTimeManager.shared.userLimitMinutes
 
     var body: some View {
         ZStack {
@@ -35,6 +37,7 @@ struct DistractionConfigView: View {
         }
         .onAppear {
             draftSelection = screenTimeManager.selection
+            limitMinutes = screenTimeManager.userLimitMinutes
         }
         .task {
             if screenTimeManager.authorizationStatus == .notDetermined {
@@ -65,29 +68,7 @@ struct DistractionConfigView: View {
 
     private var authorizedContent: some View {
         VStack(spacing: 12) {
-            GoosieCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                        Text("Screen Time Connected")
-                            .font(GoosieTheme.bodyFont(15))
-                            .foregroundStyle(GoosieTheme.charcoalOutline)
-                    }
-
-                    if screenTimeManager.hasSelection {
-                        let appCount = screenTimeManager.selection.applicationTokens.count
-                        let catCount = screenTimeManager.selection.categoryTokens.count
-                        Text(selectionSummary(apps: appCount, categories: catCount))
-                            .font(GoosieTheme.captionFont(12))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                    } else {
-                        Text("No apps selected yet — tap below to choose.")
-                            .font(GoosieTheme.captionFont(12))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                    }
-                }
-            }
+            statusCard
 
             PillButton(
                 title: screenTimeManager.hasSelection ? "Change Selected Apps" : "Choose Apps to Track",
@@ -99,7 +80,78 @@ struct DistractionConfigView: View {
             }
 
             if screenTimeManager.hasSelection {
-                thresholdInfoCard
+                limitCard
+                usageCard
+                DeviceActivityReport(.init(rawValue: "distraction_summary"))
+                    .frame(height: 120)
+            }
+        }
+    }
+
+    private var statusCard: some View {
+        GoosieCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("Screen Time Connected")
+                        .font(GoosieTheme.bodyFont(15))
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
+                }
+
+                if screenTimeManager.hasSelection {
+                    let appCount = screenTimeManager.selection.applicationTokens.count
+                    let catCount = screenTimeManager.selection.categoryTokens.count
+                    Text(selectionSummary(apps: appCount, categories: catCount))
+                        .font(GoosieTheme.captionFont(12))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                } else {
+                    Text("No apps selected yet — tap below to choose.")
+                        .font(GoosieTheme.captionFont(12))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                }
+            }
+        }
+    }
+
+    private var limitCard: some View {
+        GoosieCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Daily Limit")
+                    .font(GoosieTheme.bodyFont(15))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                Stepper(
+                    "\(limitMinutes) minutes",
+                    value: $limitMinutes,
+                    in: 15...120,
+                    step: 15
+                )
+                .onChange(of: limitMinutes) { _, newVal in
+                    screenTimeManager.userLimitMinutes = newVal
+                }
+                Text("Apps will be blocked after this limit")
+                    .font(GoosieTheme.captionFont(12))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+            }
+        }
+    }
+
+    private var usageCard: some View {
+        GoosieCard {
+            HStack(spacing: 10) {
+                Image(systemName: "clock.fill")
+                    .foregroundStyle(GoosieTheme.coralAccent)
+                    .font(.system(size: 14))
+                let approx = screenTimeManager.approxMinutesToday
+                if approx > 0 {
+                    Text("~\(approx) min on distracting apps today")
+                        .font(GoosieTheme.captionFont(12))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                } else {
+                    Text("No distraction time recorded today")
+                        .font(GoosieTheme.captionFont(12))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                }
             }
         }
     }
@@ -129,19 +181,6 @@ struct DistractionConfigView: View {
                 color: GoosieTheme.coralAccent
             ) {
                 Task { await screenTimeManager.requestAuthorization() }
-            }
-        }
-    }
-
-    private var thresholdInfoCard: some View {
-        GoosieCard {
-            HStack(spacing: 10) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
-                    .font(.system(size: 14))
-                Text("Every \(GoosieConstants.screenTimeThresholdMinutes) minutes on tracked apps reduces your goose's happiness.")
-                    .font(GoosieTheme.captionFont(12))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
             }
         }
     }

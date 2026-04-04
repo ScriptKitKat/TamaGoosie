@@ -100,8 +100,13 @@ public enum GoosieConstants {
 
     // MARK: - Screen Time
     public static let screenTimeSelectionKey = "screenTimeSelection"
-    public static let screenTimeThresholdEventsKey = "screenTimeThresholdEvents"
-    public static let screenTimeThresholdMinutes: Int = 30
+    public static let screenTimeThresholdEventsKey = "distractionHitsToday"
+    public static let screenTimeApproxMinutesKey = "distractionApproxMinutes"
+    public static let screenTimeLastHitKey = "lastDistractionHit"
+    public static let screenTimeLimitKey = "distractionLimitMinutes"
+    public static let screenTimeLastPenaltyMinutesKey = "lastPenaltyApproxMinutes"
+    public static let screenTimeDefaultLimitMinutes: Int = 30
+    public static let screenTimeThresholds: [Int] = [15, 30, 45, 60]
 
     // MARK: - Live Activity
     public static let liveActivityMaxHours: Double = 8
