@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var morningReminderTime = Calendar.current.date(from: DateComponents(hour: 8, minute: 0))!
     @State private var decayWarningsEnabled = true
     @State private var goalRemindersEnabled = true
+    @State private var focusModeEnabled = false
     @State private var showResetConfirmation = false
     @State private var debugGoalTitle = "Read for 30 minutes"
     @State private var debugPushLevel = 1
@@ -34,6 +35,26 @@ struct SettingsView: View {
                         .font(GoosieTheme.titleFont(28))
                         .foregroundStyle(GoosieTheme.charcoalOutline)
                         .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // Account
+                    if let username = ConvexManager.shared.currentUsername {
+                        GoosieCard {
+                            HStack {
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(GoosieTheme.coralAccent)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("@\(username)")
+                                        .font(GoosieTheme.bodyFont())
+                                        .foregroundStyle(GoosieTheme.charcoalOutline)
+                                    Text("Your TamaGoosie account")
+                                        .font(GoosieTheme.captionFont(11))
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
 
                     // Goose Name
                     GoosieCard {
@@ -82,6 +103,35 @@ struct SettingsView: View {
                             Toggle("Goal Reminders", isOn: $goalRemindersEnabled)
                                 .font(GoosieTheme.captionFont())
                                 .tint(GoosieTheme.mintBackground)
+                        }
+                    }
+
+                    // Focus Mode (Dynamic Island)
+                    GoosieCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Focus Mode", systemImage: "timer")
+                                .font(GoosieTheme.bodyFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                            Text("Show a focus timer in the Dynamic Island while you concentrate.")
+                                .font(GoosieTheme.captionFont(11))
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+
+                            Toggle("Enable Focus Dynamic Island", isOn: $focusModeEnabled)
+                                .font(GoosieTheme.captionFont())
+                                .tint(GoosieTheme.mintBackground)
+                                .onChange(of: focusModeEnabled) { _, enabled in
+                                    if enabled {
+                                        guard let state = gooseState else { return }
+                                        let manager = GooseLiveActivityManager.shared
+                                        if !manager.isActive {
+                                            manager.startPetActivity(gooseName: state.name, state: state)
+                                        }
+                                        manager.startFocusMode(state: state, minutesRemaining: GoosieConstants.focusDefaultMinutes)
+                                    } else {
+                                        GooseLiveActivityManager.shared.endActivity()
+                                    }
+                                }
                         }
                     }
 
