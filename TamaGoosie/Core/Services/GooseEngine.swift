@@ -61,6 +61,36 @@ final class GooseEngine {
         }
     }
 
+    // MARK: - Goal Uncompletion
+
+    func uncompleteGoal(_ goal: Goal, state: GooseState) {
+        guard !state.isDead, goal.isCompleted, goal.type != "deadline" else { return }
+
+        goal.currentCount = 0
+        goal.isCompleted  = false
+        goal.completedAt  = nil
+        goal.currentStreak = max(0, goal.currentStreak - 1)
+
+        // Refund the exact reward that was awarded (same formula as completeGoal)
+        let xpAwarded = Int(Double(GoosieConstants.goalCompletionXP)
+            * RewardEngine.streakMultiplier(for: state.streakDays))
+        let refund = RewardEngine.StatDelta(
+            happiness: -(GoosieConstants.goalCompletionHappinessBase * goal.happinessWeight),
+            xp: -xpAwarded
+        )
+        RewardEngine.applyDelta(refund, to: state)
+
+        // Handle level-down if XP went negative
+        while state.xp < 0 && state.level > 1 {
+            state.level -= 1
+            state.xp += GoosieConstants.xpForLevel(state.level)
+            state.updatePhase()
+        }
+        state.xp = max(0, state.xp)
+
+        saveStatsToAppGroup(state.toSyncPayload())
+    }
+
     // MARK: - Health Data Processing
 
     func processHealthData(steps: Int, exerciseMinutes: Double, sleepHours: Double, state: GooseState) {

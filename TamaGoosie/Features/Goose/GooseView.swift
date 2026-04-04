@@ -44,6 +44,11 @@ struct GooseView: View {
         .onDisappear {
             viewModel.onDisappear()
         }
+        .onChange(of: gooseStates) { _, newStates in
+            if let state = newStates.first {
+                viewModel.updateState(state)
+            }
+        }
         .sheet(isPresented: $viewModel.showDeathScreen) {
             DeathScreen(viewModel: viewModel)
         }

@@ -51,6 +51,14 @@ final class GooseViewModel {
 
     // MARK: - Lifecycle
 
+    /// Called by GooseView.onChange(of: gooseStates) to keep the viewModel
+    /// in sync with the persistent GooseState (avoids stale-reference issues
+    /// when @Query delivers the real state after onAppear fires).
+    func updateState(_ state: GooseState) {
+        gooseState = state
+        if state.isDead && !showDeathScreen { showDeathScreen = true }
+    }
+
     func onAppear(state: GooseState) {
         gooseState = state
         engine.update(state: state)
