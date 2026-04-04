@@ -33,6 +33,7 @@ targets:
       - sdk: FamilyControls.framework
       - sdk: DeviceActivity.framework
       - sdk: ManagedSettings.framework
+      - sdk: FoundationModels.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app

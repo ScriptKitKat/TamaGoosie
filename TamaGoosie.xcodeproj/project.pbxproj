@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		62D9DEF652CA44E68C9A1B76 /* GooseChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61E54AAB56349CCB9EEB3DB /* GooseChatService.swift */; };
+		19F1BFE5A8E949EDBC85B1E8 /* GooseChatPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D542EEA3FEC54FABB51DA769 /* GooseChatPanel.swift */; };
+		236CB8825A634E79A84076B1 /* FoundationModels.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F845F81C7A8B4DB69AFB24C8 /* FoundationModels.framework */; };
 		017959C9F45D8E0D4A01C5A6 /* GooseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B47951E494EC28E765569B2 /* GooseView.swift */; };
 		02EEA7EC9EBFB369FF402410 /* GooseAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */; };
 		045511F37A331C29DAD6B7F5 /* GoalListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCA0686348168B60F7AB827 /* GoalListView.swift */; };
@@ -170,6 +173,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C61E54AAB56349CCB9EEB3DB /* GooseChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseChatService.swift; sourceTree = "<group>"; };
+		D542EEA3FEC54FABB51DA769 /* GooseChatPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseChatPanel.swift; sourceTree = "<group>"; };
+		F845F81C7A8B4DB69AFB24C8 /* FoundationModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FoundationModels.framework; path = System/Library/Frameworks/FoundationModels.framework; sourceTree = SDKROOT; };
 		00ADC6B707A77B7DFDAA72BA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosePhase.swift; sourceTree = "<group>"; };
 		0D59F30ADA27A66E78D15370 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -285,6 +291,7 @@
 				254A18A38E738D541F60B840 /* FamilyControls.framework in Frameworks */,
 				A6E6155AC727190C85E539D8 /* DeviceActivity.framework in Frameworks */,
 				B5E7D7CEA8CEB76189E6CD87 /* ManagedSettings.framework in Frameworks */,
+				236CB8825A634E79A84076B1 /* FoundationModels.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,6 +358,8 @@
 			isa = PBXGroup;
 			children = (
 				86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */,
+				C61E54AAB56349CCB9EEB3DB /* GooseChatService.swift */,
+				D542EEA3FEC54FABB51DA769 /* GooseChatPanel.swift */,
 				A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */,
 				B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */,
 				5B47951E494EC28E765569B2 /* GooseView.swift */,
@@ -517,6 +526,7 @@
 				1D41C0C8BE0C119347619889 /* ManagedSettings.framework */,
 				96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */,
 				86D98E002FB589C7E6874069 /* UserNotifications.framework */,
+				F845F81C7A8B4DB69AFB24C8 /* FoundationModels.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -863,6 +873,8 @@
 				B6078E1137C1C8D10610DF42 /* GoalProgress.swift in Sources */,
 				797E5DDDA429D96A2F55FFA8 /* GoalViewModel.swift in Sources */,
 				02EEA7EC9EBFB369FF402410 /* GooseAnimations.swift in Sources */,
+				62D9DEF652CA44E68C9A1B76 /* GooseChatService.swift in Sources */,
+				19F1BFE5A8E949EDBC85B1E8 /* GooseChatPanel.swift in Sources */,
 				E7FF5F4CB6202B053210D30F /* GooseEngine.swift in Sources */,
 				9C4A5FC197A58EF9EC6D0790 /* GooseLiveActivity.swift in Sources */,
 				2967D41799C4AF2113970315 /* GooseLiveActivityManager.swift in Sources */,

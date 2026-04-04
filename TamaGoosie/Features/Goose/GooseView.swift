@@ -9,6 +9,8 @@ struct GooseView: View {
     @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
 
     @State private var viewModel = GooseViewModel()
+    @State private var chatService = GooseChatService()
+    @State private var goalViewModel = GoalViewModel()
 
     private var gooseState: GooseState {
         gooseStates.first ?? GooseState()
@@ -27,30 +29,41 @@ struct GooseView: View {
             GoosieTheme.mintBackground
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 20) {
-                    header
-
-                    GooseCharacterView(
-                        mood: viewModel.mood,
-                        showReaction: viewModel.currentReaction
-                    )
-                    .frame(height: 220)
-
-                    moodLabel
-                    statBars
-                    quickActions
-
-                    Spacer(minLength: 40)
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        header
+                        GooseCharacterView(
+                            mood: viewModel.mood,
+                            showReaction: viewModel.currentReaction
+                        )
+                        .frame(height: 220)
+                        moodLabel
+                        statBars
+                        Spacer(minLength: 16)
+                    }
+                    .padding(.horizontal, GoosieTheme.padding)
+                    .padding(.bottom, 12)
                 }
+
+                GooseChatPanel(service: chatService) { draft in
+                    goalViewModel.pendingDraft = draft
+                    goalViewModel.editingGoal = nil
+                    goalViewModel.showEditor = true
+                }
+                .frame(height: 248)
                 .padding(.horizontal, GoosieTheme.padding)
-                .padding(.bottom, 30)
+                .padding(.bottom, 8)
             }
+        }
+        .sheet(isPresented: $goalViewModel.showEditor) {
+            GoalEditorView(existingGoal: goalViewModel.editingGoal, prefill: goalViewModel.pendingDraft)
         }
         .onAppear {
             ensureGooseExists()
             let log = ensureTodayLogExists()
             viewModel.onAppear(state: gooseState, log: log, profile: profile, goals: activeGoals)
+            syncChatService()
         }
         .onDisappear {
             viewModel.onDisappear()
@@ -58,6 +71,7 @@ struct GooseView: View {
         .onChange(of: gooseStates) { _, newStates in
             if let state = newStates.first {
                 viewModel.updateState(state)
+                syncChatService()
             }
         }
         .onChange(of: allDailyLogs) { _, _ in
@@ -65,6 +79,7 @@ struct GooseView: View {
         }
         .onChange(of: allGoals) { _, _ in
             viewModel.updateContext(log: todayLog, profile: profile, goals: activeGoals)
+            syncChatService()
         }
     }
 
@@ -108,23 +123,17 @@ struct GooseView: View {
         }
     }
 
-    // MARK: - Quick Actions
-
-    private var quickActions: some View {
-        HStack(spacing: 16) {
-            CircleActionButton(icon: "checkmark.circle", label: "Goals", color: GoosieTheme.happinessYellow) {
-                if let goal = activeGoals.first(where: { !$0.isCompleted }) {
-                    viewModel.completeGoal(goal)
-                }
-            }
-
-            CircleActionButton(icon: "figure.run", label: "Exercise", color: GoosieTheme.healthRed) {
-                // Navigate to health tab
-            }
-        }
-    }
-
     // MARK: - Helpers
+
+    private func syncChatService() {
+        chatService.configure(
+            name: viewModel.gooseName,
+            health: Int(viewModel.healthinessPercent),
+            happiness: Int(viewModel.happinessPercent),
+            streak: viewModel.streakDays,
+            goals: activeGoals
+        )
+    }
 
     private func ensureGooseExists() {
         if gooseStates.isEmpty {
