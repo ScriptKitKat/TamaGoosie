@@ -18,7 +18,8 @@ final class GoalViewModel {
         // (title, category, frequency, happinessWeight, targetCount, sortOrder)
         let alwaysGoals: [(String, GoalCategory, GoalFrequency, Double, Int, Int)] = [
             ("Daily walk (10,000 steps)", .health,     .daily, 1.2, 10_000, 0),
-            ("Limit screen time to 2 hrs", .screentime, .daily, 1.0, 120,   1),
+            // Screen time tracking disabled — will re-enable later
+            // ("Limit screen time to 2 hrs", .screentime, .daily, 1.0, 120,   1),
         ]
         let watchGoals: [(String, GoalCategory, GoalFrequency, Double, Int, Int)] = [
             ("8 hours of sleep", .health, .daily, 1.2, 8, 2),

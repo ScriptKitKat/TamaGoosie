@@ -29,20 +29,6 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "CC28230EF5A0A7CF4F72B801"
-               BuildableName = "TamaGoosieDeviceActivity.appex"
-               BlueprintName = "TamaGoosieDeviceActivity"
-               ReferencedContainer = "container:TamaGoosie.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "9E9022483AE9A7FF06F6AFA3"
                BuildableName = "TamaGoosieReport.appex"
                BlueprintName = "TamaGoosieReport"

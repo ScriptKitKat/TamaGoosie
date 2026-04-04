@@ -8,22 +8,44 @@ struct ContentView: View {
     @Query private var goals: [Goal]
     @Query private var gooseStates: [GooseState]
     @EnvironmentObject private var notificationDelegate: AppNotificationDelegate
+    @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
+    @StateObject private var watchSync = WatchSyncService.shared
     @State private var selectedTab = 0
     @State private var showOnboarding = false
+    /// Tracks whether we've applied one-time health rewards this session
+    @State private var healthProcessedThisSession = false
 
     var body: some View {
         mainTabView
             .onAppear {
                 if profiles.first?.hasCompletedOnboarding != true {
                     showOnboarding = true
+                } else {
+                    HealthKitManager.shared.enableBackgroundDelivery()
                 }
-                WatchSyncService.shared.activate()
-                HealthKitManager.shared.enableBackgroundDelivery()
                 scheduleNotifications()
+            }
+            .task {
+                guard profiles.first?.hasCompletedOnboarding == true else { return }
+                await syncHealthData()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
-                    processScreenTimeEvents()
+                    guard profiles.first?.hasCompletedOnboarding == true else { return }
+                    Task { await syncHealthData() }
+                }
+            }
+            .onChange(of: showOnboarding) { _, isShowing in
+                // After onboarding completes, kick off health sync
+                if !isShowing {
+                    HealthKitManager.shared.enableBackgroundDelivery()
+                    Task { await syncHealthData() }
+                }
+            }
+            .onChange(of: watchSync.isPaired) { _, paired in
+                // Auto-sync watch pairing state to UserProfile
+                if let profile = profiles.first {
+                    profile.watchPaired = paired
                 }
             }
             .onChange(of: goals.count) { _, _ in
@@ -78,15 +100,48 @@ struct ContentView: View {
         .tint(GoosieTheme.coralAccent)
     }
 
-    // MARK: - Screen Time Event Processing
+    // MARK: - HealthKit Auto-Sync
 
-    private func processScreenTimeEvents() {
+    private func syncHealthData() async {
+        let hk = HealthKitManager.shared
+        if !hk.isAuthorized {
+            try? await hk.requestAuthorization()
+        }
+        guard hk.isAuthorized else { return }
+
         guard let state = gooseStates.first else { return }
-        let events = ScreenTimeManager.shared.consumePendingThresholdEvents()
-        guard events > 0 else { return }
+        guard let snapshot = try? await hk.fetchTodayStats() else { return }
 
         let log = fetchOrCreateTodayLog()
-        GooseEngine.shared.update(state: state, log: log, profile: profiles.first, goals: goals)
+
+        if !healthProcessedThisSession {
+            // First fetch this session: update cache + DailyLog + recompute stats
+            GooseEngine.shared.processHealthData(
+                steps: snapshot.steps,
+                exerciseMinutes: snapshot.exerciseMinutes,
+                sleepHours: snapshot.sleepHours,
+                activeCalories: snapshot.activeCalories,
+                standHours: snapshot.standHours,
+                state: state,
+                dailyLog: log,
+                profile: profiles.first,
+                goals: goals
+            )
+            healthProcessedThisSession = true
+        } else {
+            // Subsequent fetches: just refresh the cache + DailyLog
+            GooseEngine.shared.refreshHealthCache(
+                steps: snapshot.steps,
+                exerciseMinutes: snapshot.exerciseMinutes,
+                sleepHours: snapshot.sleepHours,
+                activeCalories: snapshot.activeCalories,
+                standHours: snapshot.standHours,
+                dailyLog: log
+            )
+        }
+
+        // Update built-in goal progress from HealthKit values
+        GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
     }
 
     private func fetchOrCreateTodayLog() -> DailyLog {

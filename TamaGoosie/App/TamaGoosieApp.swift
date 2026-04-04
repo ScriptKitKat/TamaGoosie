@@ -94,6 +94,10 @@ struct TamaGoosieApp: App {
         }
 
         GooseNotificationSystem.shared.registerCategories()
+
+        // Activate WatchConnectivity early so the session is ready
+        // before any GooseEngine updates try to send payloads.
+        WatchSyncService.shared.activate()
     }
 
     var body: some Scene {

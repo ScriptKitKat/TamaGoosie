@@ -6,12 +6,22 @@ final class WatchSyncService: NSObject, WCSessionDelegate, ObservableObject {
 
     private var session: WCSession?
 
+    /// Whether WatchConnectivity is supported on this device (false on iPad, etc.)
+    @Published private(set) var isSupported = false
+    /// Whether an Apple Watch is currently paired to this iPhone.
+    /// Auto-detected via WCSession — never set manually.
+    @Published private(set) var isPaired = false
+
     private override init() {
         super.init()
     }
 
     func activate() {
-        guard WCSession.isSupported() else { return }
+        guard WCSession.isSupported() else {
+            isSupported = false
+            return
+        }
+        isSupported = true
         session = WCSession.default
         session?.delegate = self
         session?.activate()
@@ -38,12 +48,24 @@ final class WatchSyncService: NSObject, WCSessionDelegate, ObservableObject {
 
     // MARK: - WCSessionDelegate
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        DispatchQueue.main.async {
+            self.isPaired = (activationState == .activated) && session.isPaired
+        }
+    }
 
     func sessionDidBecomeInactive(_ session: WCSession) {}
 
     func sessionDidDeactivate(_ session: WCSession) {
+        DispatchQueue.main.async { self.isPaired = false }
         session.activate()
+    }
+
+    /// Called when watch pairing state changes (paired/unpaired).
+    func sessionWatchStateDidChange(_ session: WCSession) {
+        DispatchQueue.main.async {
+            self.isPaired = session.isPaired
+        }
     }
 
     // Handle goal completion from Watch via immediate message (Watch is reachable)
