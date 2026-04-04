@@ -112,6 +112,7 @@
 		8954547141902CE3FC703601 /* DailyLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLog.swift; sourceTree = "<group>"; };
 		8FA52C55A9DDABB6A6056E1C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		9045EF046E73C3C5CD29A718 /* TamaGoosieWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieWidgets.entitlements; sourceTree = "<group>"; };
+		941895C46340D7F63726C6F7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
 		9A2E274D0CC79E9693624851 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9B880E96B410E34DD097D19C /* GooseGlanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseGlanceView.swift; sourceTree = "<group>"; };
@@ -187,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				E7119B3A0869220100DF3B9D /* GooseWidget.swift */,
+				941895C46340D7F63726C6F7 /* Info.plist */,
 				9045EF046E73C3C5CD29A718 /* TamaGoosieWidgets.entitlements */,
 			);
 			path = TamaGoosieWidgets;
@@ -547,8 +549,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -729,8 +730,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

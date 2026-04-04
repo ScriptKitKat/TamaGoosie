@@ -61,8 +61,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.widgets
-        INFOPLIST_FILE: ""
-        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_FILE: TamaGoosieWidgets/Info.plist
     entitlements:
       path: TamaGoosieWidgets/TamaGoosieWidgets.entitlements
       properties:
