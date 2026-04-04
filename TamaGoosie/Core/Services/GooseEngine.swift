@@ -255,5 +255,15 @@ final class GooseEngine {
             defaults.set(data, forKey: GoosieConstants.gooseStatsKey)
         }
         WatchSyncService.shared.sendPayload(enrichedPayload)
+
+        // Sync to Convex (social backend)
+        GooseSyncService.shared.syncToConvex(
+            happiness: enrichedPayload.happiness,
+            healthiness: enrichedPayload.healthiness,
+            mood: enrichedPayload.mood,
+            gooseName: enrichedPayload.name,
+            spriteID: enrichedPayload.spriteID,
+            streakDays: enrichedPayload.streakDays
+        )
     }
 }
