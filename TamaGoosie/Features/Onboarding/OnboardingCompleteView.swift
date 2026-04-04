@@ -20,7 +20,7 @@ struct OnboardingCompleteView: View {
                 Spacer()
 
                 // Dancing goose
-                GooseCharacterView(mood: .ecstatic, phase: .baby)
+                GooseCharacterView(mood: .ecstatic)
                     .frame(height: 200)
                     .offset(y: danceOffset)
                     .rotationEffect(.degrees(danceRotation))

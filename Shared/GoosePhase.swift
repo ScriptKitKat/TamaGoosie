@@ -1,30 +1,5 @@
 import Foundation
 
-public enum GoosePhase: String, Codable, CaseIterable, Sendable {
-    case egg
-    case baby
-    case teen
-    case adult
-
-    public var displayName: String {
-        switch self {
-        case .egg: "Egg"
-        case .baby: "Baby"
-        case .teen: "Teen"
-        case .adult: "Adult"
-        }
-    }
-
-    public static func phase(forLevel level: Int) -> GoosePhase {
-        switch level {
-        case 0: .egg
-        case 1...5: .baby
-        case 6...15: .teen
-        default: .adult
-        }
-    }
-}
-
 public enum GooseMood: String, Codable, CaseIterable, Sendable {
     case ecstatic
     case happy
@@ -32,7 +7,6 @@ public enum GooseMood: String, Codable, CaseIterable, Sendable {
     case bored
     case sad
     case sick
-    case dead
 
     public var displayName: String {
         switch self {
@@ -42,7 +16,6 @@ public enum GooseMood: String, Codable, CaseIterable, Sendable {
         case .bored: "Bored"
         case .sad: "Sad"
         case .sick: "Sick"
-        case .dead: "Dead"
         }
     }
 
@@ -54,7 +27,6 @@ public enum GooseMood: String, Codable, CaseIterable, Sendable {
         case .bored: "😐"
         case .sad: "😢"
         case .sick: "🤢"
-        case .dead: "💀"
         }
     }
 
@@ -66,12 +38,10 @@ public enum GooseMood: String, Codable, CaseIterable, Sendable {
         case .bored: "C8C8C8"
         case .sad: "6BC5F0"
         case .sick: "B8E8D0"
-        case .dead: "808080"
         }
     }
 
     public static func deriveMood(healthiness: Double, happiness: Double) -> GooseMood {
-        if healthiness <= 0 { return .dead }
         let avg = (healthiness + happiness) / 2.0
         switch avg {
         case 0.80...: return .ecstatic

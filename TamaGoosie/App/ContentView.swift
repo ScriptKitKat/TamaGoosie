@@ -81,7 +81,7 @@ struct ContentView: View {
     // MARK: - Screen Time Event Processing
 
     private func processScreenTimeEvents() {
-        guard let state = gooseStates.first, !state.isDead else { return }
+        guard let state = gooseStates.first else { return }
         let events = ScreenTimeManager.shared.consumePendingThresholdEvents()
         guard events > 0 else { return }
 
@@ -89,12 +89,7 @@ struct ContentView: View {
         let log = fetchOrCreateTodayLog()
         log.distractionMinutes += minutesAdded
         GooseEngine.shared.updateDistractMinutes(log.distractionMinutes)
-
-        let penalty = RewardEngine.penaltyForDistractionOpen()
-        for _ in 0..<events {
-            RewardEngine.applyDelta(penalty, to: state)
-        }
-        GooseEngine.shared.update(state: state)
+        GooseEngine.shared.update(state: state, log: log, profile: profiles.first, goals: goals)
     }
 
     private func fetchOrCreateTodayLog() -> DailyLog {

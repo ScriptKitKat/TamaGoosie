@@ -9,7 +9,6 @@ struct GoosePetActivity: ActivityAttributes {
         var healthiness: Double
         var happiness: Double
         var mood: String
-        var level: Int
         var streakDays: Int
         var currentGoalTitle: String?
         var currentGoalProgress: Double?
@@ -18,7 +17,7 @@ struct GoosePetActivity: ActivityAttributes {
         // Wandering goose
         var gooseX: Double        // 0.0–1.0 horizontal position across the stage
         var isMovingRight: Bool   // true = facing right
-        var spriteKey: String     // e.g. "adult_happy", "baby_sick" — drives MiniGooseView
+        var spriteKey: String     // e.g. "happy", "sad", "sick" — drives MiniGooseView
     }
 
     var gooseName: String
@@ -50,9 +49,16 @@ struct GooseLiveActivityWidget: Widget {
                 }
 
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("Lv.\(context.state.level)")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary)
+                    if context.state.streakDays > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "flame.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.orange)
+                            Text("\(context.state.streakDays)")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundStyle(.orange)
+                        }
+                    }
                 }
 
                 DynamicIslandExpandedRegion(.center) {
@@ -141,9 +147,6 @@ struct GooseLiveActivityWidget: Widget {
                 HStack {
                     Text(context.attributes.gooseName)
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                    Text("Lv.\(context.state.level)")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
                 }
 
                 if context.state.isFocusing, let minutes = context.state.focusMinutesRemaining {
@@ -201,97 +204,54 @@ struct GooseLiveActivityWidget: Widget {
 // MARK: - Mini Goose View
 
 /// Compact procedural goose for the Dynamic Island walking stage.
-/// Appearance driven entirely by `spriteKey` (e.g. "adult_happy", "baby_sick").
+/// Appearance driven entirely by `spriteKey` (e.g. "happy", "sad", "sick").
 private struct MiniGooseView: View {
     let spriteKey: String
     let isFlipped: Bool
 
-    private var isEgg: Bool { spriteKey.hasPrefix("egg") }
-    private var isDead: Bool { spriteKey.hasSuffix("dead") }
-
     private var bodyColor: Color {
-        if spriteKey.hasSuffix("happy")   { return .white }
-        if spriteKey.hasSuffix("neutral") { return Color(white: 0.88) }
-        if spriteKey.hasSuffix("sad")     { return Color(red: 0.78, green: 0.87, blue: 1.0) }
-        if spriteKey.hasSuffix("sick")    { return Color(red: 0.80, green: 0.95, blue: 0.80) }
-        if spriteKey.hasSuffix("dead")    { return Color(white: 0.50) }
-        return .white
-    }
-
-    // Baby is smaller than teen/adult
-    private var scale: CGFloat {
-        if spriteKey.hasPrefix("baby") { return 0.75 }
-        if spriteKey.hasPrefix("teen") { return 0.88 }
-        return 1.0
+        switch spriteKey {
+        case "happy":   return .white
+        case "neutral": return Color(white: 0.88)
+        case "sad":     return Color(red: 0.78, green: 0.87, blue: 1.0)
+        case "sick":    return Color(red: 0.80, green: 0.95, blue: 0.80)
+        default:        return .white
+        }
     }
 
     var body: some View {
-        ZStack {
-            if isEgg {
-                eggBody
-            } else {
-                gooseBody
-            }
-        }
-        .scaleEffect(x: isFlipped ? -1 : 1, y: 1)
-        .scaleEffect(scale)
-        .frame(width: 28, height: 32)
+        gooseBody
+            .scaleEffect(x: isFlipped ? -1 : 1, y: 1)
+            .frame(width: 28, height: 32)
     }
-
-    // MARK: Egg
-
-    private var eggBody: some View {
-        Ellipse()
-            .fill(Color(white: 0.97))
-            .overlay(Ellipse().stroke(Color(white: 0.75), lineWidth: 0.5))
-            .frame(width: 18, height: 24)
-    }
-
-    // MARK: Goose
 
     private var gooseBody: some View {
         ZStack {
-            // Body
             Ellipse()
                 .fill(bodyColor)
                 .frame(width: 20, height: 16)
                 .offset(y: 6)
 
-            // Neck
             Capsule()
                 .fill(bodyColor)
                 .frame(width: 7, height: 12)
                 .offset(x: 4, y: -2)
 
-            // Head
             Circle()
                 .fill(bodyColor)
                 .frame(width: 11, height: 11)
                 .offset(x: 6, y: -8)
 
-            // Beak
-            if !isDead {
-                Triangle()
-                    .fill(Color.orange)
-                    .frame(width: 6, height: 4)
-                    .offset(x: 12, y: -8)
-            }
+            Triangle()
+                .fill(Color.orange)
+                .frame(width: 6, height: 4)
+                .offset(x: 12, y: -8)
 
-            // Eyes
-            if isDead {
-                // X eyes
-                Text("×")
-                    .font(.system(size: 6, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.7))
-                    .offset(x: 7, y: -9)
-            } else {
-                Circle()
-                    .fill(Color.black)
-                    .frame(width: 3, height: 3)
-                    .offset(x: 8, y: -9)
-            }
+            Circle()
+                .fill(Color.black)
+                .frame(width: 3, height: 3)
+                .offset(x: 8, y: -9)
 
-            // Feet
             HStack(spacing: 4) {
                 Capsule()
                     .fill(Color.orange.opacity(0.8))

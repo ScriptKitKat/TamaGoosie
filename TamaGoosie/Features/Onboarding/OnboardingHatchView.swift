@@ -41,7 +41,7 @@ struct OnboardingHatchView: View {
                     }
 
                     if hatched {
-                        GooseCharacterView(mood: .ecstatic, phase: .baby)
+                        GooseCharacterView(mood: .ecstatic)
                             .frame(height: 220)
                             .transition(
                                 .scale(scale: 0.4)

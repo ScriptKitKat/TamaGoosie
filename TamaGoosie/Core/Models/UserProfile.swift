@@ -27,10 +27,7 @@ final class UserProfile {
     @Relationship(deleteRule: .cascade, inverse: \Goal.userProfile)
     var goals: [Goal] = []
 
-    @Relationship(deleteRule: .cascade, inverse: \DailyLog.userProfile)
-    var dailyLogs: [DailyLog] = []
-
-    @Relationship(deleteRule: .cascade, inverse: \DistractionApp.userProfile)
+@Relationship(deleteRule: .cascade, inverse: \DistractionApp.userProfile)
     var distractionApps: [DistractionApp] = []
 
     init(

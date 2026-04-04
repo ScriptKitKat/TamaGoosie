@@ -24,7 +24,6 @@
 		45A0AB0B4C6AD741A245043E /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9F686670F7CA74D19AB1BD /* WatchApp.swift */; };
 		4641DE71A6A7AAD75B9019C2 /* TamaGoosieWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		48444724C3D21789368ECF65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
-		4870F5458C5868D1EA3FB4E8 /* DecayEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B4DBB787504B206C0A8B90 /* DecayEngine.swift */; };
 		4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A088FE71FAEE764B51B4E397 /* UserProfile.swift */; };
 		50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */; };
 		52F4FC49B90EEB650F9239AA /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */; };
@@ -223,7 +222,6 @@
 		E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionConfigView.swift; sourceTree = "<group>"; };
 		E7119B3A0869220100DF3B9D /* GooseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseWidget.swift; sourceTree = "<group>"; };
 		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		EF1ECEB7316CD68905419198 /* DecayEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecayEngineTests.swift; sourceTree = "<group>"; };
 		FE71510B695CABD03828F0D4 /* DistractionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -363,7 +361,6 @@
 		86C376D77E790E9917E5D499 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				27B4DBB787504B206C0A8B90 /* DecayEngine.swift */,
 				60862FF4436630CDC20ABFF6 /* GooseEngine.swift */,
 				2EE23080F0C585620FA2AA80 /* RewardEngine.swift */,
 				BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */,
@@ -384,7 +381,6 @@
 		A8819B930C83700E791EA1EA /* TamaGoosieTests */ = {
 			isa = PBXGroup;
 			children = (
-				EF1ECEB7316CD68905419198 /* DecayEngineTests.swift */,
 				8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */,
 				DA5121AC95426E42B580756F /* SyncPayloadTests.swift */,
 			);
@@ -679,7 +675,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8310F2E97FBA727473AA1DAD /* DecayEngineTests.swift in Sources */,
 				3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */,
 				BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */,
 			);
@@ -713,7 +708,6 @@
 				48444724C3D21789368ECF65 /* Constants.swift in Sources */,
 				1344CABD800068004099CC07 /* ContentView.swift in Sources */,
 				75DD0AC472950585037683BF /* DailyLog.swift in Sources */,
-				4870F5458C5868D1EA3FB4E8 /* DecayEngine.swift in Sources */,
 				2F3E292F809B7EE6E15DD73E /* DistractionApp.swift in Sources */,
 				50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */,
 				CF2A2DA87AA6A0F57E753A5E /* DistractionOverlay.swift in Sources */,
@@ -965,7 +959,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1044,7 +1038,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

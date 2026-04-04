@@ -20,7 +20,7 @@ struct OnboardingNotificationsView: View {
 
                     Spacer().frame(height: 8)
 
-                    GooseCharacterView(mood: .happy, phase: .baby)
+                    GooseCharacterView(mood: .happy)
                         .frame(height: 160)
                 }
 
