@@ -10,8 +10,9 @@ final class GooseEngine {
 
     // Cached health data populated by processHealthData; included in every sync payload
     private(set) var cachedSteps: Int = 0
-    private var cachedExerciseMinutes: Int = 0
+    private(set) var cachedExerciseMinutes: Int = 0
     private(set) var cachedSleepHours: Double = 0.0
+    private(set) var cachedActiveCalories: Double = 0.0
     private var cachedStandHours: Int = 0
     // Cached distraction minutes updated by DistractionOverlay each minute
     private(set) var cachedDistractMinutes: Int = 0
@@ -70,6 +71,8 @@ final class GooseEngine {
         saveStatsToAppGroup(state.toSyncPayload())
     }
 
+    // MARK: - Goal Uncompletion
+
     func uncompleteGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) {
         guard goal.isCompleted, goal.type != "deadline" else { return }
 
@@ -86,6 +89,69 @@ final class GooseEngine {
         }
         state.updateMood()
         saveStatsToAppGroup(state.toSyncPayload())
+    }
+
+    // MARK: - Health Data Processing
+
+    func processHealthData(
+        steps: Int,
+        exerciseMinutes: Double,
+        sleepHours: Double,
+        activeCalories: Double = 0,
+        standHours: Int = 0,
+        state: GooseState,
+        dailyLog: DailyLog? = nil,
+        profile: UserProfile? = nil,
+        goals: [Goal] = []
+    ) {
+        // Update cache + DailyLog
+        refreshHealthCache(
+            steps: steps,
+            exerciseMinutes: exerciseMinutes,
+            sleepHours: sleepHours,
+            activeCalories: activeCalories,
+            standHours: standHours,
+            dailyLog: dailyLog
+        )
+
+        // Recompute stats from formulas
+        update(state: state, log: dailyLog, profile: profile, goals: goals)
+    }
+
+    /// Update cached health values without recomputing stats (for subsequent fetches
+    /// within the same day after the initial processing).
+    func refreshHealthCache(
+        steps: Int,
+        exerciseMinutes: Double,
+        sleepHours: Double,
+        activeCalories: Double = 0,
+        standHours: Int = 0,
+        dailyLog: DailyLog? = nil
+    ) {
+        cachedSteps = steps
+        cachedExerciseMinutes = Int(exerciseMinutes)
+        cachedSleepHours = sleepHours
+        cachedActiveCalories = activeCalories
+        cachedStandHours = standHours
+
+        if let log = dailyLog {
+            log.steps = steps
+            log.exerciseMinutes = Int(exerciseMinutes)
+            log.sleepHours = sleepHours
+            log.standHours = standHours
+        }
+    }
+
+    /// Sync built-in goal currentCount from cached HealthKit values so progress
+    /// persists across app restarts.
+    func syncBuiltinGoalProgress(_ goals: [Goal]) {
+        for goal in goals where goal.isHealthKitTracked && !goal.isCompleted {
+            if goal.title.localizedCaseInsensitiveContains("steps") {
+                goal.currentCount = min(cachedSteps, goal.targetCount)
+            } else if goal.title.localizedCaseInsensitiveContains("sleep") {
+                goal.currentCount = min(Int(cachedSleepHours), goal.targetCount)
+            }
+        }
     }
 
     // MARK: - Reset
@@ -184,6 +250,7 @@ final class GooseEngine {
         enrichedPayload.exerciseMinutes = cachedExerciseMinutes
         enrichedPayload.sleepHours = cachedSleepHours
         enrichedPayload.standHours = cachedStandHours
+        enrichedPayload.activeCalories = cachedActiveCalories
         enrichedPayload.topGoals = cachedTopGoals
 
         guard let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID) else { return }

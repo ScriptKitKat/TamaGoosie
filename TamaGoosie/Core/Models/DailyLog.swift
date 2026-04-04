@@ -22,6 +22,13 @@ final class DailyLog {
     var goalsCompleted: Int
     var goalsTotal: Int
 
+    // Back-reference to owning UserProfile
+    var userProfile: UserProfile?
+
+    // 1:many — HealthKit snapshots collected during this day
+    @Relationship(deleteRule: .cascade, inverse: \HealthSnapshot.dailyLog)
+    var healthSnapshots: [HealthSnapshot] = []
+
     init(date: Date = .now) {
         self.id = UUID()
         self.date = Calendar.current.startOfDay(for: date)

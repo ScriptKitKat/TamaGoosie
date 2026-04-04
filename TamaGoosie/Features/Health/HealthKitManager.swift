@@ -57,6 +57,9 @@ final class HealthKitManager {
             snapshot.exerciseMinutes = try await fetchSum(type: exType, predicate: predicate, unit: .minute())
         }
 
+        // Stand hours
+        snapshot.standHours = try await fetchStandHours(predicate: predicate)
+
         // Sleep (last night)
         snapshot.sleepHours = try await fetchSleepHours()
 
@@ -87,6 +90,24 @@ final class HealthKitManager {
                 }
                 let value = result?.sumQuantity()?.doubleValue(for: unit) ?? 0
                 continuation.resume(returning: value)
+            }
+            store.execute(query)
+        }
+    }
+
+    private func fetchStandHours(predicate: NSPredicate) async throws -> Int {
+        let standType = HKCategoryType.categoryType(forIdentifier: .appleStandHour)!
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(sampleType: standType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                let standCount = (samples ?? [])
+                    .compactMap { $0 as? HKCategorySample }
+                    .filter { $0.value == HKCategoryValueAppleStandHour.stood.rawValue }
+                    .count
+                continuation.resume(returning: standCount)
             }
             store.execute(query)
         }
