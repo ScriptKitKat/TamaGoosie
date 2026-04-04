@@ -35,13 +35,22 @@ xcrun simctl list devices available
 1. **Preferred**: Add the file path to the relevant `sources:` entry in `project.yml` and run `xcodegen generate`. XcodeGen recursively includes all `.swift` files in source directories.
 2. **Manual**: Use a Python script to insert PBXBuildFile, PBXFileReference, group children, and Sources build phase entries into `project.pbxproj`.
 
+## Documentation
+
+Detailed documentation lives in `docs/`:
+- `docs/architecture.md` — targets, directory layout, data flow, layer responsibilities
+- `docs/stat-system.md` — healthiness/happiness formulas, mood derivation, streak, constants
+- `docs/models.md` — all SwiftData `@Model` classes and their fields
+- `docs/goose.md` — GooseCharacterView, GooseViewModel, GooseView, Live Activity, Onboarding
+- `docs/goals.md` — goal types, GoalListView, GoalViewModel, notifications, categories
+
 ## Architecture Overview
 
 TamaGoosie is a **Tamagotchi-style virtual goose** app with three targets:
 
 | Target | Platform | Role |
 |--------|----------|------|
-| `TamaGoosie` | iOS 17+ | Main app (source of truth) |
+| `TamaGoosie` | iOS 26+ | Main app (source of truth) |
 | `TamaGoosieWatch` | watchOS 10+ | Read-only mirror via WatchConnectivity |
 | `TamaGoosieWidgets` | iOS | Home screen widgets via WidgetKit |
 | `TamaGoosieTests` | iOS | XCTest unit tests |
@@ -74,22 +83,22 @@ HealthKitManager → GooseEngine → GooseState (SwiftData @Model)
 ### Key Files
 
 **Shared/** — compiled into all three targets:
-- `GoosePhase.swift` — `GoosePhase`, `GooseMood` (derivation logic), `GoalCategory`, `GoalFrequency`
+- `GoosePhase.swift` — `GooseMood` (derivation logic), `GoalCategory`, `GoalFrequency` (no GoosePhase — phases removed)
 - `GooseStats.swift` — `GooseSyncPayload` (the cross-target sync struct)
 - `SyncPayload.swift` — `GoalSummary` (lightweight goal for Watch/Widget)
-- `Constants.swift` — `GoosieConstants` (all magic numbers: decay rates, formula weights, XP curves, app group ID)
+- `Constants.swift` — `GoosieConstants` (formula weights, streak constants, focus timer constants, app group ID; no XP or decay constants)
 
 **TamaGoosie/Core/Models/** — SwiftData `@Model` classes:
-- `GooseState` — the single goose instance (one row in DB)
+- `GooseState` — the single goose instance (one row in DB); fields: `healthiness`, `happiness`, `mood`, `streakDays`, `longestStreak`, `lastStreakDate`, `name`, `spriteID`, `hatID`, `colorID`, `lastUpdated`, `createdAt`
 - `Goal` — user goals; `type` is `"recurring" | "deadline" | "builtin"`
-- `DailyLog` — one row per calendar day, accumulates HealthKit + distraction data
+- `DailyLog` — one row per calendar day, accumulates HealthKit + distraction data; fields: steps, exerciseMinutes, sleepHours, standHours, sittingHours, outsideMinutes, distractionOpens, distractionMinutes, goalsCompleted, goalsTotal
 - `DistractionApp` — user-configured distraction apps
 - `UserProfile` — user baselines (auto-updated after 7 days of logs) and settings
 
 **TamaGoosie/Core/Services/**:
-- `GooseEngine` — singleton orchestrator; entry point for all stat mutations. Call `GooseEngine.shared.update/completeGoal/processHealthData/revive/hatchNewEgg`
-- `DecayEngine` — pure time-based decay; grace period (first 2h of 8+ hour absence free), compound penalty (extra 0.004/hr when either stat < 0.2), death when healthiness ≤ 0
-- `RewardEngine` — pure stat delta calculations; also contains `computeHealthiness(log:profile:)` and `computeHappiness(log:goals:)` formula implementations
+- `GooseEngine` — singleton orchestrator. Entry point: `GooseEngine.shared.update(state:log:profile:goals:)`, `completeGoal(_:state:log:goals:)`, `uncompleteGoal(_:state:log:goals:)`, `resetGoose(state:)`
+- `RewardEngine` — two pure formula functions: `computeHealthiness(log:profile:)` and `computeHappiness(log:goals:)`. No delta mutations.
+- `DecayEngine` — **deleted**. Stats do not decay; they are recomputed from real data on every update.
 
 ### Sync Architecture
 
@@ -99,19 +108,19 @@ HealthKitManager → GooseEngine → GooseState (SwiftData @Model)
 
 The Watch receives payloads via `WatchSyncReceiver` and stores `currentPayload: GooseSyncPayload`.
 
-### Mood & Phase Derivation
+### Mood Derivation
 
-`GooseMood.deriveMood(healthiness:happiness:)` maps `avg = (h + hap) / 2`:
+`GooseMood.deriveMood(healthiness:happiness:)` maps `avg = (healthiness + happiness) / 2`:
 - `>= 0.80` → ecstatic, `0.60–0.80` → happy, `0.40–0.60` → content
-- `0.25–0.40` → bored, `0.10–0.25` → sad, `< 0.10` → sick, `healthiness == 0` → dead
+- `0.25–0.40` → bored, `0.10–0.25` → sad, `< 0.10` → sick
 
-`GoosePhase.phase(forLevel:)`: level 0 → egg, 1–5 → baby, 6–15 → teen, 16+ → adult.
+There is no `dead` mood and no phase system. The goose's mood is the sole visual feedback signal.
 
 ### Design System
 
-`GoosieTheme` (enum in `Theme/GoosieTheme.swift`) provides all colors, typography, and spacing constants. `GoosieComponents.swift` contains shared UI primitives: `StatBar`, `PillButton`, `CircleActionButton`, `GoosieCard`, `LevelBadge`, `StreakFlame`.
+`GoosieTheme` (enum in `Theme/GoosieTheme.swift`) provides all colors, typography, and spacing constants. `GoosieComponents.swift` contains shared UI primitives: `StatBar`, `PillButton`, `CircleActionButton`, `GoosieCard`, `StreakFlame` (only renders when `days > 0`).
 
-`GooseCharacterView` (in `GooseAnimations.swift`) renders the animated goose. It takes `mood: GooseMood` and `phase: GoosePhase` — do not add additional parameters without updating all call sites across all three targets.
+`GooseCharacterView` (in `GooseAnimations.swift`) renders the animated goose. It takes `mood: GooseMood` — do not add additional parameters without updating all call sites across all three targets.
 
 ### Notifications
 
@@ -120,7 +129,10 @@ The Watch receives payloads via `WatchSyncReceiver` and stores `currentPayload: 
 ### Important Constraints
 
 - **All stat values are stored 0.0–1.0 in models**, displayed as 0–100 in UI only. Never store percent values in `GooseState`.
+- Stats are **computed from formulas, never mutated directly**. Always call `GooseEngine.shared.update(state:log:profile:goals:)` to recompute both stats from the current `DailyLog`.
+- **`DailyLog` must exist before stat computation.** Views use `ensureTodayLogExists()` to eagerly create a `DailyLog` for today if one doesn't exist yet (e.g., first launch, new day).
 - `GoalSummary.progress` (on sync struct) is 0.0–1.0. `Goal.currentCount`/`targetCount`/`isCompleted` (on SwiftData model) still exist and drive `Goal.progress` computed property.
 - The `Shared/` directory is compiled into all three targets. Code there must avoid importing `SwiftData` or any iOS-only frameworks.
 - App group ID: `group.com.tamagoosie`. Sync key: `"gooseStats"`.
 - Built-in goals have `type == "builtin"`. `GoalViewModel.seedBuiltinGoalsIfNeeded()` checks for their presence before inserting.
+- There is no death, revival, XP, levels, or phase progression. `GooseState` has no `isDead`, `level`, `xp`, or `phase` fields.
