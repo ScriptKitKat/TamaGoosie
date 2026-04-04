@@ -33,6 +33,13 @@ final class Goal {
     // Goose impact
     var happinessWeight: Double
 
+    // Back-reference to owning UserProfile
+    var userProfile: UserProfile?
+
+    // 1:many — one GoalProgress row per calendar day
+    @Relationship(deleteRule: .cascade, inverse: \GoalProgress.goal)
+    var progressRecords: [GoalProgress] = []
+
     init(
         title: String,
         type: String = "recurring",
@@ -85,6 +92,13 @@ final class Goal {
         set {
             customDays = newValue.sorted().map(String.init).joined(separator: ",")
         }
+    }
+
+    /// True for the two built-in goals driven by HealthKit (steps, sleep).
+    var isHealthKitTracked: Bool {
+        guard type == "builtin" else { return false }
+        return title.localizedCaseInsensitiveContains("steps") ||
+               title.localizedCaseInsensitiveContains("sleep")
     }
 
     func toSummary() -> GoalSummary {

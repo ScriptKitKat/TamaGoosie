@@ -9,6 +9,7 @@ struct TamaGoosieApp: App {
         let schema = Schema([
             GooseState.self,
             Goal.self,
+            GoalProgress.self,
             FocusSession.self,
             HealthSnapshot.self,
             DailyLog.self,

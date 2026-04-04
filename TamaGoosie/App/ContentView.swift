@@ -4,24 +4,20 @@ import SwiftData
 struct ContentView: View {
     @Query private var profiles: [UserProfile]
     @State private var selectedTab = 0
-    @State private var hasCompletedOnboarding = false
+    @State private var showOnboarding = false
 
     var body: some View {
-        Group {
-            if hasCompletedOnboarding {
-                mainTabView
-            } else {
-                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+        mainTabView
+            .onAppear {
+                if profiles.first?.hasCompletedOnboarding != true {
+                    showOnboarding = true
+                }
+                WatchSyncService.shared.activate()
+                HealthKitManager.shared.enableBackgroundDelivery()
             }
-        }
-        .onAppear {
-            if let profile = profiles.first, profile.hasCompletedOnboarding {
-                hasCompletedOnboarding = true
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingContainerView { showOnboarding = false }
             }
-
-            WatchSyncService.shared.activate()
-            HealthKitManager.shared.enableBackgroundDelivery()
-        }
     }
 
     private var mainTabView: some View {

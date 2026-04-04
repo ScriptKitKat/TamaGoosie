@@ -14,6 +14,9 @@ final class HealthSnapshot {
     var workoutCount: Int
     var wasProcessed: Bool
 
+    // Back-reference to owning DailyLog
+    var dailyLog: DailyLog?
+
     init(
         date: Date = .now,
         steps: Int = 0,

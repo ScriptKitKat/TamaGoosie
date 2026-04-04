@@ -65,6 +65,17 @@ final class GoalViewModel {
         }
     }
 
+    /// Call when fresh HealthKit values arrive. Completes walk/sleep goals if threshold met.
+    func autoCompleteHealthKitGoals(goals: [Goal], steps: Int, sleepHours: Double, state: GooseState) {
+        for goal in goals where goal.isHealthKitTracked && !goal.isCompleted {
+            if goal.title.localizedCaseInsensitiveContains("steps"), steps >= 10_000 {
+                completeGoal(goal, gooseState: state)
+            } else if goal.title.localizedCaseInsensitiveContains("sleep"), sleepHours >= 8.0 {
+                completeGoal(goal, gooseState: state)
+            }
+        }
+    }
+
     func resetDailyGoals(_ goals: [Goal]) {
         let calendar = Calendar.current
         for goal in goals where goal.isCompleted {
