@@ -5,36 +5,52 @@ import SwiftData
 final class Goal {
     var id: UUID
     var title: String
-    var category: String // GoalCategory raw value
-    var frequency: String // GoalFrequency raw value
+    var type: String            // "deadline" | "recurring" | "builtin"
+    var category: String        // GoalCategory raw value
+    var frequency: String       // GoalFrequency raw value
+
+    // Deadline goals
+    var dueDate: Date?
+
+    // Recurring goals
+    var preferredTime: Date?
     var targetCount: Int
     var currentCount: Int
+
+    // Tracking
     var isCompleted: Bool
-    var createdAt: Date
     var completedAt: Date?
-    var streakDays: Int
+    var currentStreak: Int
     var lastCompletedDate: Date?
     var isActive: Bool
     var sortOrder: Int
+    var createdAt: Date
+
+    // Goose impact
+    var happinessWeight: Double
 
     init(
         title: String,
+        type: String = "recurring",
         category: GoalCategory = .custom,
         frequency: GoalFrequency = .daily,
         targetCount: Int = 1,
+        happinessWeight: Double = 1.0,
         sortOrder: Int = 0
     ) {
         self.id = UUID()
         self.title = title
+        self.type = type
         self.category = category.rawValue
         self.frequency = frequency.rawValue
         self.targetCount = targetCount
         self.currentCount = 0
         self.isCompleted = false
-        self.createdAt = .now
-        self.streakDays = 0
+        self.currentStreak = 0
         self.isActive = true
         self.sortOrder = sortOrder
+        self.createdAt = .now
+        self.happinessWeight = happinessWeight
     }
 
     // MARK: - Computed
@@ -56,10 +72,8 @@ final class Goal {
         GoalSummary(
             id: id,
             title: title,
-            category: goalCategory,
-            currentCount: currentCount,
-            targetCount: targetCount,
-            isCompleted: isCompleted
+            progress: progress,
+            category: category
         )
     }
 

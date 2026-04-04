@@ -8,11 +8,19 @@ struct GoalEditorView: View {
     var existingGoal: Goal?
 
     @State private var title = ""
+    @State private var goalType = "recurring"
     @State private var category: GoalCategory = .custom
     @State private var frequency: GoalFrequency = .daily
     @State private var targetCount = 1
+    @State private var happinessWeight: Double = 1.0
+    @State private var dueDate = Date()
+    @State private var preferredTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
+    @State private var showDueDatePicker = false
+    @State private var showPreferredTimePicker = false
 
     var isEditing: Bool { existingGoal != nil }
+
+    private let goalTypes = ["recurring", "deadline"]
 
     var body: some View {
         NavigationStack {
@@ -32,6 +40,21 @@ struct GoalEditorView: View {
                                 TextField("e.g., Drink 8 glasses of water", text: $title)
                                     .font(GoosieTheme.bodyFont())
                                     .textFieldStyle(.plain)
+                            }
+                        }
+
+                        // Goal Type
+                        GoosieCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Type")
+                                    .font(GoosieTheme.captionFont())
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+
+                                HStack(spacing: 8) {
+                                    ForEach(goalTypes, id: \.self) { type in
+                                        typeChip(type)
+                                    }
+                                }
                             }
                         }
 
@@ -55,33 +78,79 @@ struct GoalEditorView: View {
                             }
                         }
 
-                        // Frequency
-                        GoosieCard {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Frequency")
-                                    .font(GoosieTheme.captionFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                        // Frequency (recurring only)
+                        if goalType == "recurring" {
+                            GoosieCard {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Frequency")
+                                        .font(GoosieTheme.captionFont())
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
 
-                                HStack(spacing: 8) {
-                                    ForEach(GoalFrequency.allCases, id: \.self) { freq in
-                                        frequencyChip(freq)
+                                    HStack(spacing: 8) {
+                                        ForEach(GoalFrequency.allCases, id: \.self) { freq in
+                                            frequencyChip(freq)
+                                        }
                                     }
+                                }
+                            }
+
+                            // Target count
+                            GoosieCard {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Daily Target")
+                                        .font(GoosieTheme.captionFont())
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+
+                                    Stepper(value: $targetCount, in: 1...99) {
+                                        Text("\(targetCount) time\(targetCount > 1 ? "s" : "")")
+                                            .font(GoosieTheme.bodyFont())
+                                            .foregroundStyle(GoosieTheme.charcoalOutline)
+                                    }
+                                }
+                            }
+
+                            // Preferred time
+                            GoosieCard {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Preferred Time")
+                                        .font(GoosieTheme.captionFont())
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+
+                                    DatePicker("Time", selection: $preferredTime, displayedComponents: .hourAndMinute)
+                                        .font(GoosieTheme.captionFont())
                                 }
                             }
                         }
 
-                        // Target count
+                        // Due date (deadline only)
+                        if goalType == "deadline" {
+                            GoosieCard {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Due Date")
+                                        .font(GoosieTheme.captionFont())
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+
+                                    DatePicker("Due", selection: $dueDate, displayedComponents: .date)
+                                        .font(GoosieTheme.captionFont())
+                                }
+                            }
+                        }
+
+                        // Importance weight
                         GoosieCard {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Daily Target")
-                                    .font(GoosieTheme.captionFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-
-                                Stepper(value: $targetCount, in: 1...99) {
-                                    Text("\(targetCount) time\(targetCount > 1 ? "s" : "")")
-                                        .font(GoosieTheme.bodyFont())
-                                        .foregroundStyle(GoosieTheme.charcoalOutline)
+                                HStack {
+                                    Text("Importance")
+                                        .font(GoosieTheme.captionFont())
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                                    Spacer()
+                                    Text(String(format: "%.1fx", happinessWeight))
+                                        .font(GoosieTheme.captionFont(12))
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
                                 }
+
+                                Slider(value: $happinessWeight, in: 0.5...2.0, step: 0.5)
+                                    .tint(GoosieTheme.coralAccent)
                             }
                         }
                     }
@@ -100,6 +169,25 @@ struct GoalEditorView: View {
                 }
             }
             .onAppear { loadExistingGoal() }
+        }
+    }
+
+    private func typeChip(_ type: String) -> some View {
+        let isSelected = goalType == type
+        let label = type == "recurring" ? "Recurring" : "Deadline"
+
+        return Button {
+            goalType = type
+        } label: {
+            Text(label)
+                .font(GoosieTheme.captionFont(12))
+                .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? GoosieTheme.coralAccent : GoosieTheme.coralAccent.opacity(0.15))
+                )
         }
     }
 
@@ -147,9 +235,13 @@ struct GoalEditorView: View {
     private func loadExistingGoal() {
         guard let goal = existingGoal else { return }
         title = goal.title
+        goalType = goal.type
         category = goal.goalCategory
         frequency = goal.goalFrequency
         targetCount = goal.targetCount
+        happinessWeight = goal.happinessWeight
+        if let due = goal.dueDate { dueDate = due }
+        if let pref = goal.preferredTime { preferredTime = pref }
     }
 
     private func save() {
@@ -158,16 +250,24 @@ struct GoalEditorView: View {
 
         if let goal = existingGoal {
             goal.title = trimmedTitle
+            goal.type = goalType
             goal.category = category.rawValue
             goal.frequency = frequency.rawValue
             goal.targetCount = targetCount
+            goal.happinessWeight = happinessWeight
+            goal.dueDate = goalType == "deadline" ? dueDate : nil
+            goal.preferredTime = goalType == "recurring" ? preferredTime : nil
         } else {
             let goal = Goal(
                 title: trimmedTitle,
+                type: goalType,
                 category: category,
                 frequency: frequency,
-                targetCount: targetCount
+                targetCount: targetCount,
+                happinessWeight: happinessWeight
             )
+            goal.dueDate = goalType == "deadline" ? dueDate : nil
+            goal.preferredTime = goalType == "recurring" ? preferredTime : nil
             modelContext.insert(goal)
         }
         dismiss()

@@ -3,52 +3,57 @@ import SwiftData
 
 @Model
 final class GooseState {
-    var name: String
-    var health: Double
-    var happiness: Double
-    var energy: Double
-    var hygiene: Double
-    var xp: Int
-    var level: Int
-    var phase: String // GoosePhase raw value
-    var mood: String // GooseMood raw value
-    var streakDays: Int
-    var longestStreak: Int
+    var id: UUID = UUID()
+    var name: String = "Harold"
+    var spriteID: String = "default"
+    var hatID: String?
+    var colorID: String?
+
+    // Core stats (0.0 – 1.0)
+    var healthiness: Double = 0.8
+    var happiness: Double = 0.7
+
+    // Progression
+    var xp: Int = 0
+    var level: Int = 1
+    var streakDays: Int = 0
+    var longestStreak: Int = 0
     var lastStreakDate: Date?
-    var isDead: Bool
-    var deathCount: Int
-    var lastDeathDate: Date?
-    var daysAlive: Int
-    var totalGoalsCompleted: Int
-    var birthDate: Date
-    var lastUpdated: Date
-    var isVacationMode: Bool
-    var hasCompletedOnboarding: Bool
+
+    // Derived state (cached for Watch sync)
+    var phase: String = GoosePhase.baby.rawValue
+    var mood: String = GooseMood.content.rawValue
+
+    // Death
+    var isDead: Bool = false
+    var deathDate: Date?
+    var deathCause: String?
+    var reviveCount: Int = 0
+
+    // Settings
+    var isVacationMode: Bool = false
+
+    // Timestamps
+    var lastUpdated: Date = Date()
+    var createdAt: Date = Date()
 
     init(
-        name: String = "Harnold",
-        health: Double = 100,
-        happiness: Double = 100,
-        energy: Double = 100,
-        hygiene: Double = 100,
+        name: String = "Harold",
+        healthiness: Double = 0.8,
+        happiness: Double = 0.7,
         xp: Int = 0,
         level: Int = 1,
         phase: String = GoosePhase.baby.rawValue,
-        mood: String = GooseMood.happy.rawValue,
+        mood: String = GooseMood.content.rawValue,
         streakDays: Int = 0,
         longestStreak: Int = 0,
         isDead: Bool = false,
-        deathCount: Int = 0,
-        birthDate: Date = .now,
-        lastUpdated: Date = .now,
-        isVacationMode: Bool = false,
-        hasCompletedOnboarding: Bool = false
+        isVacationMode: Bool = false
     ) {
+        self.id = UUID()
         self.name = name
-        self.health = health
+        self.healthiness = healthiness
         self.happiness = happiness
-        self.energy = energy
-        self.hygiene = hygiene
         self.xp = xp
         self.level = level
         self.phase = phase
@@ -56,13 +61,9 @@ final class GooseState {
         self.streakDays = streakDays
         self.longestStreak = longestStreak
         self.isDead = isDead
-        self.deathCount = deathCount
-        self.daysAlive = 0
-        self.totalGoalsCompleted = 0
-        self.birthDate = birthDate
-        self.lastUpdated = lastUpdated
         self.isVacationMode = isVacationMode
-        self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.lastUpdated = .now
+        self.createdAt = .now
     }
 
     // MARK: - Computed Helpers
@@ -72,39 +73,31 @@ final class GooseState {
     }
 
     var currentMood: GooseMood {
-        GooseMood(rawValue: mood) ?? .neutral
+        GooseMood(rawValue: mood) ?? .content
     }
 
-    func toStats() -> GooseStats {
-        GooseStats(
-            health: health,
+    func toSyncPayload(topGoals: [GoalSummary] = []) -> GooseSyncPayload {
+        GooseSyncPayload(
+            healthiness: healthiness,
             happiness: happiness,
-            energy: energy,
-            hygiene: hygiene,
+            mood: mood,
+            phase: phase,
+            name: name,
             level: level,
-            xp: xp,
-            mood: currentMood,
-            phase: currentPhase,
             streakDays: streakDays,
-            gooseName: name,
-            isDead: isDead
+            isDead: isDead,
+            spriteID: spriteID,
+            topGoals: topGoals
         )
     }
 
     func clampStats() {
-        health = min(GoosieConstants.statMax, max(GoosieConstants.statMin, health))
+        healthiness = min(GoosieConstants.statMax, max(GoosieConstants.statMin, healthiness))
         happiness = min(GoosieConstants.statMax, max(GoosieConstants.statMin, happiness))
-        energy = min(GoosieConstants.statMax, max(GoosieConstants.statMin, energy))
-        hygiene = min(GoosieConstants.statMax, max(GoosieConstants.statMin, hygiene))
     }
 
     func updateMood() {
-        mood = GooseMood.mood(
-            health: health,
-            happiness: happiness,
-            energy: energy,
-            hygiene: hygiene
-        ).rawValue
+        mood = GooseMood.deriveMood(healthiness: healthiness, happiness: happiness).rawValue
     }
 
     func updatePhase() {

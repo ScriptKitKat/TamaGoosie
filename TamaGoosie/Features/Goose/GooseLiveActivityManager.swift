@@ -79,10 +79,8 @@ final class GooseLiveActivityManager {
 
     private func makeContentState(from state: GooseState, currentGoal: Goal? = nil) -> GoosePetActivity.ContentState {
         GoosePetActivity.ContentState(
-            health: state.health,
+            healthiness: state.healthiness,
             happiness: state.happiness,
-            energy: state.energy,
-            hygiene: state.hygiene,
             mood: state.mood,
             level: state.level,
             streakDays: state.streakDays,

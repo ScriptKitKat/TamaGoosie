@@ -3,33 +3,33 @@ import WidgetKit
 
 struct GooseComplicationProvider: TimelineProvider {
     func placeholder(in context: Context) -> GooseComplicationEntry {
-        GooseComplicationEntry(date: .now, stats: GooseStats())
+        GooseComplicationEntry(date: .now, payload: GooseSyncPayload())
     }
 
     func getSnapshot(in context: Context, completion: @escaping (GooseComplicationEntry) -> Void) {
-        completion(GooseComplicationEntry(date: .now, stats: loadStats()))
+        completion(GooseComplicationEntry(date: .now, payload: loadPayload()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<GooseComplicationEntry>) -> Void) {
-        let entry = GooseComplicationEntry(date: .now, stats: loadStats())
+        let entry = GooseComplicationEntry(date: .now, payload: loadPayload())
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: .now)!
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
     }
 
-    private func loadStats() -> GooseStats {
+    private func loadPayload() -> GooseSyncPayload {
         guard let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID),
               let data = defaults.data(forKey: GoosieConstants.gooseStatsKey),
-              let stats = try? JSONDecoder().decode(GooseStats.self, from: data) else {
-            return GooseStats()
+              let payload = try? JSONDecoder().decode(GooseSyncPayload.self, from: data) else {
+            return GooseSyncPayload()
         }
-        return stats
+        return payload
     }
 }
 
 struct GooseComplicationEntry: TimelineEntry {
     let date: Date
-    let stats: GooseStats
+    let payload: GooseSyncPayload
 }
 
 struct GooseComplicationCircular: View {
@@ -40,12 +40,12 @@ struct GooseComplicationCircular: View {
             AccessoryWidgetBackground()
 
             Circle()
-                .trim(from: 0, to: entry.stats.health / 100)
+                .trim(from: 0, to: entry.payload.healthiness)
                 .stroke(.green, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .padding(3)
 
-            Text(entry.stats.mood.emoji)
+            Text(entry.payload.moodEnum.emoji)
                 .font(.system(size: 18))
         }
     }
@@ -56,11 +56,11 @@ struct GooseComplicationRectangular: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(entry.stats.mood.emoji)
+            Text(entry.payload.moodEnum.emoji)
                 .font(.system(size: 20))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.stats.gooseName)
+                Text(entry.payload.name)
                     .font(.system(size: 13, weight: .bold, design: .rounded))
 
                 HStack(spacing: 4) {
@@ -72,18 +72,18 @@ struct GooseComplicationRectangular: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(.gray.opacity(0.3))
                             Capsule().fill(.green)
-                                .frame(width: max(0, geo.size.width * (entry.stats.health / 100)))
+                                .frame(width: max(0, geo.size.width * entry.payload.healthiness))
                         }
                     }
                     .frame(height: 5)
                 }
 
-                if entry.stats.streakDays > 0 {
+                if entry.payload.streakDays > 0 {
                     HStack(spacing: 2) {
                         Image(systemName: "flame.fill")
                             .font(.system(size: 8))
                             .foregroundStyle(.orange)
-                        Text("\(entry.stats.streakDays)")
+                        Text("\(entry.payload.streakDays)")
                             .font(.system(size: 10, design: .rounded))
                     }
                 }

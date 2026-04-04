@@ -2,97 +2,95 @@ import Foundation
 
 enum RewardEngine {
     struct StatDelta {
-        var health: Double = 0
+        var healthiness: Double = 0
         var happiness: Double = 0
-        var energy: Double = 0
-        var hygiene: Double = 0
         var xp: Int = 0
     }
 
-    // MARK: - Goal Completion Rewards
+    // MARK: - Goal Completion
 
-    static func rewardForGoalCompletion(streakDays: Int) -> StatDelta {
-        let multiplier = streakMultiplier(for: streakDays)
-
+    static func rewardForGoalCompletion(weight: Double, streakDays: Int) -> StatDelta {
+        let xpMultiplier = streakMultiplier(for: streakDays)
         return StatDelta(
-            health: GoosieConstants.goalCompletionHealthBonus * multiplier,
-            happiness: GoosieConstants.goalCompletionHappinessBonus * multiplier,
-            energy: GoosieConstants.goalCompletionEnergyBonus * multiplier,
-            hygiene: GoosieConstants.goalCompletionHygieneBonus * multiplier,
-            xp: Int(Double(GoosieConstants.goalCompletionXP) * multiplier)
+            happiness: GoosieConstants.goalCompletionHappinessBase * weight,
+            xp: Int(Double(GoosieConstants.goalCompletionXP) * xpMultiplier)
+        )
+    }
+
+    static func rewardForAllGoalsCompleted() -> StatDelta {
+        StatDelta(
+            healthiness: GoosieConstants.allGoalsHealthinessBonus,
+            happiness: GoosieConstants.allGoalsHappinessBonus,
+            xp: GoosieConstants.allGoalsXP
         )
     }
 
     // MARK: - Health Data Rewards
 
-    static func rewardForHealthData(_ snapshot: HealthSnapshot) -> StatDelta {
-        var delta = StatDelta()
-
-        // Steps
-        if snapshot.steps >= GoosieConstants.stepsThresholdHigh {
-            delta.health += 15
-            delta.energy += 10
-            delta.happiness += 8
-            delta.xp += 50
-        } else if snapshot.steps >= GoosieConstants.stepsThresholdMid {
-            delta.health += 10
-            delta.energy += 6
-            delta.happiness += 5
-            delta.xp += 30
-        } else if snapshot.steps >= GoosieConstants.stepsThresholdLow {
-            delta.health += 5
-            delta.energy += 3
-            delta.happiness += 2
-            delta.xp += 15
-        }
-
-        // Sleep
-        if snapshot.sleepHours < GoosieConstants.sleepPenaltyBelow {
-            delta.energy -= 10
-            delta.health -= 5
-            delta.happiness -= 3
-        } else if snapshot.sleepHours >= GoosieConstants.sleepBonusMin &&
-                    snapshot.sleepHours <= GoosieConstants.sleepBonusMax {
-            delta.energy += 12
-            delta.health += 8
-            delta.happiness += 5
-            delta.xp += 20
-        }
-
-        // Exercise
-        if snapshot.exerciseMinutes >= GoosieConstants.exerciseBonusMinutes {
-            delta.health += 10
-            delta.energy += 5
-            delta.happiness += 8
-            delta.hygiene += 3
-            delta.xp += 25
-        }
-
-        return delta
+    static func rewardForExercise(minutes: Double) -> StatDelta {
+        guard minutes >= GoosieConstants.exerciseThresholdMinutes else { return StatDelta() }
+        return StatDelta(
+            healthiness: GoosieConstants.exerciseHealthinessBonus,
+            happiness: GoosieConstants.exerciseHappinessBonus,
+            xp: GoosieConstants.exerciseXP
+        )
     }
 
-    // MARK: - Focus Session Rewards
+    static func rewardForSleep(hours: Double) -> StatDelta {
+        if hours < GoosieConstants.sleepPenaltyBelow {
+            return StatDelta(
+                healthiness: -GoosieConstants.badSleepHealthinessPenalty,
+                happiness: -GoosieConstants.badSleepHappinessPenalty
+            )
+        } else if hours >= GoosieConstants.sleepBonusMin && hours <= GoosieConstants.sleepBonusMax {
+            return StatDelta(
+                healthiness: GoosieConstants.goodSleepHealthinessBonus,
+                happiness: GoosieConstants.goodSleepHappinessBonus,
+                xp: GoosieConstants.goodSleepXP
+            )
+        }
+        return StatDelta()
+    }
+
+    static func rewardForSteps(_ steps: Int) -> StatDelta {
+        guard steps >= GoosieConstants.stepsThreshold else { return StatDelta() }
+        return StatDelta(
+            healthiness: GoosieConstants.stepsHealthinessBonus,
+            happiness: GoosieConstants.stepsHappinessBonus,
+            xp: GoosieConstants.stepsXP
+        )
+    }
+
+    static func penaltyForDistractionOpen() -> StatDelta {
+        StatDelta(happiness: -GoosieConstants.distractionOpenPenalty)
+    }
+
+    static func rewardForStreakMilestone() -> StatDelta {
+        StatDelta(
+            healthiness: GoosieConstants.streakMilestoneHealthinessBonus,
+            happiness: GoosieConstants.streakMilestoneHappinessBonus,
+            xp: GoosieConstants.streakMilestoneXP
+        )
+    }
+
+    // MARK: - Focus Session
 
     static func rewardForFocusSession(minutes: Int) -> StatDelta {
         StatDelta(
             happiness: Double(minutes) * GoosieConstants.focusHappinessBonus,
-            energy: Double(minutes) * GoosieConstants.focusEnergyBonus,
             xp: minutes * GoosieConstants.focusXPPerMinute
         )
     }
 
-    // MARK: - Apply Rewards
+    // MARK: - Apply
 
     static func applyDelta(_ delta: StatDelta, to state: GooseState) {
-        state.health += delta.health
+        state.healthiness += delta.healthiness
         state.happiness += delta.happiness
-        state.energy += delta.energy
-        state.hygiene += delta.hygiene
         state.xp += delta.xp
-
         state.clampStats()
 
-        // Check level up
+        // Level up
         while state.xp >= GoosieConstants.xpForLevel(state.level) && state.level < GoosieConstants.maxLevel {
             state.xp -= GoosieConstants.xpForLevel(state.level)
             state.level += 1
@@ -102,10 +100,61 @@ enum RewardEngine {
         state.updateMood()
     }
 
-    // MARK: - Streak
+    // MARK: - Healthiness Formula
+
+    static func computeHealthiness(log: DailyLog, profile: UserProfile) -> Double {
+        let sleepScore = clamp(log.sleepHours / profile.avgSleepHours)
+        let exerciseScore = clamp(Double(log.exerciseMinutes) / Double(max(1, profile.avgExerciseMinutes)))
+        let stepsScore = clamp(Double(log.steps) / Double(max(1, profile.avgSteps)))
+        let sittingScore = clamp(1.0 - (log.sittingHours / 16.0))
+        let outsideScore = clamp(Double(log.outsideMinutes) / 60.0)
+
+        if profile.watchPaired && log.outsideMinutes > 0 {
+            return (GoosieConstants.sleepWeightWithOutside * sleepScore)
+                 + (GoosieConstants.exerciseWeightWithOutside * exerciseScore)
+                 + (GoosieConstants.stepsWeightWithOutside * stepsScore)
+                 + (GoosieConstants.sittingWeightWithOutside * sittingScore)
+                 + (GoosieConstants.outsideWeightWithOutside * outsideScore)
+        } else {
+            return (GoosieConstants.sleepWeight * sleepScore)
+                 + (GoosieConstants.exerciseWeight * exerciseScore)
+                 + (GoosieConstants.stepsWeight * stepsScore)
+                 + (GoosieConstants.sittingWeight * sittingScore)
+        }
+    }
+
+    // MARK: - Happiness Formula
+
+    static func computeHappiness(log: DailyLog, goals: [Goal]) -> Double {
+        let goalScore: Double = log.goalsTotal > 0
+            ? Double(log.goalsCompleted) / Double(log.goalsTotal)
+            : 0.5
+
+        let distractionPenalty = clamp(Double(log.distractionMinutes) / GoosieConstants.distractionMaxMinutes)
+
+        let maxStreak = goals.map(\.currentStreak).max() ?? 0
+        let streakBonus = min(GoosieConstants.maxStreakBonus, Double(maxStreak) * 0.01)
+
+        let raw = (GoosieConstants.goalScoreWeight * goalScore)
+                + (GoosieConstants.distractionWeight * (1.0 - distractionPenalty))
+                + (GoosieConstants.baseHappinessWeight * 1.0)
+                + streakBonus
+
+        return clamp(raw)
+    }
+
+    // MARK: - Helpers
 
     static func streakMultiplier(for streakDays: Int) -> Double {
         min(GoosieConstants.maxStreakMultiplier,
             1.0 + Double(streakDays) * GoosieConstants.streakMultiplierIncrement)
+    }
+
+    static func isStreakMilestone(_ days: Int) -> Bool {
+        [7, 14, 30, 60, 90, 180, 365].contains(days)
+    }
+
+    private static func clamp(_ v: Double) -> Double {
+        max(0.0, min(1.0, v))
     }
 }

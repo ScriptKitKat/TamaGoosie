@@ -113,22 +113,18 @@ struct HealthDashboard: View {
                     .font(GoosieTheme.bodyFont(16))
                     .foregroundStyle(GoosieTheme.charcoalOutline)
 
-                if snapshot.steps >= GoosieConstants.stepsThresholdHigh {
-                    impactRow(icon: "figure.walk", text: "Amazing steps today!", delta: "+15 Health")
-                } else if snapshot.steps >= GoosieConstants.stepsThresholdMid {
-                    impactRow(icon: "figure.walk", text: "Great walking!", delta: "+10 Health")
-                } else if snapshot.steps >= GoosieConstants.stepsThresholdLow {
-                    impactRow(icon: "figure.walk", text: "Good start!", delta: "+5 Health")
+                if snapshot.steps >= GoosieConstants.stepsThreshold {
+                    impactRow(icon: "figure.walk", text: "Amazing steps today!", delta: "+5% Healthiness")
                 }
 
                 if snapshot.sleepHours >= GoosieConstants.sleepBonusMin && snapshot.sleepHours <= GoosieConstants.sleepBonusMax {
-                    impactRow(icon: "moon.fill", text: "Great sleep!", delta: "+12 Energy")
+                    impactRow(icon: "moon.fill", text: "Great sleep!", delta: "+5% Healthiness")
                 } else if snapshot.sleepHours < GoosieConstants.sleepPenaltyBelow && snapshot.sleepHours > 0 {
-                    impactRow(icon: "moon.fill", text: "Need more sleep", delta: "-10 Energy")
+                    impactRow(icon: "moon.fill", text: "Need more sleep", delta: "-10% Healthiness")
                 }
 
-                if snapshot.exerciseMinutes >= GoosieConstants.exerciseBonusMinutes {
-                    impactRow(icon: "figure.run", text: "Workout complete!", delta: "+10 Health")
+                if snapshot.exerciseMinutes >= GoosieConstants.exerciseThresholdMinutes {
+                    impactRow(icon: "figure.run", text: "Workout complete!", delta: "+8% Healthiness")
                 }
             }
         }
@@ -146,7 +142,7 @@ struct HealthDashboard: View {
             Spacer()
             Text(delta)
                 .font(GoosieTheme.captionFont(12))
-                .foregroundStyle(delta.hasPrefix("-") ? GoosieTheme.coralAccent : GoosieTheme.hygieneGreen)
+                .foregroundStyle(delta.hasPrefix("-") ? GoosieTheme.coralAccent : GoosieTheme.happinessYellow)
         }
     }
 
@@ -159,7 +155,13 @@ struct HealthDashboard: View {
         if let data = try? await healthManager.fetchTodayStats() {
             snapshot = data
             if let state = gooseState, !data.wasProcessed {
-                GooseEngine.shared.processHealthData(data, state: state)
+                GooseEngine.shared.processHealthData(
+                    steps: data.steps,
+                    exerciseMinutes: data.exerciseMinutes,
+                    sleepHours: data.sleepHours,
+                    state: state
+                )
+                data.wasProcessed = true
             }
         }
     }

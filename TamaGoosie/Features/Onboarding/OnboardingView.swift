@@ -6,12 +6,12 @@ struct OnboardingView: View {
     @Binding var hasCompletedOnboarding: Bool
 
     @State private var currentPage = 0
-    @State private var gooseName = "Harnold"
+    @State private var gooseName = "Harold"
     @State private var selectedGoals: Set<String> = []
     @State private var eggHatched = false
 
     private let presetGoals: [(String, GoalCategory)] = [
-        ("Drink 8 glasses of water", .health),
+        ("Drink 8 glasses of water", .water),
         ("Take a 30-minute walk", .fitness),
         ("Meditate for 10 minutes", .mindfulness),
         ("Read for 20 minutes", .learning),
@@ -20,9 +20,9 @@ struct OnboardingView: View {
         ("Eat a healthy meal", .health),
         ("Call a friend or family", .social),
         ("Practice a skill", .learning),
-        ("Brush teeth 2x", .hygiene),
-        ("Clean room/desk", .hygiene),
         ("Complete top 3 tasks", .productivity),
+        ("Daily exercise routine", .exercise),
+        ("Limit screen time", .screentime),
     ]
 
     var body: some View {
@@ -48,7 +48,6 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            // Egg / hatching animation
             ZStack {
                 if eggHatched {
                     GooseCharacterView(mood: .ecstatic, phase: .baby)
@@ -92,7 +91,6 @@ struct OnboardingView: View {
                 )
                 .shadow(color: GoosieTheme.softPink.opacity(0.3), radius: 10, y: 5)
 
-            // Crack lines
             Path { path in
                 path.move(to: CGPoint(x: 40, y: 75))
                 path.addLine(to: CGPoint(x: 55, y: 65))
@@ -285,18 +283,22 @@ struct OnboardingView: View {
 
     private func completeOnboarding() {
         // Create goose
-        let goose = GooseState(name: gooseName.isEmpty ? "Harnold" : gooseName, hasCompletedOnboarding: true)
+        let goose = GooseState(name: gooseName.isEmpty ? "Harold" : gooseName)
         modelContext.insert(goose)
+
+        // Create user profile
+        let profile = UserProfile(hasCompletedOnboarding: true)
+        modelContext.insert(profile)
 
         // Create selected goals
         for (title, _) in presetGoals where selectedGoals.contains(title) {
             let category = presetGoals.first(where: { $0.0 == title })?.1 ?? .custom
-            let goal = Goal(title: title, category: category)
+            let goal = Goal(title: title, type: "recurring", category: category)
             modelContext.insert(goal)
         }
 
         // Schedule morning reminder
-        NotificationManager.shared.scheduleMorningReminder(gooseName: goose.name)
+        NotificationManager.shared.scheduleMorningReminder(gooseName: goose.name, healthiness: goose.healthiness)
 
         hasCompletedOnboarding = true
     }

@@ -1,42 +1,52 @@
 import Foundation
 
-/// Lightweight Codable struct for syncing goose stats to Watch/Widgets
-public struct GooseStats: Codable, Sendable, Hashable {
-    public var health: Double
+/// Lightweight Codable struct for syncing goose state to Watch/Widgets via app group
+public struct GooseSyncPayload: Codable, Sendable, Hashable {
+    public var healthiness: Double
     public var happiness: Double
-    public var energy: Double
-    public var hygiene: Double
+    public var mood: String
+    public var phase: String
+    public var name: String
     public var level: Int
-    public var xp: Int
-    public var mood: GooseMood
-    public var phase: GoosePhase
     public var streakDays: Int
-    public var gooseName: String
     public var isDead: Bool
+    public var spriteID: String
+    public var topGoals: [GoalSummary]
 
     public init(
-        health: Double = 100,
-        happiness: Double = 100,
-        energy: Double = 100,
-        hygiene: Double = 100,
+        healthiness: Double = 0.8,
+        happiness: Double = 0.7,
+        mood: String = GooseMood.content.rawValue,
+        phase: String = GoosePhase.baby.rawValue,
+        name: String = "Harold",
         level: Int = 1,
-        xp: Int = 0,
-        mood: GooseMood = .happy,
-        phase: GoosePhase = .baby,
         streakDays: Int = 0,
-        gooseName: String = "Harnold",
-        isDead: Bool = false
+        isDead: Bool = false,
+        spriteID: String = "default",
+        topGoals: [GoalSummary] = []
     ) {
-        self.health = health
+        self.healthiness = healthiness
         self.happiness = happiness
-        self.energy = energy
-        self.hygiene = hygiene
-        self.level = level
-        self.xp = xp
         self.mood = mood
         self.phase = phase
+        self.name = name
+        self.level = level
         self.streakDays = streakDays
-        self.gooseName = gooseName
         self.isDead = isDead
+        self.spriteID = spriteID
+        self.topGoals = topGoals
+    }
+
+    public var moodEnum: GooseMood {
+        GooseMood(rawValue: mood) ?? .content
+    }
+
+    public var phaseEnum: GoosePhase {
+        GoosePhase(rawValue: phase) ?? .baby
+    }
+
+    /// Display-ready healthiness percentage (0–100)
+    public var healthinessPercent: Int {
+        Int(healthiness * 100)
     }
 }

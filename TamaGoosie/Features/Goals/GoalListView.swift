@@ -68,6 +68,7 @@ struct GoalListView: View {
             GoalEditorView(existingGoal: viewModel.editingGoal)
         }
         .onAppear {
+            viewModel.seedBuiltinGoalsIfNeeded(in: modelContext)
             viewModel.resetDailyGoals(goals)
         }
     }
@@ -128,8 +129,8 @@ struct GoalCardView: View {
                             .font(GoosieTheme.captionFont(11))
                             .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
 
-                        if goal.streakDays > 0 {
-                            StreakFlame(days: goal.streakDays)
+                        if goal.currentStreak > 0 {
+                            StreakFlame(days: goal.currentStreak)
                         }
                     }
                 }

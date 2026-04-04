@@ -12,7 +12,7 @@ final class GooseViewModel {
     private var updateTimer: Timer?
 
     var mood: GooseMood {
-        gooseState?.currentMood ?? .neutral
+        gooseState?.currentMood ?? .content
     }
 
     var phase: GoosePhase {
@@ -23,24 +23,18 @@ final class GooseViewModel {
         mood.displayName
     }
 
-    var healthPercent: Double {
-        gooseState?.health ?? 0
+    /// Healthiness as 0–100 for display
+    var healthinessPercent: Double {
+        (gooseState?.healthiness ?? 0) * 100
     }
 
+    /// Happiness as 0–100 for display
     var happinessPercent: Double {
-        gooseState?.happiness ?? 0
-    }
-
-    var energyPercent: Double {
-        gooseState?.energy ?? 0
-    }
-
-    var hygienePercent: Double {
-        gooseState?.hygiene ?? 0
+        (gooseState?.happiness ?? 0) * 100
     }
 
     var gooseName: String {
-        gooseState?.name ?? "Harnold"
+        gooseState?.name ?? "Harold"
     }
 
     var level: Int {
@@ -89,22 +83,6 @@ final class GooseViewModel {
         guard let state = gooseState else { return }
         engine.completeGoal(goal, state: state)
         triggerReaction(.goalComplete)
-    }
-
-    func feedGoose() {
-        guard let state = gooseState, !state.isDead else { return }
-        state.health = min(GoosieConstants.statMax, state.health + 10)
-        state.hygiene = max(GoosieConstants.statMin, state.hygiene - 3)
-        state.clampStats()
-        state.updateMood()
-        triggerReaction(.feed)
-    }
-
-    func cleanGoose() {
-        guard let state = gooseState, !state.isDead else { return }
-        state.hygiene = min(GoosieConstants.statMax, state.hygiene + 15)
-        state.clampStats()
-        state.updateMood()
     }
 
     func reviveGoose() -> Bool {

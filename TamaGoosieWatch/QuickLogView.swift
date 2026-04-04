@@ -21,18 +21,18 @@ struct QuickLogView: View {
                                         .font(.system(size: 14, weight: .medium, design: .rounded))
                                         .lineLimit(2)
 
-                                    Text("\(goal.currentCount)/\(goal.targetCount)")
+                                    Text("\(Int(goal.progress * 100))%")
                                         .font(.system(size: 11, design: .rounded))
                                         .foregroundStyle(.secondary)
                                 }
 
                                 Spacer()
 
-                                Image(systemName: goal.isCompleted ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(goal.isCompleted ? .green : .gray)
+                                Image(systemName: goal.progress >= 1.0 ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(goal.progress >= 1.0 ? .green : .gray)
                             }
                         }
-                        .disabled(goal.isCompleted)
+                        .disabled(goal.progress >= 1.0)
                     }
                 }
             }

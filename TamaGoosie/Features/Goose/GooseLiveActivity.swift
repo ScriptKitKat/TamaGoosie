@@ -6,10 +6,8 @@ import WidgetKit
 
 struct GoosePetActivity: ActivityAttributes {
     struct ContentState: Codable, Hashable {
-        var health: Double
+        var healthiness: Double
         var happiness: Double
-        var energy: Double
-        var hygiene: Double
         var mood: String
         var level: Int
         var streakDays: Int
@@ -27,11 +25,9 @@ struct GoosePetActivity: ActivityAttributes {
 struct GooseLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: GoosePetActivity.self) { context in
-            // Lock Screen banner
             lockScreenBanner(context: context)
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded regions
                 DynamicIslandExpandedRegion(.leading) {
                     moodEmoji(context.state.mood)
                         .font(.system(size: 32))
@@ -69,11 +65,9 @@ struct GooseLiveActivityWidget: Widget {
                             .font(.system(size: 12, design: .rounded))
                             .foregroundStyle(.secondary)
                     } else {
-                        HStack(spacing: 8) {
-                            miniStatBar(value: context.state.health, color: .red, icon: "heart.fill")
+                        HStack(spacing: 12) {
+                            miniStatBar(value: context.state.healthiness, color: .red, icon: "heart.fill")
                             miniStatBar(value: context.state.happiness, color: .yellow, icon: "face.smiling.fill")
-                            miniStatBar(value: context.state.energy, color: .blue, icon: "bolt.fill")
-                            miniStatBar(value: context.state.hygiene, color: .green, icon: "drop.fill")
                         }
                         .padding(.horizontal, 4)
                     }
@@ -86,9 +80,9 @@ struct GooseLiveActivityWidget: Widget {
                     Text("\(minutes)m")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                 } else {
-                    Text("\(Int(context.state.health))%")
+                    Text("\(Int(context.state.healthiness * 100))%")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(context.state.health > 30 ? Color.primary : Color.red)
+                        .foregroundStyle(context.state.healthiness > 0.3 ? Color.primary : Color.red)
                 }
             } minimal: {
                 moodEmoji(context.state.mood)
@@ -129,7 +123,7 @@ struct GooseLiveActivityWidget: Widget {
             Spacer()
 
             VStack(spacing: 2) {
-                Text("\(Int(context.state.health))%")
+                Text("\(Int(context.state.healthiness * 100))%")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                 if context.state.streakDays > 0 {
                     HStack(spacing: 2) {
@@ -150,9 +144,10 @@ struct GooseLiveActivityWidget: Widget {
 
     private func moodEmoji(_ moodRaw: String) -> Text {
         let mood = GooseMood(rawValue: moodRaw)
-        return Text(mood?.emoji ?? "😐")
+        return Text(mood?.emoji ?? "😌")
     }
 
+    /// Display a mini stat bar for 0.0–1.0 values
     private func miniStatBar(value: Double, color: Color, icon: String) -> some View {
         VStack(spacing: 2) {
             Image(systemName: icon)
@@ -164,7 +159,7 @@ struct GooseLiveActivityWidget: Widget {
                         .fill(color.opacity(0.2))
                     Capsule()
                         .fill(color)
-                        .frame(width: max(0, geo.size.width * (value / 100)))
+                        .frame(width: max(0, geo.size.width * value))
                 }
             }
             .frame(height: 4)

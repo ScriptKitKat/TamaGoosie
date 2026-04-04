@@ -13,6 +13,8 @@ struct TamaGoosieApp: App {
             FocusSession.self,
             HealthSnapshot.self,
             DailyLog.self,
+            DistractionApp.self,
+            UserProfile.self,
         ])
     }
 }

@@ -5,39 +5,45 @@ import SwiftData
 final class DailyLog {
     var id: UUID
     var date: Date
+
+    // HealthKit data
+    var steps: Int
+    var exerciseMinutes: Int
+    var sleepHours: Double
+    var standHours: Int
+    var sittingHours: Double
+    var outsideMinutes: Int
+
+    // Distraction tracking
+    var distractionOpens: Int
+    var distractionMinutes: Int
+
+    // Goal snapshot
     var goalsCompleted: Int
     var goalsTotal: Int
-    var focusMinutes: Int
-    var steps: Int
-    var sleepHours: Double
-    var exerciseMinutes: Double
-    var healthStart: Double
-    var healthEnd: Double
-    var happinessStart: Double
-    var happinessEnd: Double
-    var energyStart: Double
-    var energyEnd: Double
-    var hygieneStart: Double
-    var hygieneEnd: Double
+
+    // Cached deltas (after GooseEngine runs)
+    var healthinessDelta: Double
+    var happinessDelta: Double
+
+    // XP earned
     var xpEarned: Int
 
     init(date: Date = .now) {
         self.id = UUID()
         self.date = Calendar.current.startOfDay(for: date)
+        self.steps = 0
+        self.exerciseMinutes = 0
+        self.sleepHours = 0
+        self.standHours = 0
+        self.sittingHours = 0
+        self.outsideMinutes = 0
+        self.distractionOpens = 0
+        self.distractionMinutes = 0
         self.goalsCompleted = 0
         self.goalsTotal = 0
-        self.focusMinutes = 0
-        self.steps = 0
-        self.sleepHours = 0
-        self.exerciseMinutes = 0
-        self.healthStart = 0
-        self.healthEnd = 0
-        self.happinessStart = 0
-        self.happinessEnd = 0
-        self.energyStart = 0
-        self.energyEnd = 0
-        self.hygieneStart = 0
-        self.hygieneEnd = 0
+        self.healthinessDelta = 0
+        self.happinessDelta = 0
         self.xpEarned = 0
     }
 }

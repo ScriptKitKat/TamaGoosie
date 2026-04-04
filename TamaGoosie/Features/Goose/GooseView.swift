@@ -15,16 +15,13 @@ struct GooseView: View {
 
     var body: some View {
         ZStack {
-            // Background
             GoosieTheme.mintBackground
                 .ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 20) {
-                    // Header
                     header
 
-                    // Goose Character
                     GooseCharacterView(
                         mood: viewModel.mood,
                         phase: viewModel.phase,
@@ -32,13 +29,8 @@ struct GooseView: View {
                     )
                     .frame(height: 220)
 
-                    // Mood label
                     moodLabel
-
-                    // Stat bars
                     statBars
-
-                    // Quick actions
                     quickActions
                 }
                 .padding(.horizontal, GoosieTheme.padding)
@@ -90,15 +82,13 @@ struct GooseView: View {
             )
     }
 
-    // MARK: - Stat Bars
+    // MARK: - Stat Bars (2 stats: healthiness + happiness)
 
     private var statBars: some View {
         GoosieCard {
             VStack(spacing: 12) {
-                StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthPercent, color: GoosieTheme.healthRed)
+                StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthinessPercent, color: GoosieTheme.healthRed)
                 StatBar(label: "Happy", icon: "face.smiling.fill", value: viewModel.happinessPercent, color: GoosieTheme.happinessYellow)
-                StatBar(label: "Energy", icon: "bolt.fill", value: viewModel.energyPercent, color: GoosieTheme.energyBlue)
-                StatBar(label: "Hygiene", icon: "drop.fill", value: viewModel.hygienePercent, color: GoosieTheme.hygieneGreen)
             }
         }
     }
@@ -107,22 +97,14 @@ struct GooseView: View {
 
     private var quickActions: some View {
         HStack(spacing: 16) {
-            CircleActionButton(icon: "fork.knife", label: "Feed", color: GoosieTheme.coralAccent) {
-                viewModel.feedGoose()
-            }
-
-            CircleActionButton(icon: "checkmark.circle", label: "Goals", color: GoosieTheme.hygieneGreen) {
+            CircleActionButton(icon: "checkmark.circle", label: "Goals", color: GoosieTheme.happinessYellow) {
                 if let goal = activeGoals.first {
                     viewModel.completeGoal(goal)
                 }
             }
 
-            CircleActionButton(icon: "figure.run", label: "Exercise", color: GoosieTheme.energyBlue) {
+            CircleActionButton(icon: "figure.run", label: "Exercise", color: GoosieTheme.healthRed) {
                 // Navigate to health tab
-            }
-
-            CircleActionButton(icon: "shower.fill", label: "Clean", color: GoosieTheme.skyBlue) {
-                viewModel.cleanGoose()
             }
         }
     }
@@ -160,12 +142,16 @@ struct DeathScreen: View {
                     .font(GoosieTheme.bodyFont(18))
                     .foregroundStyle(.white.opacity(0.8))
 
-                // Memorial stats
+                if let cause = viewModel.gooseState?.deathCause {
+                    Text(cause)
+                        .font(GoosieTheme.captionFont())
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+
                 GoosieCard {
                     VStack(spacing: 8) {
-                        memorialStat("Days alive", value: "\(viewModel.gooseState?.daysAlive ?? 0)")
-                        memorialStat("Goals completed", value: "\(viewModel.gooseState?.totalGoalsCompleted ?? 0)")
                         memorialStat("Longest streak", value: "\(viewModel.gooseState?.longestStreak ?? 0) days")
+                        memorialStat("Revive count", value: "\(viewModel.gooseState?.reviveCount ?? 0)")
                     }
                 }
                 .padding(.horizontal, 40)

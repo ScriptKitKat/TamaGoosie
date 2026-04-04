@@ -2,24 +2,23 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Query private var gooseStates: [GooseState]
+    @Query private var profiles: [UserProfile]
     @State private var selectedTab = 0
     @State private var hasCompletedOnboarding = false
 
     var body: some View {
         Group {
-            if hasCompletedOnboarding || !(gooseStates.first?.hasCompletedOnboarding == false && gooseStates.isEmpty) {
+            if hasCompletedOnboarding {
                 mainTabView
             } else {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
             }
         }
         .onAppear {
-            if let goose = gooseStates.first, goose.hasCompletedOnboarding {
+            if let profile = profiles.first, profile.hasCompletedOnboarding {
                 hasCompletedOnboarding = true
             }
 
-            // Activate services
             WatchSyncService.shared.activate()
             HealthKitManager.shared.enableBackgroundDelivery()
         }

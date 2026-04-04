@@ -7,6 +7,7 @@ struct FocusSessionView: View {
 
     @State private var timer = FocusTimer()
     @State private var showDurationPicker = false
+    @State private var showDistractionOverlay = false
 
     private var gooseState: GooseState? {
         gooseStates.first
@@ -17,7 +18,7 @@ struct FocusSessionView: View {
         if timer.isRunning {
             return timer.progress > 0.5 ? .happy : .content
         }
-        return gooseState?.currentMood ?? .neutral
+        return gooseState?.currentMood ?? .content
     }
 
     var body: some View {
@@ -32,14 +33,11 @@ struct FocusSessionView: View {
 
                 Spacer()
 
-                // Timer ring with goose
                 ZStack {
-                    // Background ring
                     Circle()
                         .stroke(GoosieTheme.charcoalOutline.opacity(0.1), lineWidth: 8)
                         .frame(width: 260, height: 260)
 
-                    // Progress ring
                     Circle()
                         .trim(from: 0, to: timer.progress)
                         .stroke(
@@ -54,7 +52,6 @@ struct FocusSessionView: View {
                         .rotationEffect(.degrees(-90))
                         .animation(.linear(duration: 1), value: timer.progress)
 
-                    // Goose in center
                     GooseCharacterView(
                         mood: gooseMood,
                         phase: gooseState?.currentPhase ?? .baby
@@ -62,13 +59,11 @@ struct FocusSessionView: View {
                     .scaleEffect(0.7)
                 }
 
-                // Timer display
                 Text(timer.displayTime)
                     .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundStyle(GoosieTheme.charcoalOutline)
                     .contentTransition(.numericText())
 
-                // Duration picker button
                 if !timer.isRunning {
                     Button {
                         showDurationPicker = true
@@ -87,14 +82,13 @@ struct FocusSessionView: View {
 
                 Spacer()
 
-                // Controls
                 HStack(spacing: 20) {
                     if timer.isRunning {
                         PillButton(title: "Pause", icon: "pause.fill", color: GoosieTheme.warmOrange) {
                             timer.pause()
                         }
                     } else if timer.isCompleted {
-                        PillButton(title: "Done!", icon: "checkmark", color: GoosieTheme.hygieneGreen) {
+                        PillButton(title: "Done!", icon: "checkmark", color: GoosieTheme.happinessYellow) {
                             finishSession(completed: true)
                         }
                     } else {
@@ -110,17 +104,30 @@ struct FocusSessionView: View {
                     }
                 }
 
-                // Encouragement text
                 if timer.isRunning {
-                    Text("Your goose is cheering you on!")
-                        .font(GoosieTheme.captionFont())
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                    VStack(spacing: 6) {
+                        Text("Your goose is cheering you on!")
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+
+                        Button {
+                            showDistractionOverlay = true
+                        } label: {
+                            Text("I got distracted...")
+                                .font(GoosieTheme.captionFont(12))
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
+                                .underline()
+                        }
+                    }
                 }
             }
             .padding(GoosieTheme.padding)
         }
         .sheet(isPresented: $showDurationPicker) {
             durationPicker
+        }
+        .fullScreenCover(isPresented: $showDistractionOverlay) {
+            DistractionOverlay()
         }
     }
 

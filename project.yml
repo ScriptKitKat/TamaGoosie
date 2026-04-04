@@ -68,16 +68,31 @@ targets:
         com.apple.security.application-groups:
           - group.com.tamagoosie
 
+  TamaGoosieTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - TamaGoosieTests
+    dependencies:
+      - target: TamaGoosie
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.tests
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   TamaGoosie:
     build:
       targets:
         TamaGoosie: all
         TamaGoosieWidgets: all
+        TamaGoosieTests: testing
     run:
       config: Debug
     test:
       config: Debug
+      targets:
+        - TamaGoosieTests
 
   TamaGoosieWatch:
     build:

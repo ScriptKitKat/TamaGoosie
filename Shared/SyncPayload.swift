@@ -1,25 +1,20 @@
 import Foundation
 
-/// Lightweight goal representation for Watch
+/// Lightweight goal representation for Watch sync and widget display
 public struct GoalSummary: Codable, Sendable, Identifiable, Hashable {
     public var id: UUID
     public var title: String
-    public var category: GoalCategory
-    public var currentCount: Int
-    public var targetCount: Int
-    public var isCompleted: Bool
+    public var progress: Double
+    public var category: String
 
-    public init(id: UUID, title: String, category: GoalCategory, currentCount: Int, targetCount: Int, isCompleted: Bool) {
+    public init(id: UUID, title: String, progress: Double, category: String) {
         self.id = id
         self.title = title
+        self.progress = progress
         self.category = category
-        self.currentCount = currentCount
-        self.targetCount = targetCount
-        self.isCompleted = isCompleted
     }
 
-    public var progress: Double {
-        guard targetCount > 0 else { return 0 }
-        return Double(currentCount) / Double(targetCount)
+    public var goalCategory: GoalCategory {
+        GoalCategory(rawValue: category) ?? .custom
     }
 }

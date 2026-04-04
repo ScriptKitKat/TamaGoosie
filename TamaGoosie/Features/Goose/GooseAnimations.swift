@@ -15,13 +15,11 @@ struct GooseCharacterView: View {
 
     var body: some View {
         ZStack {
-            // Base goose body
             gooseBody
                 .offset(y: bobOffset)
                 .rotationEffect(.degrees(wobbleAngle))
                 .scaleEffect(reactionScale)
 
-            // Face overlays
             if mood != .dead {
                 faceOverlay
                     .offset(y: bobOffset - 20)
@@ -30,11 +28,9 @@ struct GooseCharacterView: View {
                     .offset(y: bobOffset - 20)
             }
 
-            // Mood overlays
             moodOverlay
                 .offset(y: bobOffset)
 
-            // Reaction overlay
             reactionOverlay
         }
         .onAppear { startIdleAnimation() }
@@ -48,7 +44,6 @@ struct GooseCharacterView: View {
 
     private var gooseBody: some View {
         ZStack {
-            // Body shape — kawaii blob
             Ellipse()
                 .fill(mood == .dead ? Color.gray.opacity(0.5) : GoosieTheme.creamWhite)
                 .frame(width: 160, height: 140)
@@ -57,7 +52,6 @@ struct GooseCharacterView: View {
                         .stroke(GoosieTheme.charcoalOutline, lineWidth: 3.5)
                 )
 
-            // Belly highlight
             if mood != .dead {
                 Ellipse()
                     .fill(.white.opacity(0.4))
@@ -65,14 +59,12 @@ struct GooseCharacterView: View {
                     .offset(y: 10)
             }
 
-            // Wings (small bumps on sides)
             wing(flipped: false)
                 .offset(x: -70, y: 10)
 
             wing(flipped: true)
                 .offset(x: 70, y: 10)
 
-            // Feet
             HStack(spacing: 30) {
                 foot
                 foot
@@ -106,17 +98,14 @@ struct GooseCharacterView: View {
 
     private var faceOverlay: some View {
         ZStack {
-            // Eyes
             HStack(spacing: 24) {
                 eye
                 eye
             }
 
-            // Beak
             beak
                 .offset(y: 16)
 
-            // Blush marks (when happy)
             if mood == .happy || mood == .ecstatic {
                 HStack(spacing: 50) {
                     blushMark
@@ -129,8 +118,7 @@ struct GooseCharacterView: View {
 
     private var eye: some View {
         Group {
-            if isBlinking || mood == .sleeping {
-                // Closed eye — horizontal line
+            if isBlinking || mood == .sick {
                 Capsule()
                     .fill(GoosieTheme.charcoalOutline)
                     .frame(width: 10, height: 2.5)
@@ -161,13 +149,11 @@ struct GooseCharacterView: View {
 
     private var deadFace: some View {
         ZStack {
-            // X eyes
             HStack(spacing: 24) {
                 xEye
                 xEye
             }
 
-            // Flat beak
             beak
                 .offset(y: 16)
                 .opacity(0.5)
@@ -195,9 +181,6 @@ struct GooseCharacterView: View {
         case .sad:
             SweatDrop()
                 .offset(x: 50, y: -40)
-        case .sleeping:
-            ZzzBubbles()
-                .offset(x: 60, y: -60)
         case .ecstatic:
             SparkleParticles()
                 .offset(y: -80)
@@ -224,13 +207,11 @@ struct GooseCharacterView: View {
     // MARK: - Animations
 
     private func startIdleAnimation() {
-        // Bob animation
         let duration: Double = mood == .sad ? 3.0 : 2.0
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
             bobOffset = mood == .sad ? -3 : -8
         }
 
-        // Blink timer
         scheduleNextBlink()
     }
 

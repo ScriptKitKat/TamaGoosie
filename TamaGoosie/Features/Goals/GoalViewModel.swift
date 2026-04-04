@@ -11,6 +11,32 @@ final class GoalViewModel {
         context.delete(goal)
     }
 
+    /// Seeds 4 built-in goals if none of type "builtin" exist yet.
+    func seedBuiltinGoalsIfNeeded(in context: ModelContext) {
+        let descriptor = FetchDescriptor<Goal>(predicate: #Predicate { $0.type == "builtin" })
+        guard (try? context.fetch(descriptor))?.isEmpty != false else { return }
+
+        let builtin: [(String, GoalCategory, GoalFrequency, Double)] = [
+            ("Daily walk (10,000 steps)", .health, .daily, 1.2),
+            ("8 hours of sleep", .health, .daily, 1.2),
+            ("Drink 8 glasses of water", .health, .daily, 1.0),
+            ("No screens after 9pm", .mindfulness, .daily, 1.0),
+        ]
+
+        for (index, (title, category, frequency, weight)) in builtin.enumerated() {
+            let goal = Goal(
+                title: title,
+                type: "builtin",
+                category: category,
+                frequency: frequency,
+                targetCount: 1,
+                happinessWeight: weight,
+                sortOrder: index
+            )
+            context.insert(goal)
+        }
+    }
+
     func completeGoal(_ goal: Goal, gooseState: GooseState) {
         GooseEngine.shared.completeGoal(goal, state: gooseState)
     }
