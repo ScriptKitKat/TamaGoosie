@@ -184,7 +184,7 @@ struct OnboardingView: View {
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.white)
+                .foregroundStyle(.white)
                 }
             }
             .padding(12)

@@ -25,6 +25,9 @@ final class GooseState {
     var lastUpdated: Date = Date()
     var createdAt: Date = Date()
 
+    // Back-reference to owning UserProfile
+    var userProfile: UserProfile?
+
     init(
         name: String = "Harold",
         healthiness: Double = 0.8,

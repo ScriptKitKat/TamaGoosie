@@ -1,13 +1,12 @@
 import SwiftUI
 import SwiftData
+import FamilyControls
 
 struct DistractionConfigView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \DistractionApp.displayName) private var apps: [DistractionApp]
-
-    @State private var showAddSheet = false
-    @State private var newName = ""
-    @State private var newLimit = 30
+    @State private var screenTimeManager = ScreenTimeManager.shared
+    @State private var showPicker = false
+    @State private var draftSelection = FamilyActivitySelection()
 
     var body: some View {
         ZStack {
@@ -17,26 +16,30 @@ struct DistractionConfigView: View {
                 VStack(spacing: 16) {
                     infoCard
 
-                    if apps.isEmpty {
-                        emptyState
+                    if screenTimeManager.isAuthorized {
+                        authorizedContent
                     } else {
-                        ForEach(apps, id: \.id) { app in
-                            appRow(app)
-                        }
+                        unauthorizedContent
                     }
-
-                    PillButton(title: "Add App", icon: "plus", color: GoosieTheme.coralAccent) {
-                        showAddSheet = true
-                    }
-                    .padding(.top, 8)
                 }
                 .padding(GoosieTheme.padding)
             }
         }
         .navigationTitle("Distraction Apps")
         .navigationBarTitleDisplayMode(.large)
-        .sheet(isPresented: $showAddSheet) {
-            addAppSheet
+        .familyActivityPicker(isPresented: $showPicker, selection: $draftSelection)
+        .onChange(of: showPicker) { wasShowing, isShowing in
+            if wasShowing && !isShowing {
+                screenTimeManager.saveSelection(draftSelection)
+            }
+        }
+        .onAppear {
+            draftSelection = screenTimeManager.selection
+        }
+        .task {
+            if screenTimeManager.authorizationStatus == .notDetermined {
+                await screenTimeManager.requestAuthorization()
+            }
         }
     }
 
@@ -52,7 +55,7 @@ struct DistractionConfigView: View {
                     Text("Track Distractions")
                         .font(GoosieTheme.bodyFont(15))
                         .foregroundStyle(GoosieTheme.charcoalOutline)
-                    Text("Opening these apps decreases your goose's happiness.")
+                    Text("Using tracked apps reduces your goose's happiness.")
                         .font(GoosieTheme.captionFont(12))
                         .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
                 }
@@ -60,90 +63,97 @@ struct DistractionConfigView: View {
         }
     }
 
-    private var emptyState: some View {
-        GoosieCard {
-            VStack(spacing: 8) {
-                Image(systemName: "app.badge.checkmark")
-                    .font(.system(size: 36))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
-                Text("No distraction apps added yet")
-                    .font(GoosieTheme.captionFont())
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+    private var authorizedContent: some View {
+        VStack(spacing: 12) {
+            GoosieCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text("Screen Time Connected")
+                            .font(GoosieTheme.bodyFont(15))
+                            .foregroundStyle(GoosieTheme.charcoalOutline)
+                    }
+
+                    if screenTimeManager.hasSelection {
+                        let appCount = screenTimeManager.selection.applicationTokens.count
+                        let catCount = screenTimeManager.selection.categoryTokens.count
+                        Text(selectionSummary(apps: appCount, categories: catCount))
+                            .font(GoosieTheme.captionFont(12))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                    } else {
+                        Text("No apps selected yet — tap below to choose.")
+                            .font(GoosieTheme.captionFont(12))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                    }
+                }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+
+            PillButton(
+                title: screenTimeManager.hasSelection ? "Change Selected Apps" : "Choose Apps to Track",
+                icon: "app.badge",
+                color: GoosieTheme.coralAccent
+            ) {
+                draftSelection = screenTimeManager.selection
+                showPicker = true
+            }
+
+            if screenTimeManager.hasSelection {
+                thresholdInfoCard
+            }
         }
     }
 
-    private func appRow(_ app: DistractionApp) -> some View {
-        GoosieCard {
-            HStack {
-                Image(systemName: "app.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(GoosieTheme.coralAccent)
-                    .frame(width: 36, height: 36)
-                    .background(GoosieTheme.coralAccent.opacity(0.15), in: RoundedRectangle(cornerRadius: 8))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(app.displayName)
+    private var unauthorizedContent: some View {
+        VStack(spacing: 12) {
+            GoosieCard {
+                VStack(spacing: 10) {
+                    Image(systemName: "hourglass")
+                        .font(.system(size: 36))
+                        .foregroundStyle(GoosieTheme.coralAccent.opacity(0.7))
+                    Text("Screen Time Access Required")
                         .font(GoosieTheme.bodyFont(15))
                         .foregroundStyle(GoosieTheme.charcoalOutline)
-                    Text("Limit: \(app.dailyLimitMinutes) min/day")
+                    Text("TamaGoosie uses Screen Time to automatically detect when you use distracting apps — no manual setup needed.")
                         .font(GoosieTheme.captionFont(12))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                        .multilineTextAlignment(.center)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            }
 
-                Spacer()
-
-                Button {
-                    modelContext.delete(app)
-                } label: {
-                    Image(systemName: "trash")
-                        .foregroundStyle(GoosieTheme.coralAccent)
-                }
+            PillButton(
+                title: "Allow Screen Time Access",
+                icon: "lock.open",
+                color: GoosieTheme.coralAccent
+            ) {
+                Task { await screenTimeManager.requestAuthorization() }
             }
         }
     }
 
-    private var addAppSheet: some View {
-        NavigationStack {
-            Form {
-                Section("App Name") {
-                    TextField("e.g. Instagram, TikTok", text: $newName)
-                        .autocorrectionDisabled()
-                }
-                Section("Daily Limit") {
-                    Stepper("\(newLimit) minutes", value: $newLimit, in: 5...240, step: 5)
-                }
-            }
-            .navigationTitle("Add Distraction App")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        resetSheet()
-                        showAddSheet = false
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        guard !newName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                        let bundleID = newName.lowercased().replacingOccurrences(of: " ", with: ".")
-                        let app = DistractionApp(bundleID: bundleID, displayName: newName, dailyLimitMinutes: newLimit)
-                        modelContext.insert(app)
-                        resetSheet()
-                        showAddSheet = false
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
+    private var thresholdInfoCard: some View {
+        GoosieCard {
+            HStack(spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .font(.system(size: 14))
+                Text("Every \(GoosieConstants.screenTimeThresholdMinutes) minutes on tracked apps reduces your goose's happiness.")
+                    .font(GoosieTheme.captionFont(12))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
             }
         }
-        .presentationDetents([.medium])
     }
 
-    private func resetSheet() {
-        newName = ""
-        newLimit = 30
+    // MARK: - Helpers
+
+    private func selectionSummary(apps: Int, categories: Int) -> String {
+        switch (apps, categories) {
+        case (0, 0): return "Nothing selected"
+        case (let a, 0): return "\(a) app\(a == 1 ? "" : "s") selected"
+        case (0, let c): return "\(c) categor\(c == 1 ? "y" : "ies") selected"
+        default: return "\(apps) app\(apps == 1 ? "" : "s") and \(categories) categor\(categories == 1 ? "y" : "ies") selected"
+        }
     }
 }

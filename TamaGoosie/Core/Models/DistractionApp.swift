@@ -9,6 +9,9 @@ final class DistractionApp {
     var iconName: String?
     var dailyLimitMinutes: Int
 
+    // Back-reference to owning UserProfile
+    var userProfile: UserProfile?
+
     init(
         bundleID: String,
         displayName: String,

@@ -38,15 +38,13 @@ struct GooseComplicationCircular: View {
     var body: some View {
         ZStack {
             AccessoryWidgetBackground()
-
+            Circle().fill(Color(hex: 0xFFF8F0))
             Circle()
                 .trim(from: 0, to: entry.payload.healthiness)
-                .stroke(.green, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(Color(hex: 0x7ECBC4), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .padding(3)
-
-            Text(entry.payload.moodEnum.emoji)
-                .font(.system(size: 18))
+                .padding(2)
+            DuckFaceView(size: 22)
         }
     }
 }
@@ -56,43 +54,32 @@ struct GooseComplicationRectangular: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(entry.payload.moodEnum.emoji)
-                .font(.system(size: 20))
+            DuckFaceView(size: 26)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.payload.name)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(hex: 0x4A3728))
 
-                HStack(spacing: 4) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 8))
-                        .foregroundStyle(.red)
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(.gray.opacity(0.3))
-                            Capsule().fill(.green)
-                                .frame(width: max(0, geo.size.width * entry.payload.healthiness))
-                        }
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color(hex: 0xE8E0D4))
+                        Capsule().fill(Color(hex: 0x7ECBC4))
+                            .frame(width: geo.size.width * max(0, entry.payload.healthiness))
                     }
-                    .frame(height: 5)
                 }
+                .frame(height: 3)
 
                 if entry.payload.streakDays > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 8))
-                            .foregroundStyle(.orange)
-                        Text("\(entry.payload.streakDays)")
-                            .font(.system(size: 10, design: .rounded))
-                    }
+                    Text("\(entry.payload.streakDays)-day streak")
+                        .font(.system(size: 9, design: .rounded))
+                        .foregroundStyle(Color(hex: 0xA09080))
                 }
             }
         }
     }
 }
 
-@main
 struct GooseComplicationWidget: Widget {
     let kind = "GooseComplication"
 

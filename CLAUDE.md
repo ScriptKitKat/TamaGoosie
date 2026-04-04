@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## watchOS Target Rules
+
+**Bundle ID must be prefixed by the iOS app's bundle ID:**
+- iOS app: `com.tamagoosie.app`
+- Watch app: `com.tamagoosie.app.watch` ✅ — never `com.tamagoosie.watch` ❌
+
+**Watch `Info.plist` must contain:**
+```xml
+<key>WKCompanionAppBundleIdentifier</key>
+<string>com.tamagoosie.app</string>
+```
+
+**`project.yml` iOS target must embed the Watch target:**
+```yaml
+TamaGoosie:
+  dependencies:
+    - target: TamaGoosieWatch
+      embed: true
+```
+
+**Run the iOS scheme** (`TamaGoosie`), not the Watch scheme, to install both apps on the simulator together.
+
+**`@main` can only appear once per module.** `WatchApp.swift` owns `@main`. Any `Widget` or `WKExtension` entry points must live in a separate extension target — never in the main Watch app target.
+
+---
+
 ## Build & Test Commands
 
 The project uses **XcodeGen** to regenerate `TamaGoosie.xcodeproj` from `project.yml`. Always regenerate after modifying `project.yml` or adding new source files via the Python approach below.

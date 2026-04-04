@@ -19,6 +19,17 @@ final class UserProfile {
     var watchPaired: Bool
     var hasCompletedOnboarding: Bool
 
+    // MARK: - Relationships (1:1 and 1:many owned by UserProfile)
+
+    @Relationship(deleteRule: .cascade, inverse: \GooseState.userProfile)
+    var gooseState: GooseState?
+
+    @Relationship(deleteRule: .cascade, inverse: \Goal.userProfile)
+    var goals: [Goal] = []
+
+@Relationship(deleteRule: .cascade, inverse: \DistractionApp.userProfile)
+    var distractionApps: [DistractionApp] = []
+
     init(
         displayName: String? = nil,
         avgSleepHours: Double = 8.0,
