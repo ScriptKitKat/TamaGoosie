@@ -2,10 +2,34 @@ import Foundation
 import SwiftData
 import Observation
 
+// MARK: - Goal Draft (AI-inferred prefill for GoalEditorView)
+
+struct GoalDraft: Equatable {
+    var title: String = ""
+    var goalType: String = "recurring"
+    var category: GoalCategory = .custom
+    var frequency: GoalFrequency = .daily
+    var customDays: Set<Int> = []
+    var targetCount: Int = 1
+    var happinessWeight: Double = 1.0
+    var dueDate: Date = .now
+    var enableReminder: Bool = false
+    var preferredTime: Date = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? .now
+}
+
+// MARK: - Chat Message
+
+struct ChatMessage: Identifiable {
+    let id = UUID()
+    let isUser: Bool
+    let text: String
+}
+
 @Observable
 final class GoalViewModel {
     var showEditor = false
     var editingGoal: Goal?
+    var pendingDraft: GoalDraft?
 
     func deleteGoal(_ goal: Goal, in context: ModelContext) {
         GooseNotificationSystem.shared.cancelPushes(for: goal.id)

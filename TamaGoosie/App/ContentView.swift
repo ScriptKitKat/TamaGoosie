@@ -54,6 +54,9 @@ struct ContentView: View {
             .onChange(of: goals.count) { _, _ in
                 scheduleNotifications()
             }
+            .onChange(of: goals.map { $0.isCompleted }) { _, _ in
+                scheduleNotifications()
+            }
             .sheet(item: $notificationDelegate.pendingNegotiation) { negotiation in
                 NegotiationView(negotiation: negotiation)
             }

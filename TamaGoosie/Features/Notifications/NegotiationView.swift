@@ -9,13 +9,19 @@ final class NegotiationSession: ObservableObject {
     @Published var isLoading = false
     @Published var outcome: NegotiationReply.Outcome? = nil
 
-    private let llmSession: LanguageModelSession
+    private let llmSession: LanguageModelSession?
     private let goalTitle: String
     private(set) var turnCount = 0
 
     init(goalTitle: String) {
         self.goalTitle = goalTitle
-        self.llmSession = GooseSpeechGenerator.shared.makeNegotiationSession(goalTitle: goalTitle)
+        let provider = UserDefaults.standard.string(forKey: "chatProvider") ?? "apple"
+        if provider == "gemini" {
+            self.llmSession = nil
+            Task { await GooseSpeechGenerator.shared.startGeminiNegotiation() }
+        } else {
+            self.llmSession = GooseSpeechGenerator.shared.makeNegotiationSession(goalTitle: goalTitle)
+        }
     }
 
     func start() async {
@@ -31,9 +37,11 @@ final class NegotiationSession: ObservableObject {
         messages.append(NegotiationMessage(role: .user, text: userMessage))
         isLoading = true
 
+        let conversationSoFar = messages.map { ($0.role == .goose ? "goose" : "owner") + ": " + $0.text }.joined(separator: "\n")
         let reply = await GooseSpeechGenerator.shared.negotiate(
             session: llmSession,
             userMessage: userMessage,
+            conversationSoFar: conversationSoFar,
             goalTitle: goalTitle,
             turnNumber: turnCount
         )
@@ -44,10 +52,9 @@ final class NegotiationSession: ObservableObject {
 
         if let o = reply.outcome {
             outcome = o
-        } else if turnCount >= 3 {
-            // Force rejection after 3 unanswered turns
-            let finalText = "i have made up my mind. please work on \(goalTitle). i believe in you."
-            messages.append(NegotiationMessage(role: .goose, text: finalText))
+        } else if turnCount >= 5 {
+            // Auto-reject after 5 exchanges without being convinced
+            messages.append(NegotiationMessage(role: .goose, text: "ok goose has heard enough. please just do \(goalTitle)!! honk!!"))
             outcome = .rejected
         }
     }
@@ -214,26 +221,36 @@ struct NegotiationView: View {
                     Text("pushing paused for \(hours) hours")
                         .font(.system(size: 12, design: .rounded))
                         .foregroundStyle(.white.opacity(0.5))
+                    Text("tap to close")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.25))
+                        .padding(.top, 4)
                 }
                 .onAppear {
                     GooseNotificationSystem.shared.pausePushes(goalID: negotiation.goalID, hours: hours)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { dismiss() }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) { dismiss() }
                 }
 
             case .rejected:
                 VStack(spacing: 6) {
-                    Text("i'm not convinced. please work on it.")
+                    Text("goose is not convince. please do the thing.")
                         .font(.system(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(Color(hex: 0xFF6B6B))
                     Text("honk.")
                         .font(.system(size: 12, design: .rounded))
                         .foregroundStyle(.white.opacity(0.5))
+                    Text("tap to close")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.25))
+                        .padding(.top, 4)
                 }
                 .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { dismiss() }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) { dismiss() }
                 }
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture { dismiss() }
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
         .background(Color.white.opacity(0.08))

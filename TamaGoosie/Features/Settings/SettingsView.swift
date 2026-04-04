@@ -7,6 +7,11 @@ struct SettingsView: View {
     @Query private var gooseStates: [GooseState]
     @Query private var profiles: [UserProfile]
 
+    @AppStorage("chatProvider") private var chatProvider: String = "apple"
+    @AppStorage("geminiAPIKey") private var geminiAPIKey: String = ""
+    @State private var geminiAPIKeyInput: String = ""
+    @State private var showGeminiKey: Bool = false
+
     @State private var gooseName = ""
     @State private var morningReminderEnabled = true
     @State private var morningReminderHour = 8
@@ -106,6 +111,9 @@ struct SettingsView: View {
                         }
                     }
 
+                    // AI Model
+                    aiModelCard
+
                     // Focus Mode (Dynamic Island)
                     GoosieCard {
                         VStack(alignment: .leading, spacing: 8) {
@@ -203,6 +211,7 @@ struct SettingsView: View {
         }
         .onAppear {
             gooseName = gooseState?.name ?? "Harold"
+            geminiAPIKeyInput = geminiAPIKey
         }
         .alert("Reset Goose?", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -364,6 +373,75 @@ struct SettingsView: View {
         case 3: return "honk honk!!"
         case 4: return "please!!"
         default: return "honk."
+        }
+    }
+
+    // MARK: - AI Model Card
+
+    private var aiModelCard: some View {
+        GoosieCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("AI Model")
+                    .font(GoosieTheme.bodyFont())
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                Picker("", selection: $chatProvider) {
+                    Text("Apple Intelligence").tag("apple")
+                    Text("Gemini").tag("gemini")
+                }
+                .pickerStyle(.segmented)
+
+                if chatProvider == "gemini" {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Gemini API Key")
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+
+                        HStack {
+                            if showGeminiKey {
+                                TextField("paste your api key", text: $geminiAPIKeyInput)
+                                    .font(GoosieTheme.captionFont())
+                                    .textFieldStyle(.plain)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
+                            } else {
+                                SecureField("paste your api key", text: $geminiAPIKeyInput)
+                                    .font(GoosieTheme.captionFont())
+                                    .textFieldStyle(.plain)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
+                            }
+
+                            Button {
+                                showGeminiKey.toggle()
+                            } label: {
+                                Image(systemName: showGeminiKey ? "eye.slash" : "eye")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                            }
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(GoosieTheme.charcoalOutline.opacity(0.05))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .strokeBorder(GoosieTheme.charcoalOutline.opacity(0.12), lineWidth: 1)
+                                )
+                        )
+                        .onChange(of: geminiAPIKeyInput) { _, newValue in
+                            geminiAPIKey = newValue
+                        }
+
+                        Text("uses gemini-2.5-flash-lite. your key is stored locally.")
+                            .font(GoosieTheme.captionFont(11))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                    }
+                }
+            }
         }
     }
 

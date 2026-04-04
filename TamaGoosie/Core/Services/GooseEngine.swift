@@ -45,6 +45,9 @@ final class GooseEngine {
     func completeGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) {
         goal.complete()
 
+        // Immediately cancel all pending notifications for this goal so nothing stale fires.
+        GooseNotificationSystem.shared.cancelGoalNotifications(for: goal.id)
+
         // Update goal streak — only extend when last completion was yesterday,
         // leave unchanged if already completed today, restart otherwise.
         if let lastDate = goal.lastCompletedDate {

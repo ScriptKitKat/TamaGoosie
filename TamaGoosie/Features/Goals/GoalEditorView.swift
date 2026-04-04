@@ -7,20 +7,38 @@ struct GoalEditorView: View {
     @Query private var gooseStates: [GooseState]
 
     var existingGoal: Goal?
+    var prefill: GoalDraft?
 
-    @State private var title = ""
-    @State private var goalType = "recurring"
-    @State private var category: GoalCategory = .custom
-    @State private var frequency: GoalFrequency = .daily
-    @State private var customDays: Set<Int> = []
-    @State private var targetCount = 1
-    @State private var happinessWeight: Double = 1.0
-    @State private var dueDate = Date()
-    @State private var enableReminder = false
-    @State private var preferredTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
+    @State private var title: String
+    @State private var goalType: String
+    @State private var category: GoalCategory
+    @State private var frequency: GoalFrequency
+    @State private var customDays: Set<Int>
+    @State private var targetCount: Int
+    @State private var happinessWeight: Double
+    @State private var dueDate: Date
+    @State private var enableReminder: Bool
+    @State private var preferredTime: Date
     @State private var notificationPermissionDenied = false
     @State private var toastMessage: String?
     @State private var toastTask: Task<Void, Never>?
+
+    init(existingGoal: Goal? = nil, prefill: GoalDraft? = nil) {
+        self.existingGoal = existingGoal
+        self.prefill = prefill
+        let draft = (existingGoal == nil) ? prefill : nil
+        let defaultTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+        _title          = State(initialValue: draft?.title ?? "")
+        _goalType       = State(initialValue: draft?.goalType ?? "recurring")
+        _category       = State(initialValue: draft?.category ?? .custom)
+        _frequency      = State(initialValue: draft?.frequency ?? .daily)
+        _customDays     = State(initialValue: draft?.customDays ?? [])
+        _targetCount    = State(initialValue: draft?.targetCount ?? 1)
+        _happinessWeight = State(initialValue: draft?.happinessWeight ?? 1.0)
+        _dueDate        = State(initialValue: draft?.dueDate ?? Date())
+        _enableReminder = State(initialValue: draft?.enableReminder ?? false)
+        _preferredTime  = State(initialValue: draft?.preferredTime ?? defaultTime)
+    }
 
     var isEditing: Bool { existingGoal != nil }
     var isBuiltin: Bool { existingGoal?.type == "builtin" }
@@ -71,7 +89,9 @@ struct GoalEditorView: View {
                     }
                 }
             }
-            .onAppear { loadExistingGoal() }
+            .onAppear {
+                if existingGoal != nil { loadExistingGoal() }
+            }
         }
     }
 

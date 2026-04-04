@@ -79,10 +79,21 @@ final class GooseNotificationSystem {
 
     // MARK: - Public Actions
 
-    /// Call when a goal is completed or deleted.
-    func cancelPushes(for goalID: UUID) {
-        center.removePendingNotificationRequests(withIdentifiers: pushIDs(for: goalID))
+    /// Cancels every pending notification for a goal: push chain, all reminder variants, and reset suggestion.
+    /// Call immediately when a goal is completed so no stale notifications fire.
+    func cancelGoalNotifications(for goalID: UUID) {
+        var ids = pushIDs(for: goalID)
+        // Base daily reminder + 7 weekday-specific variants (weekdays/weekends/custom frequencies)
+        ids.append("reminder_\(goalID.uuidString)")
+        for d in 1...7 { ids.append("reminder_\(goalID.uuidString)_\(d)") }
+        ids.append("reset_\(goalID.uuidString)")
+        center.removePendingNotificationRequests(withIdentifiers: ids)
         EscalationTracker.shared.reset(for: goalID)
+    }
+
+    /// Call when a goal is deleted (also cancels everything).
+    func cancelPushes(for goalID: UUID) {
+        cancelGoalNotifications(for: goalID)
     }
 
     /// Call when user taps "i'm on it!" on a push notification.
