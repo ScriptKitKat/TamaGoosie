@@ -173,7 +173,7 @@ private struct AuraParticleView: View {
                 .font(.system(size: sizes[index], weight: .bold, design: .rounded))
                 .foregroundStyle(color)
         case .drops:
-            Image(systemName: index % 2 == 0 ? "dizzy" : "star.fill")
+            Image(systemName: index % 2 == 0 ? "bolt.fill" : "exclamationmark.2")
                 .font(.system(size: 15))
                 .foregroundStyle(color)
         }
