@@ -19,8 +19,11 @@ struct GoalEditorView: View {
     @State private var enableReminder = false
     @State private var preferredTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
     @State private var notificationPermissionDenied = false
+    @State private var toastMessage: String?
+    @State private var toastTask: Task<Void, Never>?
 
     var isEditing: Bool { existingGoal != nil }
+    var isBuiltin: Bool { existingGoal?.type == "builtin" }
 
     private let goalTypes = ["recurring", "deadline"]
 
@@ -29,12 +32,109 @@ struct GoalEditorView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .bottom) {
                 GoosieTheme.mintBackground
                     .ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    if isBuiltin {
+                        builtinThresholdEditor
+                    } else {
+                        fullEditor
+                    }
+                }
+
+                if let message = toastMessage {
+                    Text(message)
+                        .font(GoosieTheme.captionFont(13))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(GoosieTheme.charcoalOutline.opacity(0.85)))
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .id(message)
+                }
+            }
+            .animation(.easeInOut(duration: 0.25), value: toastMessage)
+            .navigationTitle(isBuiltin ? "Edit Goal Target" : (isEditing ? "Edit Goal" : "New Goal"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if isBuiltin {
+                        Button("Save") { saveBuiltin() }
+                    } else {
+                        Button("Save") { save() }
+                    }
+                }
+            }
+            .onAppear { loadExistingGoal() }
+        }
+    }
+
+    // MARK: - Built-in threshold editor
+
+    @ViewBuilder
+    private var builtinThresholdEditor: some View {
+        VStack(spacing: 20) {
+            GoosieCard {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Goal")
+                        .font(GoosieTheme.captionFont())
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                    Text(existingGoal?.title ?? "")
+                        .font(GoosieTheme.bodyFont())
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
+                }
+            }
+
+            GoosieCard {
+                if existingGoal?.title.localizedCaseInsensitiveContains("steps") == true {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Daily step target")
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                        Stepper(value: $targetCount, in: 1000...50000, step: 500) {
+                            Text("\(targetCount.formatted()) steps")
+                                .font(GoosieTheme.bodyFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                        }
+                    }
+                } else if existingGoal?.title.localizedCaseInsensitiveContains("sleep") == true {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Sleep target (hours)")
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                        Stepper(value: $targetCount, in: 4...12, step: 1) {
+                            Text("\(targetCount) hours")
+                                .font(GoosieTheme.bodyFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Screen time limit (minutes)")
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                        Stepper(value: $targetCount, in: 30...480, step: 15) {
+                            Text("\(targetCount) minutes")
+                                .font(GoosieTheme.bodyFont())
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(GoosieTheme.padding)
+    }
+
+    // MARK: - Full editor
+
+    private var fullEditor: some View {
+        VStack(spacing: 20) {
                         // Title
                         GoosieCard {
                             VStack(alignment: .leading, spacing: 8) {
@@ -224,23 +324,8 @@ struct GoalEditorView: View {
                                     .tint(GoosieTheme.coralAccent)
                             }
                         }
-                    }
-                    .padding(GoosieTheme.padding)
-                }
-            }
-            .navigationTitle(isEditing ? "Edit Goal" : "New Goal")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
-                        .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
-            .onAppear { loadExistingGoal() }
         }
+        .padding(GoosieTheme.padding)
     }
 
     private func typeChip(_ type: String) -> some View {
@@ -305,6 +390,23 @@ struct GoalEditorView: View {
         }
     }
 
+    private func showToast(_ message: String) {
+        toastTask?.cancel()
+        toastMessage = message
+        toastTask = Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { toastMessage = nil }
+        }
+    }
+
+    private func saveBuiltin() {
+        guard let goal = existingGoal else { return }
+        goal.targetCount = targetCount
+        try? modelContext.save()
+        dismiss()
+    }
+
     private func requestNotificationPermissionIfNeeded() {
         Task {
             do {
@@ -338,7 +440,14 @@ struct GoalEditorView: View {
 
     private func save() {
         let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
-        guard !trimmedTitle.isEmpty else { return }
+        guard !trimmedTitle.isEmpty else {
+            showToast("Please enter a goal title")
+            return
+        }
+        if goalType == "recurring", frequency == .custom, customDays.isEmpty {
+            showToast("Please select at least one day")
+            return
+        }
 
         let resolvedPreferredTime: Date? = enableReminder ? preferredTime : nil
 

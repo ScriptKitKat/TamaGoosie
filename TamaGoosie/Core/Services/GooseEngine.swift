@@ -8,6 +8,17 @@ final class GooseEngine {
 
     private(set) var isUpdating = false
 
+    // Cached health data populated by processHealthData; included in every sync payload
+    private(set) var cachedSteps: Int = 0
+    private var cachedExerciseMinutes: Int = 0
+    private(set) var cachedSleepHours: Double = 0.0
+    private var cachedStandHours: Int = 0
+    // Cached distraction minutes updated by DistractionOverlay each minute
+    private(set) var cachedDistractMinutes: Int = 0
+
+    // Cached goals populated by refreshGoals(_:); included in every sync payload
+    private var cachedTopGoals: [GoalSummary] = []
+
     private init() {}
 
     // MARK: - Core Update Loop
@@ -31,10 +42,15 @@ final class GooseEngine {
 
         goal.complete()
 
-        // Update goal streak
-        if let lastDate = goal.lastCompletedDate,
-           Calendar.current.isDateInYesterday(lastDate) || Calendar.current.isDateInToday(lastDate) {
-            goal.currentStreak += 1
+        // Update goal streak — only extend when last completion was yesterday,
+        // leave unchanged if already completed today, restart otherwise.
+        if let lastDate = goal.lastCompletedDate {
+            if Calendar.current.isDateInYesterday(lastDate) {
+                goal.currentStreak += 1
+            } else if !Calendar.current.isDateInToday(lastDate) {
+                goal.currentStreak = 1
+            }
+            // Already completed today: streak stays the same.
         } else {
             goal.currentStreak = 1
         }
@@ -93,8 +109,14 @@ final class GooseEngine {
 
     // MARK: - Health Data Processing
 
-    func processHealthData(steps: Int, exerciseMinutes: Double, sleepHours: Double, state: GooseState) {
+    func processHealthData(steps: Int, exerciseMinutes: Double, sleepHours: Double, standHours: Int = 0, state: GooseState) {
         guard !state.isDead else { return }
+
+        // Cache health values so they're included in every subsequent sync payload
+        cachedSteps = steps
+        cachedExerciseMinutes = Int(exerciseMinutes)
+        cachedSleepHours = sleepHours
+        cachedStandHours = standHours
 
         var combined = RewardEngine.StatDelta()
 
@@ -227,13 +249,53 @@ final class GooseEngine {
         }
     }
 
+    // MARK: - Formula Accessors
+
+    /// Compute healthiness (0–1) from today's DailyLog and UserProfile baselines.
+    func computeHealthiness(log: DailyLog, profile: UserProfile) -> Double {
+        RewardEngine.computeHealthiness(log: log, profile: profile)
+    }
+
+    /// Compute happiness (0–1) from today's DailyLog and current Goals.
+    func computeHappiness(log: DailyLog, goals: [Goal]) -> Double {
+        RewardEngine.computeHappiness(log: log, goals: goals)
+    }
+
+    /// Apply time-based decay to state, then sync to App Group + Watch.
+    func applyDecay(to state: GooseState) {
+        guard !state.isVacationMode, !state.isDead else { return }
+        DecayEngine.applyDecay(to: state)
+        state.updateMood()
+        saveStatsToAppGroup(state.toSyncPayload())
+    }
+
+    /// Call this from DistractionOverlay each time distractionMinutes increments.
+    func updateDistractMinutes(_ minutes: Int) {
+        cachedDistractMinutes = minutes
+    }
+
+    // MARK: - Goals Cache
+
+    /// Call this whenever the active goals list changes (onAppear, onChange).
+    /// Converts Goal → GoalSummary and caches for the next sync payload.
+    func refreshGoals(_ goals: [Goal]) {
+        cachedTopGoals = goals.filter(\.isActive).map { $0.toSummary() }
+    }
+
     // MARK: - App Group Sync + Watch Sync
 
     private func saveStatsToAppGroup(_ payload: GooseSyncPayload) {
+        var enrichedPayload = payload
+        enrichedPayload.steps = cachedSteps
+        enrichedPayload.exerciseMinutes = cachedExerciseMinutes
+        enrichedPayload.sleepHours = cachedSleepHours
+        enrichedPayload.standHours = cachedStandHours
+        enrichedPayload.topGoals = cachedTopGoals
+
         guard let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID) else { return }
-        if let data = try? JSONEncoder().encode(payload) {
+        if let data = try? JSONEncoder().encode(enrichedPayload) {
             defaults.set(data, forKey: GoosieConstants.gooseStatsKey)
         }
-        WatchSyncService.shared.sendPayload(payload)
+        WatchSyncService.shared.sendPayload(enrichedPayload)
     }
 }

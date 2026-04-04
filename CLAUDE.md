@@ -2,6 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## watchOS Target Rules
+
+**Bundle ID must be prefixed by the iOS app's bundle ID:**
+- iOS app: `com.tamagoosie.app`
+- Watch app: `com.tamagoosie.app.watch` ✅ — never `com.tamagoosie.watch` ❌
+
+**Watch `Info.plist` must contain:**
+```xml
+<key>WKCompanionAppBundleIdentifier</key>
+<string>com.tamagoosie.app</string>
+```
+
+**`project.yml` iOS target must embed the Watch target:**
+```yaml
+TamaGoosie:
+  dependencies:
+    - target: TamaGoosieWatch
+      embed: true
+```
+
+**Run the iOS scheme** (`TamaGoosie`), not the Watch scheme, to install both apps on the simulator together.
+
+**`@main` can only appear once per module.** `WatchApp.swift` owns `@main`. Any `Widget` or `WKExtension` entry points must live in a separate extension target — never in the main Watch app target.
+
+---
+
 ## Build & Test Commands
 
 The project uses **XcodeGen** to regenerate `TamaGoosie.xcodeproj` from `project.yml`. Always regenerate after modifying `project.yml` or adding new source files via the Python approach below.
@@ -82,6 +108,7 @@ HealthKitManager → GooseEngine → GooseState (SwiftData @Model)
 **TamaGoosie/Core/Models/** — SwiftData `@Model` classes:
 - `GooseState` — the single goose instance (one row in DB)
 - `Goal` — user goals; `type` is `"recurring" | "deadline" | "builtin"`
+  - **Built-in goals** (`type == "builtin"`) are never manually checked off by the user — their progress is tracked automatically. This includes HealthKit-driven goals (step count, sleep hours) and internally-tracked goals (screen time via `GooseEngine.shared.cachedDistractMinutes`, updated by `DistractionOverlay`). Goals that require user action to complete must be `"recurring"` type and chosen explicitly by the user.
 - `DailyLog` — one row per calendar day, accumulates HealthKit + distraction data
 - `DistractionApp` — user-configured distraction apps
 - `UserProfile` — user baselines (auto-updated after 7 days of logs) and settings

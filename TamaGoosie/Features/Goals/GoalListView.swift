@@ -7,8 +7,14 @@ struct GoalListView: View {
     // Filter to active goals in Swift instead.
     @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @Query private var gooseStates: [GooseState]
+    @Query private var profiles: [UserProfile]
 
-    private var goals: [Goal] { allGoals.filter { $0.isActive } }
+    private var goals: [Goal] {
+        let active   = allGoals.filter { $0.isActive }
+        let builtins = active.filter { $0.type == "builtin" }.sorted { $0.sortOrder < $1.sortOrder }
+        let others   = active.filter { $0.type != "builtin" }.sorted { $0.sortOrder < $1.sortOrder }
+        return builtins + others
+    }
 
     @State private var confettiBursts: [ConfettiBurst] = []
 
@@ -16,6 +22,33 @@ struct GoalListView: View {
 
     private var gooseState: GooseState? {
         gooseStates.first
+    }
+
+    private var isWatchPaired: Bool { profiles.first?.watchPaired ?? false }
+
+    private var hasUserGoals: Bool {
+        goals.contains { $0.type != "builtin" }
+    }
+
+    private func hkProgress(for goal: Goal) -> Double {
+        if goal.title.localizedCaseInsensitiveContains("steps") {
+            return min(Double(GooseEngine.shared.cachedSteps) / Double(goal.targetCount), 1.0)
+        } else if goal.title.localizedCaseInsensitiveContains("screen time") {
+            return min(Double(GooseEngine.shared.cachedDistractMinutes) / Double(goal.targetCount), 1.0)
+        } else {
+            return min(GooseEngine.shared.cachedSleepHours / Double(goal.targetCount), 1.0)
+        }
+    }
+
+    private func hkLabel(for goal: Goal) -> String {
+        if goal.title.localizedCaseInsensitiveContains("steps") {
+            return "\(GooseEngine.shared.cachedSteps.formatted()) / \(goal.targetCount.formatted()) steps"
+        } else if goal.title.localizedCaseInsensitiveContains("screen time") {
+            return "\(GooseEngine.shared.cachedDistractMinutes) / \(goal.targetCount) mins used"
+        } else {
+            let h = GooseEngine.shared.cachedSleepHours
+            return String(format: "%.1f / %d hrs", h, goal.targetCount)
+        }
     }
 
     var body: some View {
@@ -73,6 +106,14 @@ struct GoalListView: View {
                                     onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
                                 )
                                 .padding(.horizontal, GoosieTheme.padding)
+                            } else if goal.isHealthKitTracked {
+                                HealthKitGoalCardView(
+                                    goal: goal,
+                                    progress: hkProgress(for: goal),
+                                    valueLabel: hkLabel(for: goal),
+                                    onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
+                                )
+                                .padding(.horizontal, GoosieTheme.padding)
                             } else {
                                 GoalCardView(
                                     goal: goal,
@@ -97,6 +138,19 @@ struct GoalListView: View {
                                 .padding(.horizontal, GoosieTheme.padding)
                             }
                         }
+
+                        if !hasUserGoals {
+                            VStack(spacing: 8) {
+                                Text("Ready to set your own goals?")
+                                    .font(GoosieTheme.bodyFont(15))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                                PillButton(title: "Add Your First Goal", icon: "plus", color: GoosieTheme.coralAccent) {
+                                    viewModel.startCreating()
+                                }
+                            }
+                            .padding(.horizontal, GoosieTheme.padding)
+                            .padding(.top, 8)
+                        }
                     }
                 }
                 .padding(.vertical)
@@ -113,8 +167,35 @@ struct GoalListView: View {
             GoalEditorView(existingGoal: viewModel.editingGoal)
         }
         .onAppear {
-            viewModel.seedBuiltinGoalsIfNeeded(in: modelContext)
+            viewModel.seedBuiltinGoalsIfNeeded(in: modelContext, isWatchPaired: isWatchPaired)
             viewModel.resetDailyGoals(goals)
+            GooseEngine.shared.refreshGoals(goals)
+        }
+        .onChange(of: goals) { _, newGoals in
+            GooseEngine.shared.refreshGoals(newGoals)
+        }
+        .onChange(of: GooseEngine.shared.cachedSteps) { _, steps in
+            if let state = gooseState {
+                viewModel.autoCompleteHealthKitGoals(
+                    goals: goals,
+                    steps: steps,
+                    sleepHours: GooseEngine.shared.cachedSleepHours,
+                    state: state
+                )
+            }
+        }
+        .onChange(of: GooseEngine.shared.cachedSleepHours) { _, hours in
+            if let state = gooseState {
+                viewModel.autoCompleteHealthKitGoals(
+                    goals: goals,
+                    steps: GooseEngine.shared.cachedSteps,
+                    sleepHours: hours,
+                    state: state
+                )
+            }
+        }
+        .onChange(of: GooseEngine.shared.cachedDistractMinutes) { _, _ in
+            // Screen time goal is display-only — progress refreshes automatically via @Observable
         }
     }
 
@@ -441,6 +522,91 @@ struct DeadlineGoalCardView: View {
         Task {
             try? await Task.sleep(for: .seconds(0.5))
             await MainActor.run { cardGlow = false }
+        }
+    }
+}
+
+// MARK: - HealthKit Goal Card
+
+struct HealthKitGoalCardView: View {
+    let goal: Goal
+    let progress: Double          // 0.0 – 1.0
+    let valueLabel: String        // e.g. "7,200 / 10,000 steps"
+    var onDelete: () -> Void
+
+    private var categoryColor: Color {
+        Color(hex: UInt(goal.goalCategory.color, radix: 16) ?? 0xFFD93D)
+    }
+
+    var body: some View {
+        GoosieCard {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 12) {
+                    // Left accent bar
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(categoryColor)
+                        .frame(width: 4)
+
+                    // Title row
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: goal.goalCategory.icon)
+                                .font(.system(size: 12))
+                                .foregroundStyle(categoryColor)
+
+                            Text(goal.title)
+                                .font(GoosieTheme.bodyFont(16))
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
+                                .strikethrough(goal.isCompleted)
+                        }
+
+                        HStack {
+                            Text(goal.goalFrequency.displayName)
+                                .font(GoosieTheme.captionFont(11))
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+
+                            if goal.currentStreak > 0 {
+                                StreakFlame(days: goal.currentStreak)
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    // Auto-tracked badge
+                    Image(systemName: "heart.text.square.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(categoryColor.opacity(0.7))
+                }
+
+                // Value label
+                Text(valueLabel)
+                    .font(GoosieTheme.captionFont(12))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                    .padding(.leading, 12)
+
+                // Progress bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(categoryColor.opacity(0.15))
+                            .frame(height: 6)
+
+                        Capsule()
+                            .fill(progress >= 1.0 ? categoryColor : categoryColor.opacity(0.8))
+                            .frame(width: geo.size.width * progress, height: 6)
+                            .animation(.easeOut(duration: 0.3), value: progress)
+                    }
+                }
+                .frame(height: 6)
+                .padding(.leading, 12)
+            }
+        }
+        .opacity(goal.isCompleted ? 0.7 : 1.0)
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) { onDelete() } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 }

@@ -2,36 +2,39 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var profiles: [UserProfile]
     @Query private var goals: [Goal]
     @Query private var gooseStates: [GooseState]
     @EnvironmentObject private var notificationDelegate: AppNotificationDelegate
     @State private var selectedTab = 0
-    @State private var hasCompletedOnboarding = false
+    @State private var showOnboarding = false
 
     var body: some View {
-        Group {
-            if hasCompletedOnboarding {
-                mainTabView
-            } else {
-                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+        mainTabView
+            .onAppear {
+                if profiles.first?.hasCompletedOnboarding != true {
+                    showOnboarding = true
+                }
+                WatchSyncService.shared.activate()
+                HealthKitManager.shared.enableBackgroundDelivery()
+                scheduleNotifications()
             }
-        }
-        .sheet(item: $notificationDelegate.pendingNegotiation) { negotiation in
-            NegotiationView(negotiation: negotiation)
-        }
-        .onAppear {
-            if let profile = profiles.first, profile.hasCompletedOnboarding {
-                hasCompletedOnboarding = true
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    processScreenTimeEvents()
+                }
             }
-
-            WatchSyncService.shared.activate()
-            HealthKitManager.shared.enableBackgroundDelivery()
-            scheduleNotifications()
-        }
-        .onChange(of: goals.count) { _, _ in
-            scheduleNotifications()
-        }
+            .onChange(of: goals.count) { _, _ in
+                scheduleNotifications()
+            }
+            .sheet(item: $notificationDelegate.pendingNegotiation) { negotiation in
+                NegotiationView(negotiation: negotiation)
+            }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingContainerView { showOnboarding = false }
+            }
     }
 
     private func scheduleNotifications() {
@@ -73,5 +76,35 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(GoosieTheme.coralAccent)
+    }
+
+    // MARK: - Screen Time Event Processing
+
+    private func processScreenTimeEvents() {
+        guard let state = gooseStates.first, !state.isDead else { return }
+        let events = ScreenTimeManager.shared.consumePendingThresholdEvents()
+        guard events > 0 else { return }
+
+        let minutesAdded = events * GoosieConstants.screenTimeThresholdMinutes
+        let log = fetchOrCreateTodayLog()
+        log.distractionMinutes += minutesAdded
+        GooseEngine.shared.updateDistractMinutes(log.distractionMinutes)
+
+        let penalty = RewardEngine.penaltyForDistractionOpen()
+        for _ in 0..<events {
+            RewardEngine.applyDelta(penalty, to: state)
+        }
+        GooseEngine.shared.update(state: state)
+    }
+
+    private func fetchOrCreateTodayLog() -> DailyLog {
+        let today = Calendar.current.startOfDay(for: .now)
+        let descriptor = FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date == today })
+        if let existing = try? modelContext.fetch(descriptor).first {
+            return existing
+        }
+        let log = DailyLog(date: .now)
+        modelContext.insert(log)
+        return log
     }
 }

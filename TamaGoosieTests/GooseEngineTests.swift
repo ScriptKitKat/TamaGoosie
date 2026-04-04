@@ -130,6 +130,56 @@ final class GooseEngineTests: XCTestCase {
         XCTAssertFalse(RewardEngine.isStreakMilestone(8))
     }
 
+    // MARK: - Decay Over 24 Hours
+
+    func test_applyDecay_over24Hours_reducesStatsByExpectedAmount() {
+        let state = GooseState()
+        state.healthiness = 0.8
+        state.happiness = 0.8
+        // 24h absence → 8+ hour gap → 2h grace → 22h effective decay
+        state.lastUpdated = Date.now.addingTimeInterval(-24 * 3600)
+
+        DecayEngine.applyDecay(to: state)
+
+        let effectiveHours = 24.0 - GoosieConstants.gracePeriodHours
+        let expectedHealthDecay = GoosieConstants.healthinessDecayPerHour * effectiveHours
+        let expectedHappyDecay  = GoosieConstants.happinessDecayPerHour  * effectiveHours
+
+        XCTAssertEqual(0.8 - state.healthiness, expectedHealthDecay, accuracy: 0.005)
+        XCTAssertEqual(0.8 - state.happiness,  expectedHappyDecay,  accuracy: 0.005)
+    }
+
+    // MARK: - Death Threshold
+
+    func test_applyDecay_deathThreshold_healthinessZero_markedDead() {
+        let state = GooseState()
+        state.healthiness = 0.05   // will deplete after 50h of effective decay
+        state.happiness = 0.5
+        // 50h absence → 8+ hour gap → 2h grace → 48h effective
+        // 48 * 0.008 = 0.384 > 0.05 → healthiness hits 0 → dead
+        state.lastUpdated = Date.now.addingTimeInterval(-50 * 3600)
+
+        DecayEngine.applyDecay(to: state)
+
+        XCTAssertTrue(state.isDead,   "Healthiness depleted to 0 should mark goose as dead")
+        XCTAssertEqual(state.healthiness, 0.0, accuracy: 0.001)
+        XCTAssertNotNil(state.deathDate)
+        XCTAssertNotNil(state.deathCause)
+    }
+
+    // MARK: - Max Steps
+
+    func test_computeHealthiness_maxSteps_returnsHighHealthinessScore() {
+        // 20 000 steps = 2.5× the 8 000 avg → stepsScore clamped to 1.0
+        let log = makeDailyLog(sleepHours: 8, exerciseMinutes: 30, steps: 20_000)
+        let profile = makeProfile()
+
+        let score = RewardEngine.computeHealthiness(log: log, profile: profile)
+
+        XCTAssertGreaterThan(score, 0.8, "Max steps with good sleep/exercise should yield > 0.80")
+        XCTAssertLessThanOrEqual(score, 1.0)
+    }
+
     // MARK: - Stat Clamping
 
     func test_applyDelta_doesNotExceedStatMax() {
