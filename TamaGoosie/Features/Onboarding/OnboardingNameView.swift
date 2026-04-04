@@ -17,7 +17,7 @@ struct OnboardingNameView: View {
                 Spacer()
 
                 // Duck
-                GooseCharacterView(mood: .happy, phase: .baby)
+                GooseCharacterView(mood: .happy)
                     .frame(height: 180)
                     .offset(y: bobOffset)
                     .rotationEffect(.degrees(wiggle))

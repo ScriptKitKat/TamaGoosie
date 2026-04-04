@@ -7,6 +7,7 @@ struct GoalListView: View {
     // Filter to active goals in Swift instead.
     @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @Query private var gooseStates: [GooseState]
+    @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
     @Query private var profiles: [UserProfile]
 
     private var goals: [Goal] {
@@ -14,6 +15,10 @@ struct GoalListView: View {
         let builtins = active.filter { $0.type == "builtin" }.sorted { $0.sortOrder < $1.sortOrder }
         let others   = active.filter { $0.type != "builtin" }.sorted { $0.sortOrder < $1.sortOrder }
         return builtins + others
+    }
+
+    private var todayLog: DailyLog? {
+        allDailyLogs.first { Calendar.current.isDateInToday($0.date) }
     }
 
     @State private var confettiBursts: [ConfettiBurst] = []
@@ -84,12 +89,12 @@ struct GoalListView: View {
                                     goal: goal,
                                     onIncrement: {
                                         if let state = gooseState {
-                                            viewModel.incrementDeadlinePercentage(goal, gooseState: state)
+                                            viewModel.incrementDeadlinePercentage(goal, gooseState: state, log: ensureTodayLogExists(), goals: goals)
                                         }
                                     },
                                     onSetPercentage: { value in
                                         if let state = gooseState {
-                                            viewModel.setDeadlinePercentage(goal, gooseState: state, to: value)
+                                            viewModel.setDeadlinePercentage(goal, gooseState: state, log: ensureTodayLogExists(), goals: goals, to: value)
                                         }
                                     },
                                     onCelebration: { origin in
@@ -119,17 +124,17 @@ struct GoalListView: View {
                                     goal: goal,
                                     onComplete: {
                                         if let state = gooseState {
-                                            viewModel.completeGoal(goal, gooseState: state)
+                                            viewModel.completeGoal(goal, gooseState: state, log: ensureTodayLogExists(), goals: goals)
                                         }
                                     },
                                     onUncomplete: {
                                         if let state = gooseState {
-                                            viewModel.uncompleteGoal(goal, gooseState: state)
+                                            viewModel.uncompleteGoal(goal, gooseState: state, log: todayLog, goals: goals)
                                         }
                                     },
                                     onIncrement: {
                                         if let state = gooseState {
-                                            viewModel.incrementGoal(goal, gooseState: state)
+                                            viewModel.incrementGoal(goal, gooseState: state, log: todayLog, goals: goals)
                                         }
                                     },
                                     onEdit: { viewModel.startEditing(goal) },
@@ -169,6 +174,7 @@ struct GoalListView: View {
         .onAppear {
             viewModel.seedBuiltinGoalsIfNeeded(in: modelContext, isWatchPaired: isWatchPaired)
             viewModel.resetDailyGoals(goals)
+            ensureTodayLogExists()
             GooseEngine.shared.refreshGoals(goals)
         }
         .onChange(of: goals) { _, newGoals in
@@ -197,6 +203,14 @@ struct GoalListView: View {
         .onChange(of: GooseEngine.shared.cachedDistractMinutes) { _, _ in
             // Screen time goal is display-only — progress refreshes automatically via @Observable
         }
+    }
+
+    @discardableResult
+    private func ensureTodayLogExists() -> DailyLog {
+        if let existing = todayLog { return existing }
+        let log = DailyLog(date: .now)
+        modelContext.insert(log)
+        return log
     }
 
     private var emptyState: some View {

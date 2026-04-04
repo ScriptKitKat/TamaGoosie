@@ -2,13 +2,18 @@ import SwiftUI
 import SwiftData
 
 struct HealthDashboard: View {
+    @Environment(\.modelContext) private var modelContext
     @Query private var gooseStates: [GooseState]
+    @Query private var profiles: [UserProfile]
+    @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
     @State private var healthManager = HealthKitManager.shared
     @State private var snapshot: HealthSnapshot?
     @State private var isLoading = false
 
-    private var gooseState: GooseState? {
-        gooseStates.first
+    private var gooseState: GooseState? { gooseStates.first }
+    private var profile: UserProfile? { profiles.first }
+    private var todayLog: DailyLog? {
+        allDailyLogs.first { Calendar.current.isDateInToday($0.date) }
     }
 
     var body: some View {
@@ -154,13 +159,19 @@ struct HealthDashboard: View {
 
         if let data = try? await healthManager.fetchTodayStats() {
             snapshot = data
-            if let state = gooseState, !data.wasProcessed {
-                GooseEngine.shared.processHealthData(
-                    steps: data.steps,
-                    exerciseMinutes: data.exerciseMinutes,
-                    sleepHours: data.sleepHours,
-                    state: state
-                )
+            if let state = gooseState {
+                // Write health data to today's DailyLog so computeHealthiness can use it
+                let log = todayLog ?? {
+                    let newLog = DailyLog(date: .now)
+                    modelContext.insert(newLog)
+                    return newLog
+                }()
+                log.steps = data.steps
+                log.exerciseMinutes = Int(data.exerciseMinutes)
+                log.sleepHours = data.sleepHours
+                log.standHours = data.standHours
+
+                GooseEngine.shared.update(state: state, log: log, profile: profile, goals: [])
                 data.wasProcessed = true
             }
         }

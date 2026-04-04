@@ -16,19 +16,18 @@ The standard goal type. Tracked by `currentCount` and `targetCount`.
 
 Completion flow:
 1. User taps checkmark / progress ring
-2. `GoalViewModel.completeGoal` or `incrementGoal` → `GooseEngine.completeGoal`
+2. `GoalViewModel.completeGoal` or `incrementGoal` calls `ensureTodayLogExists()`, then `GooseEngine.completeGoal(_:state:log:goals:)`
 3. `goal.complete()` sets `isCompleted = true`, timestamps set
-4. Streak updated: if completed yesterday or today, `currentStreak += 1`, else reset to 1
-5. `RewardEngine.rewardForGoalCompletion` applied: happiness × weight, XP × streak multiplier
-6. `GooseEngine.checkAllGoalsCompleted` fires bonus if all active goals now done
+4. `log.goalsCompleted` and `log.goalsTotal` updated to reflect current counts
+5. `RewardEngine.computeHappiness(log:goals:)` recomputes happiness immediately
+6. `GooseEngine.saveStatsToAppGroup()` broadcasts updated state
 
 **Uncomplete flow** (recurring only, not deadline):
 1. User taps completed checkmark
-2. `GooseEngine.uncompleteGoal`:
+2. `GooseEngine.uncompleteGoal(_:state:log:goals:)`:
    - Resets `currentCount = 0`, `isCompleted = false`, `completedAt = nil`
-   - Decrements `goal.currentStreak` by 1 (min 0)
-   - Refunds exact XP and happiness
-   - Level-down loop if XP goes negative
+   - Updates `log.goalsCompleted`
+   - Recomputes happiness via `computeHappiness`
 
 ### Deadline (`type == "deadline"`)
 
@@ -41,7 +40,7 @@ One-off project goals tracked by `percentageProgress` (0.0–1.0).
 - **Cannot be uncompleted** — once marked complete, it stays complete
 - Has an optional `dueDate` shown on the card
 
-Completion fires when `percentageProgress >= 1.0`. Same `GooseEngine.completeGoal` reward path as recurring.
+Completion fires when `percentageProgress >= 1.0`. Same `GooseEngine.completeGoal` path as recurring.
 
 ---
 
@@ -52,11 +51,18 @@ Completion fires when `percentageProgress >= 1.0`. Same `GooseEngine.completeGoa
 private var goals: [Goal] { allGoals.filter { $0.isActive } }
 ```
 
+Also queries `DailyLog`:
+```swift
+@Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
+```
+
 Cards are rendered by type:
 - `GoalCardView` — for recurring and builtin
 - `DeadlineGoalCardView` — for deadline
 
 **Daily reset**: `onAppear` calls `GoalViewModel.resetDailyGoals(_:)`, which calls `goal.resetForNewDay()` on any goal where `completedAt` is not today.
+
+**ensureTodayLogExists**: Same helper as GooseView — inserts a `DailyLog` for today if one doesn't exist. Called from `onAppear` and all goal callbacks to guarantee a non-nil log before stat computation.
 
 **Confetti system**: Multiple simultaneous confetti bursts are supported. `confettiBursts: [ConfettiBurst]` is an array of `Identifiable` structs. Each celebration appends a new burst; `ForEach` renders all simultaneously. Each auto-removes after 2.5 s via an async Task keyed to its UUID.
 
@@ -91,7 +97,7 @@ Cards are rendered by type:
 | Kebab menu (⋮) | Edit / Delete only (no uncomplete for deadline goals) |
 | Tap reset | If user stops tapping for 1.5s, tap counter resets |
 
-**Card center tracking**: `.onGeometryChange(for: CGPoint.self)` captures the card's global screen position. This point is passed to `onCelebration` so confetti origins exactly at the card.
+**Card center tracking**: `.onGeometryChange(for: CGPoint.self)` captures the card's global screen position. This point is passed to `onCelebration` so confetti originates exactly at the card.
 
 ---
 
@@ -124,14 +130,14 @@ Handles both creating and editing goals. Accepts an optional `existingGoal: Goal
 
 ## GoalViewModel (`GoalViewModel.swift`)
 
-Thin coordinator — delegates all stat changes to `GooseEngine`.
+Thin coordinator — delegates all stat changes to `GooseEngine`. All methods that affect stats require a non-nil `DailyLog` (obtained via `ensureTodayLogExists()` at the call site).
 
 ```swift
-func completeGoal(_ goal: Goal, gooseState: GooseState)
-func incrementGoal(_ goal: Goal, gooseState: GooseState)
-func uncompleteGoal(_ goal: Goal, gooseState: GooseState)
-func incrementDeadlinePercentage(_ goal: Goal, gooseState: GooseState, amount: Double = 0.01)
-func setDeadlinePercentage(_ goal: Goal, gooseState: GooseState, to value: Double)
+func completeGoal(_ goal: Goal, state: GooseState, log: DailyLog, goals: [Goal])
+func incrementGoal(_ goal: Goal, state: GooseState, log: DailyLog, goals: [Goal])
+func uncompleteGoal(_ goal: Goal, state: GooseState, log: DailyLog, goals: [Goal])
+func incrementDeadlinePercentage(_ goal: Goal, state: GooseState, log: DailyLog, goals: [Goal], amount: Double = 0.01)
+func setDeadlinePercentage(_ goal: Goal, state: GooseState, log: DailyLog, goals: [Goal], to value: Double)
 func deleteGoal(_ goal: Goal, in context: ModelContext)   // also cancels notification
 func seedBuiltinGoalsIfNeeded(in context: ModelContext)   // inserts 4 defaults if none exist
 func resetDailyGoals(_ goals: [Goal])                     // resets stale completions

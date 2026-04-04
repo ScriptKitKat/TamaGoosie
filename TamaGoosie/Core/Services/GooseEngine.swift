@@ -23,23 +23,25 @@ final class GooseEngine {
 
     // MARK: - Core Update Loop
 
-    func update(state: GooseState) {
+    func update(state: GooseState, log: DailyLog?, profile: UserProfile?, goals: [Goal]) {
         guard !isUpdating else { return }
         isUpdating = true
         defer { isUpdating = false }
 
-        guard !state.isVacationMode else { return }
-
-        DecayEngine.applyDecay(to: state)
+        if let log, let profile {
+            state.healthiness = RewardEngine.computeHealthiness(log: log, profile: profile)
+        }
+        if let log {
+            state.happiness = RewardEngine.computeHappiness(log: log, goals: goals)
+        }
         state.updateMood()
+        state.lastUpdated = .now
         saveStatsToAppGroup(state.toSyncPayload())
     }
 
     // MARK: - Goal Completion
 
-    func completeGoal(_ goal: Goal, state: GooseState) {
-        guard !state.isDead else { return }
-
+    func completeGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) {
         goal.complete()
 
         // Update goal streak — only extend when last completion was yesterday,
@@ -55,139 +57,43 @@ final class GooseEngine {
             goal.currentStreak = 1
         }
 
-        let reward = RewardEngine.rewardForGoalCompletion(
-            weight: goal.happinessWeight,
-            streakDays: state.streakDays
-        )
-        RewardEngine.applyDelta(reward, to: state)
-        saveStatsToAppGroup(state.toSyncPayload())
-    }
-
-    /// Check and reward if all daily goals are completed
-    func checkAllGoalsCompleted(goals: [Goal], state: GooseState) {
-        guard !state.isDead else { return }
-        let activeGoals = goals.filter { $0.isActive }
-        guard !activeGoals.isEmpty else { return }
-
-        let allCompleted = activeGoals.allSatisfy { $0.isCompleted }
-        if allCompleted {
-            let reward = RewardEngine.rewardForAllGoalsCompleted()
-            RewardEngine.applyDelta(reward, to: state)
-            saveStatsToAppGroup(state.toSyncPayload())
+        // Sync goal counts in today's log
+        if let log {
+            log.goalsCompleted = goals.filter { $0.isActive && $0.isCompleted }.count
+            log.goalsTotal = goals.filter { $0.isActive }.count
+            state.happiness = RewardEngine.computeHappiness(log: log, goals: goals)
         }
-    }
-
-    // MARK: - Goal Uncompletion
-
-    func uncompleteGoal(_ goal: Goal, state: GooseState) {
-        guard !state.isDead, goal.isCompleted, goal.type != "deadline" else { return }
-
-        goal.currentCount = 0
-        goal.isCompleted  = false
-        goal.completedAt  = nil
-        goal.currentStreak = max(0, goal.currentStreak - 1)
-
-        // Refund the exact reward that was awarded (same formula as completeGoal)
-        let xpAwarded = Int(Double(GoosieConstants.goalCompletionXP)
-            * RewardEngine.streakMultiplier(for: state.streakDays))
-        let refund = RewardEngine.StatDelta(
-            happiness: -(GoosieConstants.goalCompletionHappinessBase * goal.happinessWeight),
-            xp: -xpAwarded
-        )
-        RewardEngine.applyDelta(refund, to: state)
-
-        // Handle level-down if XP went negative
-        while state.xp < 0 && state.level > 1 {
-            state.level -= 1
-            state.xp += GoosieConstants.xpForLevel(state.level)
-            state.updatePhase()
-        }
-        state.xp = max(0, state.xp)
-
-        saveStatsToAppGroup(state.toSyncPayload())
-    }
-
-    // MARK: - Health Data Processing
-
-    func processHealthData(steps: Int, exerciseMinutes: Double, sleepHours: Double, standHours: Int = 0, state: GooseState) {
-        guard !state.isDead else { return }
-
-        // Cache health values so they're included in every subsequent sync payload
-        cachedSteps = steps
-        cachedExerciseMinutes = Int(exerciseMinutes)
-        cachedSleepHours = sleepHours
-        cachedStandHours = standHours
-
-        var combined = RewardEngine.StatDelta()
-
-        let stepsReward = RewardEngine.rewardForSteps(steps)
-        combined.healthiness += stepsReward.healthiness
-        combined.happiness += stepsReward.happiness
-        combined.xp += stepsReward.xp
-
-        let exerciseReward = RewardEngine.rewardForExercise(minutes: exerciseMinutes)
-        combined.healthiness += exerciseReward.healthiness
-        combined.happiness += exerciseReward.happiness
-        combined.xp += exerciseReward.xp
-
-        let sleepReward = RewardEngine.rewardForSleep(hours: sleepHours)
-        combined.healthiness += sleepReward.healthiness
-        combined.happiness += sleepReward.happiness
-        combined.xp += sleepReward.xp
-
-        RewardEngine.applyDelta(combined, to: state)
-        saveStatsToAppGroup(state.toSyncPayload())
-    }
-
-    // MARK: - Focus Session
-
-    func completeFocusSession(minutes: Int, state: GooseState) {
-        guard !state.isDead else { return }
-
-        let reward = RewardEngine.rewardForFocusSession(minutes: minutes)
-        RewardEngine.applyDelta(reward, to: state)
-        saveStatsToAppGroup(state.toSyncPayload())
-    }
-
-    // MARK: - Death & Revival
-
-    func revive(state: GooseState) -> Bool {
-        guard state.isDead else { return false }
-
-        // Check cooldown after 3+ deaths
-        if state.reviveCount >= GoosieConstants.revivalCooldownAfterDeathCount,
-           let lastDeath = state.deathDate {
-            let hoursSinceDeath = Date.now.timeIntervalSince(lastDeath) / 3600
-            if hoursSinceDeath < GoosieConstants.revivalCooldownHours {
-                return false
-            }
-        }
-
-        state.isDead = false
-        state.healthiness = 0.5
-        state.happiness = 0.5
-        state.reviveCount += 1
-        state.deathDate = nil
-        state.deathCause = nil
-        state.lastUpdated = .now
         state.updateMood()
         saveStatsToAppGroup(state.toSyncPayload())
-        return true
     }
 
-    func hatchNewEgg(state: GooseState) {
-        state.isDead = false
+    func uncompleteGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) {
+        guard goal.isCompleted, goal.type != "deadline" else { return }
+
+        goal.currentCount = 0
+        goal.isCompleted = false
+        goal.completedAt = nil
+        goal.currentStreak = max(0, goal.currentStreak - 1)
+
+        // Sync goal counts in today's log
+        if let log {
+            log.goalsCompleted = goals.filter { $0.isActive && $0.isCompleted }.count
+            log.goalsTotal = goals.filter { $0.isActive }.count
+            state.happiness = RewardEngine.computeHappiness(log: log, goals: goals)
+        }
+        state.updateMood()
+        saveStatsToAppGroup(state.toSyncPayload())
+    }
+
+    // MARK: - Reset
+
+    func resetGoose(state: GooseState) {
         state.healthiness = 0.8
         state.happiness = 0.7
-        state.xp = 0
-        state.level = 1
-        state.phase = GoosePhase.baby.rawValue
+        state.streakDays = 0
+        state.lastStreakDate = nil
         state.createdAt = .now
         state.lastUpdated = .now
-        state.streakDays = 0
-        state.deathDate = nil
-        state.deathCause = nil
-        // Preserve: name, reviveCount, longestStreak
         state.updateMood()
         saveStatsToAppGroup(state.toSyncPayload())
     }
@@ -208,12 +114,6 @@ final class GooseEngine {
             }
             state.lastStreakDate = .now
             state.longestStreak = max(state.longestStreak, state.streakDays)
-
-            // Streak milestone rewards
-            if RewardEngine.isStreakMilestone(state.streakDays) {
-                let reward = RewardEngine.rewardForStreakMilestone()
-                RewardEngine.applyDelta(reward, to: state)
-            }
         } else if let lastStreak = state.lastStreakDate {
             let daysSinceStreak = Calendar.current.dateComponents([.day], from: lastStreak, to: .now).day ?? 0
             if daysSinceStreak >= GoosieConstants.streakResetAfterMissedDays {
@@ -234,7 +134,6 @@ final class GooseEngine {
         let avgExercise = last7.map { Double($0.exerciseMinutes) }.reduce(0, +) / Double(last7.count)
         let avgSitting = last7.map(\.sittingHours).reduce(0, +) / Double(last7.count)
 
-        // Only update if significantly different (>10% change) to avoid noise
         if abs(avgSleep - profile.avgSleepHours) / max(1, profile.avgSleepHours) > 0.1 {
             profile.avgSleepHours = avgSleep
         }
@@ -259,14 +158,6 @@ final class GooseEngine {
     /// Compute happiness (0–1) from today's DailyLog and current Goals.
     func computeHappiness(log: DailyLog, goals: [Goal]) -> Double {
         RewardEngine.computeHappiness(log: log, goals: goals)
-    }
-
-    /// Apply time-based decay to state, then sync to App Group + Watch.
-    func applyDecay(to state: GooseState) {
-        guard !state.isVacationMode, !state.isDead else { return }
-        DecayEngine.applyDecay(to: state)
-        state.updateMood()
-        saveStatsToAppGroup(state.toSyncPayload())
     }
 
     /// Call this from DistractionOverlay each time distractionMinutes increments.

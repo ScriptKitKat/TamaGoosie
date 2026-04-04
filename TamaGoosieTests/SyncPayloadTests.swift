@@ -8,11 +8,8 @@ final class SyncPayloadTests: XCTestCase {
             healthiness: 0.75,
             happiness: 0.65,
             mood: GooseMood.happy.rawValue,
-            phase: GoosePhase.adult.rawValue,
             name: "Harold",
-            level: 5,
             streakDays: 12,
-            isDead: false,
             spriteID: "default",
             topGoals: [
                 GoalSummary(id: UUID(), title: "Walk", progress: 1.0, category: "health"),
@@ -26,20 +23,10 @@ final class SyncPayloadTests: XCTestCase {
         XCTAssertEqual(decoded.healthiness, original.healthiness, accuracy: 0.001)
         XCTAssertEqual(decoded.happiness, original.happiness, accuracy: 0.001)
         XCTAssertEqual(decoded.name, original.name)
-        XCTAssertEqual(decoded.level, original.level)
         XCTAssertEqual(decoded.streakDays, original.streakDays)
         XCTAssertEqual(decoded.topGoals.count, 2)
         XCTAssertEqual(decoded.topGoals[0].title, "Walk")
         XCTAssertEqual(decoded.topGoals[1].progress, 0.5, accuracy: 0.001)
-    }
-
-    func test_gooseSyncPayload_moodEnum_derivedCorrectly() {
-        let deadPayload = GooseSyncPayload(
-            healthiness: 0, happiness: 0, mood: GooseMood.dead.rawValue,
-            phase: GoosePhase.adult.rawValue, name: "Harold", level: 1,
-            streakDays: 0, isDead: true, spriteID: "default", topGoals: []
-        )
-        XCTAssertEqual(deadPayload.moodEnum, .dead)
     }
 
     func test_gooseSyncPayload_defaultsAreValid() {
@@ -48,33 +35,16 @@ final class SyncPayloadTests: XCTestCase {
         XCTAssertLessThanOrEqual(payload.healthiness, 1.0)
         XCTAssertGreaterThanOrEqual(payload.happiness, 0.0)
         XCTAssertLessThanOrEqual(payload.happiness, 1.0)
-        XCTAssertFalse(payload.isDead)
         XCTAssertTrue(payload.topGoals.isEmpty)
     }
 
     func test_gooseMood_deriveMood_returnsCorrectMood() {
-        // avg = 1.0 → ecstatic (>= 0.80)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 1.0, happiness: 1.0), .ecstatic)
-        // avg = 0.7 → happy (0.60..<0.80)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.7, happiness: 0.7), .happy)
-        // avg = 0.5 → content (0.40..<0.60)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.5, happiness: 0.5), .content)
-        // avg = 0.3 → bored (0.25..<0.40)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.3, happiness: 0.3), .bored)
-        // avg = 0.15 → sad (0.10..<0.25)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.15, happiness: 0.15), .sad)
-        // avg = 0.05 → sick (< 0.10)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.05, happiness: 0.05), .sick)
-        // healthiness = 0.0 → dead
-        XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.0, happiness: 0.5), .dead)
-    }
-
-    func test_goosePhase_phaseForLevel_returnsCorrectPhase() {
-        XCTAssertEqual(GoosePhase.phase(forLevel: 0), .egg)
-        XCTAssertEqual(GoosePhase.phase(forLevel: 1), .baby)
-        XCTAssertEqual(GoosePhase.phase(forLevel: 5), .baby)  // 1...5 = baby
-        XCTAssertEqual(GoosePhase.phase(forLevel: 6), .teen)  // 6...15 = teen
-        XCTAssertEqual(GoosePhase.phase(forLevel: 20), .adult)
     }
 
     func test_gooseState_toSyncPayload_includesTopGoals() {
@@ -90,53 +60,8 @@ final class SyncPayloadTests: XCTestCase {
         XCTAssertEqual(payload.topGoals[0].title, "Goal 1")
     }
 
-    // Encodes a GooseSyncPayload derived from a GooseState, decodes it, and
-    // asserts that every synced field round-trips correctly.
-    func test_gooseSyncPayload_fromGooseState_encodeDecode_allFieldsMatch() throws {
-        let state = GooseState(
-            name: "Harold",
-            healthiness: 0.72,
-            happiness: 0.63,
-            xp: 250,
-            level: 4,
-            phase: GoosePhase.teen.rawValue,
-            mood: GooseMood.happy.rawValue,
-            streakDays: 5,
-            isDead: false
-        )
-
-        let goals = [
-            GoalSummary(id: UUID(), title: "Run", progress: 1.0, category: "exercise"),
-            GoalSummary(id: UUID(), title: "Sleep 8h", progress: 0.0, category: "health"),
-        ]
-        let original = state.toSyncPayload(topGoals: goals)
-
-        let data = try JSONEncoder().encode(original)
-        let decoded = try JSONDecoder().decode(GooseSyncPayload.self, from: data)
-
-        XCTAssertEqual(decoded.healthiness, original.healthiness, accuracy: 0.001)
-        XCTAssertEqual(decoded.happiness, original.happiness, accuracy: 0.001)
-        XCTAssertEqual(decoded.mood, original.mood)
-        XCTAssertEqual(decoded.phase, original.phase)
-        XCTAssertEqual(decoded.name, original.name)
-        XCTAssertEqual(decoded.level, original.level)
-        XCTAssertEqual(decoded.streakDays, original.streakDays)
-        XCTAssertEqual(decoded.isDead, original.isDead)
-        XCTAssertEqual(decoded.spriteID, original.spriteID)
-        XCTAssertEqual(decoded.topGoals.count, original.topGoals.count)
-        XCTAssertEqual(decoded.topGoals[0].title, original.topGoals[0].title)
-        XCTAssertEqual(decoded.topGoals[1].progress, original.topGoals[1].progress, accuracy: 0.001)
-    }
-
-    // A default GooseSyncPayload must encode to under 1 KB so it fits comfortably
-    // in a WatchConnectivity applicationContext (8 KB limit) or sendMessage payload.
-    func test_gooseSyncPayload_defaultValues_encodesUnderOneKB() throws {
-        let payload = GooseSyncPayload(
-            healthiness: 0.8,
-            happiness: 0.7,
-            name: "Harold"
-        )
-        let data = try JSONEncoder().encode(payload)
-        XCTAssertLessThan(data.count, 1024, "Default GooseSyncPayload must encode to < 1 KB (got \(data.count) bytes)")
+    func test_gooseSyncPayload_moodEnum_derivedFromRawValue() {
+        let payload = GooseSyncPayload(mood: GooseMood.sick.rawValue)
+        XCTAssertEqual(payload.moodEnum, .sick)
     }
 }

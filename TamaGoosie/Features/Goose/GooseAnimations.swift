@@ -4,7 +4,6 @@ import SwiftUI
 
 struct GooseCharacterView: View {
     let mood: GooseMood
-    let phase: GoosePhase
     var showReaction: GooseReaction = .none
 
     @State private var bobOffset: CGFloat = 0
@@ -20,13 +19,8 @@ struct GooseCharacterView: View {
                 .rotationEffect(.degrees(wobbleAngle))
                 .scaleEffect(reactionScale)
 
-            if mood != .dead {
-                faceOverlay
-                    .offset(y: bobOffset - 20)
-            } else {
-                deadFace
-                    .offset(y: bobOffset - 20)
-            }
+            faceOverlay
+                .offset(y: bobOffset - 20)
 
             moodOverlay
                 .offset(y: bobOffset)
@@ -45,19 +39,17 @@ struct GooseCharacterView: View {
     private var gooseBody: some View {
         ZStack {
             Ellipse()
-                .fill(mood == .dead ? Color.gray.opacity(0.5) : GoosieTheme.creamWhite)
+                .fill(GoosieTheme.creamWhite)
                 .frame(width: 160, height: 140)
                 .overlay(
                     Ellipse()
                         .stroke(GoosieTheme.charcoalOutline, lineWidth: 3.5)
                 )
 
-            if mood != .dead {
-                Ellipse()
-                    .fill(.white.opacity(0.4))
-                    .frame(width: 80, height: 60)
-                    .offset(y: 10)
-            }
+            Ellipse()
+                .fill(.white.opacity(0.4))
+                .frame(width: 80, height: 60)
+                .offset(y: 10)
 
             wing(flipped: false)
                 .offset(x: -70, y: 10)
@@ -145,32 +137,6 @@ struct GooseCharacterView: View {
             .fill(GoosieTheme.softPink)
             .frame(width: 14, height: 14)
             .opacity(0.7)
-    }
-
-    private var deadFace: some View {
-        ZStack {
-            HStack(spacing: 24) {
-                xEye
-                xEye
-            }
-
-            beak
-                .offset(y: 16)
-                .opacity(0.5)
-        }
-    }
-
-    private var xEye: some View {
-        ZStack {
-            Rectangle()
-                .fill(GoosieTheme.charcoalOutline)
-                .frame(width: 10, height: 2.5)
-                .rotationEffect(.degrees(45))
-            Rectangle()
-                .fill(GoosieTheme.charcoalOutline)
-                .frame(width: 10, height: 2.5)
-                .rotationEffect(.degrees(-45))
-        }
     }
 
     // MARK: - Mood Overlays

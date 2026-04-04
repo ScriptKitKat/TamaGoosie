@@ -50,40 +50,40 @@ final class GoalViewModel {
         return (try? context.fetch(descriptor))?.isEmpty == false
     }
 
-    func completeGoal(_ goal: Goal, gooseState: GooseState) {
-        GooseEngine.shared.completeGoal(goal, state: gooseState)
+    func completeGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
     }
 
-    func incrementGoal(_ goal: Goal, gooseState: GooseState) {
+    func incrementGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
         goal.incrementProgress()
         if goal.isCompleted {
-            GooseEngine.shared.completeGoal(goal, state: gooseState)
+            GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
         }
     }
 
-    func incrementDeadlinePercentage(_ goal: Goal, gooseState: GooseState, amount: Double = 0.01) {
+    func incrementDeadlinePercentage(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal], amount: Double = 0.01) {
         let wasCompleted = goal.isCompleted
         goal.incrementPercentage(by: amount)
         if goal.isCompleted && !wasCompleted {
-            GooseEngine.shared.completeGoal(goal, state: gooseState)
+            GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
         }
     }
 
-    func setDeadlinePercentage(_ goal: Goal, gooseState: GooseState, to value: Double) {
+    func setDeadlinePercentage(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal], to value: Double) {
         let wasCompleted = goal.isCompleted
         goal.setPercentage(value)
         if goal.isCompleted && !wasCompleted {
-            GooseEngine.shared.completeGoal(goal, state: gooseState)
+            GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
         }
     }
 
     /// Call when fresh HealthKit values arrive. Completes walk/sleep goals if threshold met.
-    func autoCompleteHealthKitGoals(goals: [Goal], steps: Int, sleepHours: Double, state: GooseState) {
+    func autoCompleteHealthKitGoals(goals: [Goal], steps: Int, sleepHours: Double, state: GooseState, log: DailyLog? = nil) {
         for goal in goals where goal.isHealthKitTracked && !goal.isCompleted {
             if goal.title.localizedCaseInsensitiveContains("steps"), steps >= goal.targetCount {
-                completeGoal(goal, gooseState: state)
+                completeGoal(goal, gooseState: state, log: log, goals: goals)
             } else if goal.title.localizedCaseInsensitiveContains("sleep"), sleepHours >= Double(goal.targetCount) {
-                completeGoal(goal, gooseState: state)
+                completeGoal(goal, gooseState: state, log: log, goals: goals)
             }
         }
     }
@@ -97,8 +97,8 @@ final class GoalViewModel {
         }
     }
 
-    func uncompleteGoal(_ goal: Goal, gooseState: GooseState) {
-        GooseEngine.shared.uncompleteGoal(goal, state: gooseState)
+    func uncompleteGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        GooseEngine.shared.uncompleteGoal(goal, state: gooseState, log: log, goals: goals)
     }
 
     func startEditing(_ goal: Goal) {

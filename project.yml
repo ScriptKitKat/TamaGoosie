@@ -2,7 +2,7 @@ name: TamaGoosie
 options:
   bundleIdPrefix: com.tamagoosie
   deploymentTarget:
-    iOS: "18.1"
+    iOS: "26.0"
     watchOS: "10.0"
   xcodeVersion: "15.0"
   groupSortPosition: top

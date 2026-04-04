@@ -53,27 +53,6 @@ struct SettingsView: View {
                         baselinesCard(profile: profile)
                     }
 
-                    // Vacation Mode
-                    GoosieCard {
-                        Toggle(isOn: Binding(
-                            get: { gooseState?.isVacationMode ?? false },
-                            set: { newValue in
-                                gooseState?.isVacationMode = newValue
-                                profile?.vacationMode = newValue
-                            }
-                        )) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Vacation Mode")
-                                    .font(GoosieTheme.bodyFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
-                                Text("Pauses decay, disables reminders, freezes streak")
-                                    .font(GoosieTheme.captionFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                            }
-                        }
-                        .tint(GoosieTheme.mintBackground)
-                    }
-
                     // Notifications
                     GoosieCard {
                         VStack(alignment: .leading, spacing: 12) {
@@ -388,7 +367,7 @@ struct SettingsView: View {
 
     private func resetGoose() {
         guard let state = gooseState else { return }
-        GooseEngine.shared.hatchNewEgg(state: state)
+        GooseEngine.shared.resetGoose(state: state)
         gooseName = state.name
     }
 

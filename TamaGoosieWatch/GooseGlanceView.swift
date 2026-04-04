@@ -36,7 +36,7 @@ struct GooseGlanceView: View {
                 Text(payload.name)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(WatchTheme.text)
-                Text("Lvl \(payload.level) · \(payload.moodEnum.displayName.lowercased())")
+                Text(payload.moodEnum.displayName.lowercased())
                     .font(.system(size: 9, design: .rounded))
                     .foregroundStyle(WatchTheme.textSecondary)
             }
