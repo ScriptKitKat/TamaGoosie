@@ -22,6 +22,8 @@ targets:
       - Shared
     dependencies:
       - target: TamaGoosieWidgets
+      - target: TamaGoosieWatch
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app
@@ -43,7 +45,7 @@ targets:
       - Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.watch
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.watch
         INFOPLIST_FILE: TamaGoosieWatch/Info.plist
     entitlements:
       path: TamaGoosieWatch/TamaGoosieWatch.entitlements

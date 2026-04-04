@@ -8,6 +8,15 @@ final class GooseEngine {
 
     private(set) var isUpdating = false
 
+    // Cached health data populated by processHealthData; included in every sync payload
+    private var cachedSteps: Int = 0
+    private var cachedExerciseMinutes: Int = 0
+    private var cachedSleepHours: Double = 0.0
+    private var cachedStandHours: Int = 0
+
+    // Cached goals populated by refreshGoals(_:); included in every sync payload
+    private var cachedTopGoals: [GoalSummary] = []
+
     private init() {}
 
     // MARK: - Core Update Loop
@@ -63,8 +72,14 @@ final class GooseEngine {
 
     // MARK: - Health Data Processing
 
-    func processHealthData(steps: Int, exerciseMinutes: Double, sleepHours: Double, state: GooseState) {
+    func processHealthData(steps: Int, exerciseMinutes: Double, sleepHours: Double, standHours: Int = 0, state: GooseState) {
         guard !state.isDead else { return }
+
+        // Cache health values so they're included in every subsequent sync payload
+        cachedSteps = steps
+        cachedExerciseMinutes = Int(exerciseMinutes)
+        cachedSleepHours = sleepHours
+        cachedStandHours = standHours
 
         var combined = RewardEngine.StatDelta()
 
@@ -197,13 +212,28 @@ final class GooseEngine {
         }
     }
 
+    // MARK: - Goals Cache
+
+    /// Call this whenever the active goals list changes (onAppear, onChange).
+    /// Converts Goal → GoalSummary and caches for the next sync payload.
+    func refreshGoals(_ goals: [Goal]) {
+        cachedTopGoals = goals.filter(\.isActive).map { $0.toSummary() }
+    }
+
     // MARK: - App Group Sync + Watch Sync
 
     private func saveStatsToAppGroup(_ payload: GooseSyncPayload) {
+        var enrichedPayload = payload
+        enrichedPayload.steps = cachedSteps
+        enrichedPayload.exerciseMinutes = cachedExerciseMinutes
+        enrichedPayload.sleepHours = cachedSleepHours
+        enrichedPayload.standHours = cachedStandHours
+        enrichedPayload.topGoals = cachedTopGoals
+
         guard let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID) else { return }
-        if let data = try? JSONEncoder().encode(payload) {
+        if let data = try? JSONEncoder().encode(enrichedPayload) {
             defaults.set(data, forKey: GoosieConstants.gooseStatsKey)
         }
-        WatchSyncService.shared.sendPayload(payload)
+        WatchSyncService.shared.sendPayload(enrichedPayload)
     }
 }

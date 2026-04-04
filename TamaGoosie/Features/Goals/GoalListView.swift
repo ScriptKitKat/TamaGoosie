@@ -93,6 +93,10 @@ struct GoalListView: View {
         .onAppear {
             viewModel.seedBuiltinGoalsIfNeeded(in: modelContext)
             viewModel.resetDailyGoals(goals)
+            GooseEngine.shared.refreshGoals(goals)
+        }
+        .onChange(of: goals) { _, newGoals in
+            GooseEngine.shared.refreshGoals(newGoals)
         }
     }
 

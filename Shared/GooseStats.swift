@@ -13,6 +13,12 @@ public struct GooseSyncPayload: Codable, Sendable, Hashable {
     public var spriteID: String
     public var topGoals: [GoalSummary]
 
+    // Health data from DailyLog (synced from phone)
+    public var steps: Int
+    public var exerciseMinutes: Int
+    public var sleepHours: Double
+    public var standHours: Int
+
     public init(
         healthiness: Double = 0.8,
         happiness: Double = 0.7,
@@ -23,7 +29,11 @@ public struct GooseSyncPayload: Codable, Sendable, Hashable {
         streakDays: Int = 0,
         isDead: Bool = false,
         spriteID: String = "default",
-        topGoals: [GoalSummary] = []
+        topGoals: [GoalSummary] = [],
+        steps: Int = 0,
+        exerciseMinutes: Int = 0,
+        sleepHours: Double = 0.0,
+        standHours: Int = 0
     ) {
         self.healthiness = healthiness
         self.happiness = happiness
@@ -35,6 +45,10 @@ public struct GooseSyncPayload: Codable, Sendable, Hashable {
         self.isDead = isDead
         self.spriteID = spriteID
         self.topGoals = topGoals
+        self.steps = steps
+        self.exerciseMinutes = exerciseMinutes
+        self.sleepHours = sleepHours
+        self.standHours = standHours
     }
 
     public var moodEnum: GooseMood {

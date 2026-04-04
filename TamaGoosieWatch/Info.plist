@@ -22,6 +22,8 @@
 	<string>1</string>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>com.tamagoosie.app</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>TamaGoosie reads your health data to keep your goose healthy based on your real-life habits.</string>
 </dict>
