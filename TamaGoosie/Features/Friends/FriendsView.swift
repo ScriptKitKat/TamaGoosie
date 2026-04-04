@@ -84,8 +84,8 @@ struct FriendsView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             GooseCharacterView(mood: .bored)
-                .scaleEffect(0.5)
-                .frame(height: 120)
+                .scaleEffect(0.75)
+                .frame(height: 180)
 
             Text("No friends yet!")
                 .font(GoosieTheme.bodyFont())

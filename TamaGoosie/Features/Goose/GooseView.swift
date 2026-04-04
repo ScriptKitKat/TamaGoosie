@@ -29,22 +29,21 @@ struct GooseView: View {
             GoosieTheme.mintBackground
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        header
-                        GooseCharacterView(
-                            mood: viewModel.mood,
-                            showReaction: viewModel.currentReaction
-                        )
-                        .frame(height: 220)
-                        moodLabel
-                        statBars
-                        Spacer(minLength: 16)
-                    }
+            VStack(spacing: 12) {
+                header
                     .padding(.horizontal, GoosieTheme.padding)
-                    .padding(.bottom, 12)
-                }
+
+                GooseCharacterView(
+                    mood: viewModel.mood,
+                    showReaction: viewModel.currentReaction,
+                    healthiness: viewModel.healthinessPercent,
+                    happiness: viewModel.happinessPercent
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                moodLabel
+                statBars
+                    .padding(.horizontal, GoosieTheme.padding)
 
                 GooseChatPanel(service: chatService) { draft in
                     goalViewModel.pendingDraft = draft

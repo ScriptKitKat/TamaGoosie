@@ -45,12 +45,6 @@ struct ContentView: View {
                     checkAccountStatus()
                 }
             }
-            .onChange(of: watchSync.isPaired) { _, paired in
-                // Auto-sync watch pairing state to UserProfile
-                if let profile = profiles.first {
-                    profile.watchPaired = paired
-                }
-            }
             .onChange(of: goals.count) { _, _ in
                 scheduleNotifications()
             }
