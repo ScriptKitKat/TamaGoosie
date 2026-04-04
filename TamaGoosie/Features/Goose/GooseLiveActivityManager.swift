@@ -124,7 +124,6 @@ final class GooseLiveActivityManager {
             healthiness: state.healthiness,
             happiness: state.happiness,
             mood: state.mood,
-            level: state.level,
             streakDays: state.streakDays,
             currentGoalTitle: currentGoal?.title,
             currentGoalProgress: currentGoal?.progress,
@@ -137,15 +136,11 @@ final class GooseLiveActivityManager {
     }
 
     private func spriteKey(for state: GooseState) -> String {
-        let phase = state.currentPhase.rawValue  // "egg" / "baby" / "teen" / "adult"
-        let bucket: String
         switch state.currentMood {
-        case .ecstatic, .happy:   bucket = "happy"
-        case .content, .bored:    bucket = "neutral"
-        case .sad:                bucket = "sad"
-        case .sick:               bucket = "sick"
-        case .dead:               bucket = "dead"
+        case .ecstatic, .happy:   return "happy"
+        case .content, .bored:    return "neutral"
+        case .sad:                return "sad"
+        case .sick:               return "sick"
         }
-        return "\(phase)_\(bucket)"
     }
 }

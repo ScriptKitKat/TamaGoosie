@@ -26,7 +26,6 @@ final class GooseEngineTests: XCTestCase {
     }
 
     func test_computeHealthiness_perfectInputs_clampedAt1() {
-        // Perfect sleep (= baseline), extreme exercise + steps, no sitting, 2h outside (Watch)
         let log = makeDailyLog(sleepHours: 8, exerciseMinutes: 300, steps: 50000,
                                outsideMinutes: 120, sittingHours: 0)
         let profile = makeProfile(watchPaired: true)
@@ -39,14 +38,12 @@ final class GooseEngineTests: XCTestCase {
     func test_computeHealthiness_withOutsideMinutes_usesOutsideWeights() {
         let log = makeDailyLog(sleepHours: 8, exerciseMinutes: 30, steps: 8000, outsideMinutes: 90)
         let profile = makeProfile(watchPaired: true)
-
         let scoreWith = RewardEngine.computeHealthiness(log: log, profile: profile)
 
         let logWithout = makeDailyLog(sleepHours: 8, exerciseMinutes: 30, steps: 8000, outsideMinutes: 0)
         let profileWithout = makeProfile(watchPaired: false)
         let scoreWithout = RewardEngine.computeHealthiness(log: logWithout, profile: profileWithout)
 
-        // Scores may differ because of different weights
         XCTAssertGreaterThan(scoreWith, 0.0)
         XCTAssertGreaterThan(scoreWithout, 0.0)
     }
@@ -83,71 +80,15 @@ final class GooseEngineTests: XCTestCase {
         XCTAssertGreaterThan(scoreClean, scoreDirty, "Distraction should lower happiness score")
     }
 
-    // MARK: - Reward Events
+    func test_computeHappiness_partialCompletion_betweenBaselineAndFull() {
+        let partial = makeDailyLog(goalsCompleted: 2, goalsTotal: 5)
+        let full = makeDailyLog(goalsCompleted: 5, goalsTotal: 5)
+        let goals = makeGoals(count: 5, streak: 0)
 
-    func test_goalCompletionReward_appliesHappinessDelta() {
-        let state = GooseState()
-        let initialHappiness = state.happiness
+        let partialScore = RewardEngine.computeHappiness(log: partial, goals: goals)
+        let fullScore = RewardEngine.computeHappiness(log: full, goals: goals)
 
-        let reward = RewardEngine.rewardForGoalCompletion(weight: 1.0, streakDays: 0)
-        RewardEngine.applyDelta(reward, to: state)
-
-        XCTAssertGreaterThan(state.happiness, initialHappiness)
-    }
-
-    func test_goalCompletionReward_withStreakMultiplier_earnMoreXP() {
-        let baseReward = RewardEngine.rewardForGoalCompletion(weight: 1.0, streakDays: 0)
-        let streakReward = RewardEngine.rewardForGoalCompletion(weight: 1.0, streakDays: 10)
-
-        XCTAssertGreaterThan(streakReward.xp, baseReward.xp)
-    }
-
-    func test_allGoalsCompletedReward_boostsBothStats() {
-        let reward = RewardEngine.rewardForAllGoalsCompleted()
-        XCTAssertGreaterThan(reward.healthiness, 0)
-        XCTAssertGreaterThan(reward.happiness, 0)
-        XCTAssertGreaterThan(reward.xp, 0)
-    }
-
-    func test_distractionPenalty_reducesHappiness() {
-        let state = GooseState()
-        state.happiness = 0.8
-        let penalty = RewardEngine.penaltyForDistractionOpen()
-        RewardEngine.applyDelta(penalty, to: state)
-        XCTAssertLessThan(state.happiness, 0.8)
-    }
-
-    func test_streakMultiplier_capsAt2x() {
-        let multiplier = RewardEngine.streakMultiplier(for: 100)
-        XCTAssertEqual(multiplier, 2.0, accuracy: 0.001)
-    }
-
-    func test_isStreakMilestone_detectsMilestones() {
-        XCTAssertTrue(RewardEngine.isStreakMilestone(7))
-        XCTAssertTrue(RewardEngine.isStreakMilestone(30))
-        XCTAssertTrue(RewardEngine.isStreakMilestone(365))
-        XCTAssertFalse(RewardEngine.isStreakMilestone(5))
-        XCTAssertFalse(RewardEngine.isStreakMilestone(8))
-    }
-
-    // MARK: - Stat Clamping
-
-    func test_applyDelta_doesNotExceedStatMax() {
-        let state = GooseState(healthiness: 0.99, happiness: 0.99)
-        let bigDelta = RewardEngine.StatDelta(healthiness: 0.5, happiness: 0.5, xp: 0)
-        RewardEngine.applyDelta(bigDelta, to: state)
-
-        XCTAssertEqual(state.healthiness, GoosieConstants.statMax, accuracy: 0.001)
-        XCTAssertEqual(state.happiness, GoosieConstants.statMax, accuracy: 0.001)
-    }
-
-    func test_applyDelta_doesNotGoBelowStatMin() {
-        let state = GooseState(healthiness: 0.01, happiness: 0.01)
-        let bigPenalty = RewardEngine.StatDelta(healthiness: -1.0, happiness: -1.0, xp: 0)
-        RewardEngine.applyDelta(bigPenalty, to: state)
-
-        XCTAssertEqual(state.healthiness, GoosieConstants.statMin, accuracy: 0.001)
-        XCTAssertEqual(state.happiness, GoosieConstants.statMin, accuracy: 0.001)
+        XCTAssertLessThan(partialScore, fullScore, "More completed goals should yield higher happiness")
     }
 
     // MARK: - Helpers

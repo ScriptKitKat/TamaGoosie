@@ -6,17 +6,17 @@ import Observation
 final class GooseViewModel {
     var gooseState: GooseState?
     var currentReaction: GooseReaction = .none
-    var showDeathScreen = false
 
     private let engine = GooseEngine.shared
     private var updateTimer: Timer?
 
+    // Context kept in sync by the View for use in the periodic timer
+    private var currentLog: DailyLog?
+    private var currentProfile: UserProfile?
+    private var currentGoals: [Goal] = []
+
     var mood: GooseMood {
         gooseState?.currentMood ?? .content
-    }
-
-    var phase: GoosePhase {
-        gooseState?.currentPhase ?? .baby
     }
 
     var moodText: String {
@@ -37,36 +37,29 @@ final class GooseViewModel {
         gooseState?.name ?? "Harold"
     }
 
-    var level: Int {
-        gooseState?.level ?? 1
-    }
-
     var streakDays: Int {
         gooseState?.streakDays ?? 0
     }
 
-    var isDead: Bool {
-        gooseState?.isDead ?? false
-    }
-
     // MARK: - Lifecycle
 
-    /// Called by GooseView.onChange(of: gooseStates) to keep the viewModel
-    /// in sync with the persistent GooseState (avoids stale-reference issues
-    /// when @Query delivers the real state after onAppear fires).
     func updateState(_ state: GooseState) {
         gooseState = state
-        if state.isDead && !showDeathScreen { showDeathScreen = true }
     }
 
-    func onAppear(state: GooseState) {
-        gooseState = state
-        engine.update(state: state)
-        startPeriodicUpdates()
+    func updateContext(log: DailyLog?, profile: UserProfile?, goals: [Goal]) {
+        currentLog = log
+        currentProfile = profile
+        currentGoals = goals
+    }
 
-        if state.isDead {
-            showDeathScreen = true
-        }
+    func onAppear(state: GooseState, log: DailyLog?, profile: UserProfile?, goals: [Goal]) {
+        gooseState = state
+        currentLog = log
+        currentProfile = profile
+        currentGoals = goals
+        engine.update(state: state, log: log, profile: profile, goals: goals)
+        startPeriodicUpdates()
     }
 
     func onDisappear() {
@@ -78,10 +71,7 @@ final class GooseViewModel {
         updateTimer?.invalidate()
         updateTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             guard let self, let state = self.gooseState else { return }
-            self.engine.update(state: state)
-            if state.isDead && !self.showDeathScreen {
-                self.showDeathScreen = true
-            }
+            self.engine.update(state: state, log: self.currentLog, profile: self.currentProfile, goals: self.currentGoals)
         }
     }
 
@@ -89,23 +79,8 @@ final class GooseViewModel {
 
     func completeGoal(_ goal: Goal) {
         guard let state = gooseState else { return }
-        engine.completeGoal(goal, state: state)
+        engine.completeGoal(goal, state: state, log: currentLog, goals: currentGoals)
         triggerReaction(.goalComplete)
-    }
-
-    func reviveGoose() -> Bool {
-        guard let state = gooseState else { return false }
-        let success = engine.revive(state: state)
-        if success {
-            showDeathScreen = false
-        }
-        return success
-    }
-
-    func hatchNewGoose() {
-        guard let state = gooseState else { return }
-        engine.hatchNewEgg(state: state)
-        showDeathScreen = false
     }
 
     private func triggerReaction(_ reaction: GooseReaction) {

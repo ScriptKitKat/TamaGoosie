@@ -6,7 +6,6 @@ struct DistractionOverlay: View {
     @Environment(\.dismiss) private var dismiss
     @Query(filter: #Predicate<Goal> { $0.isActive && !$0.isCompleted }, sort: \Goal.sortOrder)
     private var incompleteGoals: [Goal]
-    @Query private var gooseStates: [GooseState]
 
     @State private var elapsedSeconds = 0
     @State private var countdownTimer: Timer?
@@ -15,7 +14,6 @@ struct DistractionOverlay: View {
 
     private var canDismiss: Bool { elapsedSeconds >= cooldownSeconds }
     private var progress: Double { min(1.0, Double(elapsedSeconds) / Double(cooldownSeconds)) }
-    private var gooseState: GooseState? { gooseStates.first }
 
     var body: some View {
         ZStack {
@@ -31,10 +29,7 @@ struct DistractionOverlay: View {
                     .foregroundStyle(.white.opacity(0.6))
 
                 // Goose
-                GooseCharacterView(
-                    mood: .sad,
-                    phase: gooseState?.currentPhase ?? .adult
-                )
+                GooseCharacterView(mood: .sad)
                 .frame(height: 160)
                 .saturation(0.4)
 
@@ -104,11 +99,6 @@ struct DistractionOverlay: View {
     private func startTracking() {
         let log = fetchOrCreateTodayLog()
         log.distractionOpens += 1
-
-        if let state = gooseState {
-            let penalty = RewardEngine.penaltyForDistractionOpen()
-            RewardEngine.applyDelta(penalty, to: state)
-        }
 
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             elapsedSeconds += 1

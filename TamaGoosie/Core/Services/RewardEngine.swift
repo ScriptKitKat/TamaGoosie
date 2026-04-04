@@ -1,104 +1,6 @@
 import Foundation
 
 enum RewardEngine {
-    struct StatDelta {
-        var healthiness: Double = 0
-        var happiness: Double = 0
-        var xp: Int = 0
-    }
-
-    // MARK: - Goal Completion
-
-    static func rewardForGoalCompletion(weight: Double, streakDays: Int) -> StatDelta {
-        let xpMultiplier = streakMultiplier(for: streakDays)
-        return StatDelta(
-            happiness: GoosieConstants.goalCompletionHappinessBase * weight,
-            xp: Int(Double(GoosieConstants.goalCompletionXP) * xpMultiplier)
-        )
-    }
-
-    static func rewardForAllGoalsCompleted() -> StatDelta {
-        StatDelta(
-            healthiness: GoosieConstants.allGoalsHealthinessBonus,
-            happiness: GoosieConstants.allGoalsHappinessBonus,
-            xp: GoosieConstants.allGoalsXP
-        )
-    }
-
-    // MARK: - Health Data Rewards
-
-    static func rewardForExercise(minutes: Double) -> StatDelta {
-        guard minutes >= GoosieConstants.exerciseThresholdMinutes else { return StatDelta() }
-        return StatDelta(
-            healthiness: GoosieConstants.exerciseHealthinessBonus,
-            happiness: GoosieConstants.exerciseHappinessBonus,
-            xp: GoosieConstants.exerciseXP
-        )
-    }
-
-    static func rewardForSleep(hours: Double) -> StatDelta {
-        if hours < GoosieConstants.sleepPenaltyBelow {
-            return StatDelta(
-                healthiness: -GoosieConstants.badSleepHealthinessPenalty,
-                happiness: -GoosieConstants.badSleepHappinessPenalty
-            )
-        } else if hours >= GoosieConstants.sleepBonusMin && hours <= GoosieConstants.sleepBonusMax {
-            return StatDelta(
-                healthiness: GoosieConstants.goodSleepHealthinessBonus,
-                happiness: GoosieConstants.goodSleepHappinessBonus,
-                xp: GoosieConstants.goodSleepXP
-            )
-        }
-        return StatDelta()
-    }
-
-    static func rewardForSteps(_ steps: Int) -> StatDelta {
-        guard steps >= GoosieConstants.stepsThreshold else { return StatDelta() }
-        return StatDelta(
-            healthiness: GoosieConstants.stepsHealthinessBonus,
-            happiness: GoosieConstants.stepsHappinessBonus,
-            xp: GoosieConstants.stepsXP
-        )
-    }
-
-    static func penaltyForDistractionOpen() -> StatDelta {
-        StatDelta(happiness: -GoosieConstants.distractionOpenPenalty)
-    }
-
-    static func rewardForStreakMilestone() -> StatDelta {
-        StatDelta(
-            healthiness: GoosieConstants.streakMilestoneHealthinessBonus,
-            happiness: GoosieConstants.streakMilestoneHappinessBonus,
-            xp: GoosieConstants.streakMilestoneXP
-        )
-    }
-
-    // MARK: - Focus Session
-
-    static func rewardForFocusSession(minutes: Int) -> StatDelta {
-        StatDelta(
-            happiness: Double(minutes) * GoosieConstants.focusHappinessBonus,
-            xp: minutes * GoosieConstants.focusXPPerMinute
-        )
-    }
-
-    // MARK: - Apply
-
-    static func applyDelta(_ delta: StatDelta, to state: GooseState) {
-        state.healthiness += delta.healthiness
-        state.happiness += delta.happiness
-        state.xp += delta.xp
-        state.clampStats()
-
-        // Level up
-        while state.xp >= GoosieConstants.xpForLevel(state.level) && state.level < GoosieConstants.maxLevel {
-            state.xp -= GoosieConstants.xpForLevel(state.level)
-            state.level += 1
-            state.updatePhase()
-        }
-
-        state.updateMood()
-    }
 
     // MARK: - Healthiness Formula
 
@@ -144,15 +46,6 @@ enum RewardEngine {
     }
 
     // MARK: - Helpers
-
-    static func streakMultiplier(for streakDays: Int) -> Double {
-        min(GoosieConstants.maxStreakMultiplier,
-            1.0 + Double(streakDays) * GoosieConstants.streakMultiplierIncrement)
-    }
-
-    static func isStreakMilestone(_ days: Int) -> Bool {
-        [7, 14, 30, 60, 90, 180, 365].contains(days)
-    }
 
     private static func clamp(_ v: Double) -> Double {
         max(0.0, min(1.0, v))

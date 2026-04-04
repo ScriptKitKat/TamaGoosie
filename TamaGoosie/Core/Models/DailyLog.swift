@@ -22,13 +22,6 @@ final class DailyLog {
     var goalsCompleted: Int
     var goalsTotal: Int
 
-    // Cached deltas (after GooseEngine runs)
-    var healthinessDelta: Double
-    var happinessDelta: Double
-
-    // XP earned
-    var xpEarned: Int
-
     init(date: Date = .now) {
         self.id = UUID()
         self.date = Calendar.current.startOfDay(for: date)
@@ -42,8 +35,5 @@ final class DailyLog {
         self.distractionMinutes = 0
         self.goalsCompleted = 0
         self.goalsTotal = 0
-        self.healthinessDelta = 0
-        self.happinessDelta = 0
-        self.xpEarned = 0
     }
 }

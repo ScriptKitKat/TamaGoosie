@@ -52,10 +52,7 @@ struct FocusSessionView: View {
                         .rotationEffect(.degrees(-90))
                         .animation(.linear(duration: 1), value: timer.progress)
 
-                    GooseCharacterView(
-                        mood: gooseMood,
-                        phase: gooseState?.currentPhase ?? .baby
-                    )
+                    GooseCharacterView(mood: gooseMood)
                     .scaleEffect(0.7)
                 }
 
@@ -191,10 +188,6 @@ struct FocusSessionView: View {
         let session = FocusSession(targetMinutes: timer.targetMinutes)
         session.finish(completed: completed)
         modelContext.insert(session)
-
-        if completed, let state = gooseState {
-            GooseEngine.shared.completeFocusSession(minutes: timer.elapsedMinutes, state: state)
-        }
 
         GooseLiveActivityManager.shared.endActivity()
         timer.reset()

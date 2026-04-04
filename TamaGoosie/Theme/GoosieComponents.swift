@@ -108,34 +108,20 @@ struct GoosieCard<Content: View>: View {
     }
 }
 
-// MARK: - Level Badge
-
-struct LevelBadge: View {
-    let level: Int
-
-    var body: some View {
-        Text("Lv.\(level)")
-            .font(GoosieTheme.captionFont(12))
-            .fontWeight(.bold)
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(GoosieTheme.warmOrange, in: Capsule())
-    }
-}
-
 // MARK: - Streak Flame
 
 struct StreakFlame: View {
     let days: Int
 
     var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "flame.fill")
-                .foregroundStyle(GoosieTheme.warmOrange)
-            Text("\(days)")
-                .font(GoosieTheme.bodyFont(14))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
+        if days > 0 {
+            HStack(spacing: 3) {
+                Image(systemName: "flame.fill")
+                    .foregroundStyle(GoosieTheme.warmOrange)
+                Text("\(days)")
+                    .font(GoosieTheme.bodyFont(14))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+            }
         }
     }
 }

@@ -30,15 +30,9 @@ struct GooseGlanceView: View {
                         .font(.system(size: 36))
                 }
 
-                // Name and level
-                VStack(spacing: 2) {
-                    Text(payload.name)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
-
-                    Text("Lv.\(payload.level)")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
+                // Name
+                Text(payload.name)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
 
                 // Mini stat bars (2 stats)
                 VStack(spacing: 4) {

@@ -38,30 +38,30 @@ final class GoalViewModel {
         }
     }
 
-    func completeGoal(_ goal: Goal, gooseState: GooseState) {
-        GooseEngine.shared.completeGoal(goal, state: gooseState)
+    func completeGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
     }
 
-    func incrementGoal(_ goal: Goal, gooseState: GooseState) {
+    func incrementGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
         goal.incrementProgress()
         if goal.isCompleted {
-            GooseEngine.shared.completeGoal(goal, state: gooseState)
+            GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
         }
     }
 
-    func incrementDeadlinePercentage(_ goal: Goal, gooseState: GooseState, amount: Double = 0.01) {
+    func incrementDeadlinePercentage(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal], amount: Double = 0.01) {
         let wasCompleted = goal.isCompleted
         goal.incrementPercentage(by: amount)
         if goal.isCompleted && !wasCompleted {
-            GooseEngine.shared.completeGoal(goal, state: gooseState)
+            GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
         }
     }
 
-    func setDeadlinePercentage(_ goal: Goal, gooseState: GooseState, to value: Double) {
+    func setDeadlinePercentage(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal], to value: Double) {
         let wasCompleted = goal.isCompleted
         goal.setPercentage(value)
         if goal.isCompleted && !wasCompleted {
-            GooseEngine.shared.completeGoal(goal, state: gooseState)
+            GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
         }
     }
 
@@ -74,8 +74,8 @@ final class GoalViewModel {
         }
     }
 
-    func uncompleteGoal(_ goal: Goal, gooseState: GooseState) {
-        GooseEngine.shared.uncompleteGoal(goal, state: gooseState)
+    func uncompleteGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        GooseEngine.shared.uncompleteGoal(goal, state: gooseState, log: log, goals: goals)
     }
 
     func startEditing(_ goal: Goal) {

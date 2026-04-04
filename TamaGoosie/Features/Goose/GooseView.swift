@@ -4,14 +4,23 @@ import SwiftData
 struct GooseView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var gooseStates: [GooseState]
-    @Query(filter: #Predicate<Goal> { $0.isActive && !$0.isCompleted })
-    private var activeGoals: [Goal]
+    @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
+    @Query private var profiles: [UserProfile]
+    @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
 
     @State private var viewModel = GooseViewModel()
 
     private var gooseState: GooseState {
         gooseStates.first ?? GooseState()
     }
+
+    private var activeGoals: [Goal] { allGoals.filter { $0.isActive } }
+
+    private var todayLog: DailyLog? {
+        allDailyLogs.first { Calendar.current.isDateInToday($0.date) }
+    }
+
+    private var profile: UserProfile? { profiles.first }
 
     var body: some View {
         ZStack {
@@ -24,7 +33,6 @@ struct GooseView: View {
 
                     GooseCharacterView(
                         mood: viewModel.mood,
-                        phase: viewModel.phase,
                         showReaction: viewModel.currentReaction
                     )
                     .frame(height: 220)
@@ -32,6 +40,8 @@ struct GooseView: View {
                     moodLabel
                     statBars
                     quickActions
+
+                    Spacer(minLength: 40)
                 }
                 .padding(.horizontal, GoosieTheme.padding)
                 .padding(.bottom, 30)
@@ -39,7 +49,8 @@ struct GooseView: View {
         }
         .onAppear {
             ensureGooseExists()
-            viewModel.onAppear(state: gooseState)
+            let log = ensureTodayLogExists()
+            viewModel.onAppear(state: gooseState, log: log, profile: profile, goals: activeGoals)
         }
         .onDisappear {
             viewModel.onDisappear()
@@ -49,8 +60,11 @@ struct GooseView: View {
                 viewModel.updateState(state)
             }
         }
-        .sheet(isPresented: $viewModel.showDeathScreen) {
-            DeathScreen(viewModel: viewModel)
+        .onChange(of: allDailyLogs) { _, _ in
+            viewModel.updateContext(log: todayLog, profile: profile, goals: activeGoals)
+        }
+        .onChange(of: allGoals) { _, _ in
+            viewModel.updateContext(log: todayLog, profile: profile, goals: activeGoals)
         }
     }
 
@@ -58,13 +72,9 @@ struct GooseView: View {
 
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(viewModel.gooseName)
-                    .font(GoosieTheme.titleFont(28))
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
-
-                LevelBadge(level: viewModel.level)
-            }
+            Text(viewModel.gooseName)
+                .font(GoosieTheme.titleFont(28))
+                .foregroundStyle(GoosieTheme.charcoalOutline)
 
             Spacer()
 
@@ -87,7 +97,7 @@ struct GooseView: View {
             )
     }
 
-    // MARK: - Stat Bars (2 stats: healthiness + happiness)
+    // MARK: - Stat Bars
 
     private var statBars: some View {
         GoosieCard {
@@ -103,7 +113,7 @@ struct GooseView: View {
     private var quickActions: some View {
         HStack(spacing: 16) {
             CircleActionButton(icon: "checkmark.circle", label: "Goals", color: GoosieTheme.happinessYellow) {
-                if let goal = activeGoals.first {
+                if let goal = activeGoals.first(where: { !$0.isCompleted }) {
                     viewModel.completeGoal(goal)
                 }
             }
@@ -122,68 +132,12 @@ struct GooseView: View {
             modelContext.insert(newGoose)
         }
     }
-}
 
-// MARK: - Death Screen
-
-struct DeathScreen: View {
-    let viewModel: GooseViewModel
-
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.9)
-                .ignoresSafeArea()
-
-            VStack(spacing: 24) {
-                Text("Oh no...")
-                    .font(GoosieTheme.titleFont(32))
-                    .foregroundStyle(.white)
-
-                GooseCharacterView(mood: .dead, phase: .adult)
-                    .frame(height: 180)
-                    .saturation(0)
-
-                Text("\(viewModel.gooseName) has passed away")
-                    .font(GoosieTheme.bodyFont(18))
-                    .foregroundStyle(.white.opacity(0.8))
-
-                if let cause = viewModel.gooseState?.deathCause {
-                    Text(cause)
-                        .font(GoosieTheme.captionFont())
-                        .foregroundStyle(.white.opacity(0.5))
-                }
-
-                GoosieCard {
-                    VStack(spacing: 8) {
-                        memorialStat("Longest streak", value: "\(viewModel.gooseState?.longestStreak ?? 0) days")
-                        memorialStat("Revive count", value: "\(viewModel.gooseState?.reviveCount ?? 0)")
-                    }
-                }
-                .padding(.horizontal, 40)
-
-                VStack(spacing: 12) {
-                    PillButton(title: "Revive", icon: "heart.fill", color: GoosieTheme.coralAccent) {
-                        _ = viewModel.reviveGoose()
-                    }
-
-                    PillButton(title: "Hatch New Egg", icon: "egg.fill", color: GoosieTheme.mintBackground) {
-                        viewModel.hatchNewGoose()
-                    }
-                }
-            }
-            .padding()
-        }
-    }
-
-    private func memorialStat(_ label: String, value: String) -> some View {
-        HStack {
-            Text(label)
-                .font(GoosieTheme.captionFont())
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-            Spacer()
-            Text(value)
-                .font(GoosieTheme.bodyFont(14))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
-        }
+    @discardableResult
+    private func ensureTodayLogExists() -> DailyLog {
+        if let existing = todayLog { return existing }
+        let log = DailyLog(date: .now)
+        modelContext.insert(log)
+        return log
     }
 }
