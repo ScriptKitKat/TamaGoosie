@@ -24,6 +24,8 @@
 		4870F5458C5868D1EA3FB4E8 /* DecayEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B4DBB787504B206C0A8B90 /* DecayEngine.swift */; };
 		4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A088FE71FAEE764B51B4E397 /* UserProfile.swift */; };
 		50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */; };
+		5B2C947E22E04B4ABDBC7D00 /* GooseNotificationSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF5479EFDE734D10996D06D5 /* GooseNotificationSystem.swift */; };
+		5B5E576132FB401FBC8BA7FF /* GooseSpeechGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03E910D5DA3446808CAC1DB8 /* GooseSpeechGenerator.swift */; };
 		62FEE01D7B201E49F60BB363 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		6518F54CF53495BE62C6735E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D59F30ADA27A66E78D15370 /* Assets.xcassets */; };
 		661B98CF0AE80931B1DCC43D /* GooseComplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DDC68452E992AE126D3FFFF /* GooseComplication.swift */; };
@@ -46,6 +48,7 @@
 		9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A4BFA7900EE7B0AEAA12E357 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */; };
 		A6597EDA797C71161C9E7053 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
+		A6FBF6EB77764BFE9C53F814 /* EscalationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 370E16E8CAC34C8994503875 /* EscalationTracker.swift */; };
 		A76416F6B06ECCFAA06F0439 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A9716F03CD5E2418FDD90778 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2E274D0CC79E9693624851 /* OnboardingView.swift */; };
 		ABF9CF827C3739BE790208A4 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
@@ -54,6 +57,7 @@
 		CF2A2DA87AA6A0F57E753A5E /* DistractionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE71510B695CABD03828F0D4 /* DistractionOverlay.swift */; };
 		D0DDD308DD96993F2E9DE905 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C031B61EC6D7BE366BE5676 /* SettingsView.swift */; };
 		D3AABE326679EAF4948FB8E2 /* WatchSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16C84C36F09317E8C15BBCC /* WatchSyncService.swift */; };
+		D5B63129B23F42A89AB55725 /* NegotiationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDE3CF1CBDF748B39B968D73 /* NegotiationView.swift */; };
 		DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E129223B490F8E32CA9DF16B /* HealthDashboard.swift */; };
 		DE551AED1717A85D2F0D8F8D /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
 		E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */; };
@@ -96,6 +100,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		03E910D5DA3446808CAC1DB8 /* GooseSpeechGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSpeechGenerator.swift; sourceTree = "<group>"; };
 		05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosePhase.swift; sourceTree = "<group>"; };
 		0D59F30ADA27A66E78D15370 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0F9F686670F7CA74D19AB1BD /* WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchApp.swift; sourceTree = "<group>"; };
@@ -110,9 +115,10 @@
 		2F4E8216FE4F12721B999D82 /* SyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayload.swift; sourceTree = "<group>"; };
 		2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		347903A27040413E68451AD9 /* GoalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewModel.swift; sourceTree = "<group>"; };
+		370E16E8CAC34C8994503875 /* EscalationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationTracker.swift; sourceTree = "<group>"; };
 		3DDC68452E992AE126D3FFFF /* GooseComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseComplication.swift; sourceTree = "<group>"; };
 		45E891BC9D028499BD9C7AF7 /* HealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSnapshot.swift; sourceTree = "<group>"; };
-		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		53C5205B9F9287BB3E870F0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosieWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B47951E494EC28E765569B2 /* GooseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseView.swift; sourceTree = "<group>"; };
@@ -139,9 +145,11 @@
 		ABF97FF359441B0799D8CB3D /* GoosieTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosieTheme.swift; sourceTree = "<group>"; };
 		AE9FF2C893266ED149C99A6F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivityManager.swift; sourceTree = "<group>"; };
+		BDE3CF1CBDF748B39B968D73 /* NegotiationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NegotiationView.swift; sourceTree = "<group>"; };
 		C47A9B7B550DD4EC4C0957A5 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSession.swift; sourceTree = "<group>"; };
 		CB6F6E769C5BFA19F71041A3 /* TamaGoosieTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TamaGoosieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		CF5479EFDE734D10996D06D5 /* GooseNotificationSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseNotificationSystem.swift; sourceTree = "<group>"; };
 		D16C84C36F09317E8C15BBCC /* WatchSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncService.swift; sourceTree = "<group>"; };
 		D6E9D1CB4D404178EF0F3BD5 /* TamaGoosie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosie.entitlements; sourceTree = "<group>"; };
 		DA5121AC95426E42B580756F /* SyncPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayloadTests.swift; sourceTree = "<group>"; };
@@ -253,6 +261,17 @@
 			path = Services;
 			sourceTree = "<group>";
 		};
+		9D462AB92B924F6BB6E8FD53 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				370E16E8CAC34C8994503875 /* EscalationTracker.swift */,
+				CF5479EFDE734D10996D06D5 /* GooseNotificationSystem.swift */,
+				03E910D5DA3446808CAC1DB8 /* GooseSpeechGenerator.swift */,
+				BDE3CF1CBDF748B39B968D73 /* NegotiationView.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
 		A327CB7869C0C803EFB4709F /* Theme */ = {
 			isa = PBXGroup;
 			children = (
@@ -276,6 +295,7 @@
 			isa = PBXGroup;
 			children = (
 				BAE5A5A31A290D90F06CF8E6 /* Focus */,
+				9D462AB92B924F6BB6E8FD53 /* Notifications */,
 				05E4BD8E7C0524D456EFC5D6 /* Goals */,
 				1B8464E5BCCF5D87E582A416 /* Goose */,
 				EB4499348D4ACC728713B559 /* Health */,
@@ -559,6 +579,10 @@
 				017959C9F45D8E0D4A01C5A6 /* GooseView.swift in Sources */,
 				14047F718F25D0338EBCDA49 /* GooseViewModel.swift in Sources */,
 				FA700BBA888F6144D8A8763B /* GoosieComponents.swift in Sources */,
+				A6FBF6EB77764BFE9C53F814 /* EscalationTracker.swift in Sources */,
+				5B2C947E22E04B4ABDBC7D00 /* GooseNotificationSystem.swift in Sources */,
+				5B5E576132FB401FBC8BA7FF /* GooseSpeechGenerator.swift in Sources */,
+				D5B63129B23F42A89AB55725 /* NegotiationView.swift in Sources */,
 				8011B9135369B9163BF57D74 /* GoosieTheme.swift in Sources */,
 				DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */,
 				E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */,
@@ -613,6 +637,7 @@
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -647,6 +672,7 @@
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -747,7 +773,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -810,7 +836,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

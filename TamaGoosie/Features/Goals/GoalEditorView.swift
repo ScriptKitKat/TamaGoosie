@@ -308,7 +308,7 @@ struct GoalEditorView: View {
     private func requestNotificationPermissionIfNeeded() {
         Task {
             do {
-                let granted = try await NotificationManager.shared.requestAuthorization()
+                let granted = try await GooseNotificationSystem.shared.requestAuthorization()
                 await MainActor.run {
                     notificationPermissionDenied = !granted
                 }
@@ -373,11 +373,10 @@ struct GoalEditorView: View {
     }
 
     private func scheduleReminderIfNeeded(for goal: Goal) {
-        let gooseName = gooseStates.first?.name ?? "your goose"
-        if goal.preferredTime != nil {
-            NotificationManager.shared.scheduleGoalReminder(goal, gooseName: gooseName)
-        } else {
-            NotificationManager.shared.cancelGoalReminder(goalID: goal.id)
+        // GooseNotificationSystem.rescheduleAll (called from ContentView) handles all scheduling.
+        // Cancel pushes here only when a reminder is explicitly removed.
+        if goal.preferredTime == nil {
+            GooseNotificationSystem.shared.cancelPushes(for: goal.id)
         }
     }
 }

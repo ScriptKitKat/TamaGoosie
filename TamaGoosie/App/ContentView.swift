@@ -3,6 +3,9 @@ import SwiftData
 
 struct ContentView: View {
     @Query private var profiles: [UserProfile]
+    @Query private var goals: [Goal]
+    @Query private var gooseStates: [GooseState]
+    @EnvironmentObject private var notificationDelegate: AppNotificationDelegate
     @State private var selectedTab = 0
     @State private var hasCompletedOnboarding = false
 
@@ -14,6 +17,9 @@ struct ContentView: View {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
             }
         }
+        .sheet(item: $notificationDelegate.pendingNegotiation) { negotiation in
+            NegotiationView(negotiation: negotiation)
+        }
         .onAppear {
             if let profile = profiles.first, profile.hasCompletedOnboarding {
                 hasCompletedOnboarding = true
@@ -21,6 +27,18 @@ struct ContentView: View {
 
             WatchSyncService.shared.activate()
             HealthKitManager.shared.enableBackgroundDelivery()
+            scheduleNotifications()
+        }
+        .onChange(of: goals.count) { _, _ in
+            scheduleNotifications()
+        }
+    }
+
+    private func scheduleNotifications() {
+        let activeGoals = goals.filter { $0.isActive }
+        let gooseName = gooseStates.first?.name ?? "your goose"
+        Task {
+            await GooseNotificationSystem.shared.rescheduleAll(goals: activeGoals, gooseName: gooseName)
         }
     }
 
