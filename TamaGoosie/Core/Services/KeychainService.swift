@@ -5,9 +5,10 @@ enum KeychainService {
     private static let service = "com.tamagoosie.app"
 
     enum Key: String {
-        case deviceId = "com.tamagoosie.deviceId"
         case userId = "com.tamagoosie.userId"
         case username = "com.tamagoosie.username"
+        case authProvider = "com.tamagoosie.authProvider"
+        case authUserID = "com.tamagoosie.authUserID"
     }
 
     // MARK: - Read
@@ -62,14 +63,4 @@ enum KeychainService {
         return status == errSecSuccess || status == errSecItemNotFound
     }
 
-    // MARK: - Device ID (auto-generate if missing)
-
-    static func getOrCreateDeviceId() -> String {
-        if let existing = read(.deviceId) {
-            return existing
-        }
-        let newId = UUID().uuidString
-        write(.deviceId, value: newId)
-        return newId
-    }
 }

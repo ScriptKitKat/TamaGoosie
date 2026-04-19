@@ -22,6 +22,10 @@ final class DailyLog {
     var goalsCompleted: Int
     var goalsTotal: Int
 
+    // End-of-day goose stats (snapshotted once when the next day begins)
+    var endOfDayHealthiness: Double = 0
+    var endOfDayHappiness: Double = 0
+
     // Back-reference to owning UserProfile
     var userProfile: UserProfile?
 

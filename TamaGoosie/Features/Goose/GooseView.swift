@@ -60,6 +60,7 @@ struct GooseView: View {
         }
         .onAppear {
             ensureGooseExists()
+            snapshotYesterdayIfNeeded()
             let log = ensureTodayLogExists()
             viewModel.onAppear(state: gooseState, log: log, profile: profile, goals: activeGoals)
             chatService.refreshAvailability()
@@ -148,5 +149,15 @@ struct GooseView: View {
         let log = DailyLog(date: .now)
         modelContext.insert(log)
         return log
+    }
+
+    private func snapshotYesterdayIfNeeded() {
+        let calendar = Calendar.current
+        let yesterdayLog = allDailyLogs.first {
+            calendar.isDateInYesterday($0.date)
+        }
+        if let yesterdayLog {
+            GooseEngine.shared.snapshotEndOfDay(state: gooseState, yesterdayLog: yesterdayLog)
+        }
     }
 }

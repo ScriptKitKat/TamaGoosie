@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var decayWarningsEnabled = true
     @State private var goalRemindersEnabled = true
     @State private var showResetConfirmation = false
+    @State private var showSignOutConfirmation = false
     @State private var debugGoalTitle = "Read for 30 minutes"
     @State private var debugPushLevel = 1
     @State private var debugPushSent = false
@@ -46,19 +47,32 @@ struct SettingsView: View {
                     // Account
                     if let username = ConvexManager.shared.currentUsername {
                         GoosieCard {
-                            HStack {
-                                Image(systemName: "person.circle.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundStyle(GoosieTheme.coralAccent)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("@\(username)")
-                                        .font(GoosieTheme.bodyFont())
-                                        .foregroundStyle(GoosieTheme.charcoalOutline)
-                                    Text("Your TamaGoosie account")
-                                        .font(GoosieTheme.captionFont(11))
-                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                            VStack(spacing: 12) {
+                                HStack {
+                                    Image(systemName: "person.circle.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundStyle(GoosieTheme.coralAccent)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("@\(username)")
+                                            .font(GoosieTheme.bodyFont())
+                                            .foregroundStyle(GoosieTheme.charcoalOutline)
+                                        if let provider = AuthService.shared.authProvider {
+                                            Text("Signed in with \(provider == "apple" ? "Apple" : "Google")")
+                                                .font(GoosieTheme.captionFont(11))
+                                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                                        }
+                                    }
+                                    Spacer()
                                 }
-                                Spacer()
+
+                                Button {
+                                    showSignOutConfirmation = true
+                                } label: {
+                                    Text("Sign Out")
+                                        .font(GoosieTheme.captionFont(13))
+                                        .foregroundStyle(GoosieTheme.coralAccent)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                     }
@@ -209,6 +223,14 @@ struct SettingsView: View {
             Button("Reset", role: .destructive) { resetGoose() }
         } message: {
             Text("This will reset your goose to a fresh egg. Your longest streak and revive count will be preserved.")
+        }
+        .alert("Sign Out?", isPresented: $showSignOutConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Sign Out", role: .destructive) {
+                signOutAndReset()
+            }
+        } message: {
+            Text("This will sign you out and return to the welcome screen. Your local data will be cleared.")
         }
     }
 
@@ -546,6 +568,24 @@ struct SettingsView: View {
         guard let state = gooseState else { return }
         GooseEngine.shared.resetGoose(state: state)
         gooseName = state.name
+    }
+
+    private func signOutAndReset() {
+        // Sign out of Convex + auth provider
+        ConvexManager.shared.signOut()
+
+        // Delete all local SwiftData entities so onboarding triggers again
+        for state in gooseStates { modelContext.delete(state) }
+        for profile in profiles { modelContext.delete(profile) }
+        let allGoals = (try? modelContext.fetch(FetchDescriptor<Goal>())) ?? []
+        for goal in allGoals { modelContext.delete(goal) }
+        let allLogs = (try? modelContext.fetch(FetchDescriptor<DailyLog>())) ?? []
+        for log in allLogs { modelContext.delete(log) }
+
+        try? modelContext.save()
+
+        // Clear the onboarding UserDefaults flag
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
     }
 
     private func rescheduleMorningReminder() {

@@ -34,6 +34,15 @@ final class GoalViewModel {
     func deleteGoal(_ goal: Goal, in context: ModelContext) {
         GooseNotificationSystem.shared.cancelPushes(for: goal.id)
         context.delete(goal)
+        try? context.save()
+        syncGoalsToConvex(in: context)
+    }
+
+    func syncGoalsToConvex(in context: ModelContext) {
+        let descriptor = FetchDescriptor<Goal>(sortBy: [SortDescriptor(\.sortOrder)])
+        guard let allGoals = try? context.fetch(descriptor) else { return }
+        let activeGoals = allGoals.filter { $0.isActive }
+        ConvexManager.shared.syncGoals(goals: activeGoals)
     }
 
     /// Seeds built-in goals if they don't already exist.

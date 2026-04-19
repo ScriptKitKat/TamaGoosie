@@ -1,33 +1,15 @@
 import SwiftUI
+import SwiftData
 import Charts
-
-// MARK: - Range
-
-enum HistoryRange: CaseIterable, Hashable {
-    case week, month, all
-
-    var label: String {
-        switch self {
-        case .week:  "7D"
-        case .month: "30D"
-        case .all:   "90D"
-        }
-    }
-
-    var days: Int {
-        switch self {
-        case .week:  7
-        case .month: 30
-        case .all:   90
-        }
-    }
-}
 
 // MARK: - Card
 
 struct DuckHistoryCard: View {
-    @State private var selectedRange: HistoryRange = .week
-    @State private var selectedPoint: DuckHistoryDataPoint? = nil
+    @Environment(\.modelContext) private var modelContext
+    @Query private var gooseStates: [GooseState]
+
+    @State private var selectedRange: ChartRange = .week
+    @State private var selectedPoint: DayPoint? = nil
     @State private var tooltipX: CGFloat = 0
     @State private var chartWidth: CGFloat = 300
 
@@ -35,31 +17,20 @@ struct DuckHistoryCard: View {
     private let healthColor: Color    = GoosieTheme.skyBlue
     private let tooltipWidth: CGFloat = 136
 
+    private var gooseName: String { gooseStates.first?.name ?? "Harold" }
+
+    private var provider: DailyLogHistoryProvider {
+        DailyLogHistoryProvider(modelContext: modelContext)
+    }
+
     // MARK: - Derived
 
-    private var filtered: [DuckHistoryDataPoint] {
-        Array(MockDuckHistoryProvider.data.suffix(selectedRange.days))
+    private var filtered: [DayPoint] {
+        provider.fetchPoints(range: selectedRange)
     }
 
-    private var prior: [DuckHistoryDataPoint] {
-        let all  = MockDuckHistoryProvider.data
-        let days = selectedRange.days
-        let hi   = max(0, all.count - days)
-        let lo   = max(0, all.count - days * 2)
-        return Array(all[lo..<hi])
-    }
-
-    private var avgHappiness:      Double { average(filtered.map(\.happiness)) }
-    private var avgHealth:         Double { average(filtered.map(\.health)) }
-    private var priorAvgHappiness: Double { average(prior.map(\.happiness)) }
-    private var priorAvgHealth:    Double { average(prior.map(\.health)) }
-
-    private var bestDay: DuckHistoryDataPoint? {
-        filtered.max { $0.happiness + $0.health < $1.happiness + $1.health }
-    }
-
-    private func average(_ values: [Double]) -> Double {
-        values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
+    private var summary: ChartSummary {
+        provider.computeSummary(currentPoints: filtered, range: selectedRange)
     }
 
     // MARK: - Body
@@ -68,12 +39,32 @@ struct DuckHistoryCard: View {
         GoosieCard {
             VStack(alignment: .leading, spacing: 16) {
                 headerRow
-                chartSection
-                summaryRow
-                legendRow
+                if filtered.count >= 2 {
+                    chartSection
+                    summaryRow
+                    legendRow
+                } else {
+                    emptyState
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.system(size: 36))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.25))
+            Text("\(gooseName) needs a few more days to show you trends")
+                .font(GoosieTheme.captionFont(13))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 180)
     }
 
     // MARK: - Header
@@ -95,14 +86,14 @@ struct DuckHistoryCard: View {
 
     private var rangeToggle: some View {
         HStack(spacing: 0) {
-            ForEach(HistoryRange.allCases, id: \.self) { range in
+            ForEach(ChartRange.allCases, id: \.self) { range in
                 Button {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selectedRange = range
                         selectedPoint = nil
                     }
                 } label: {
-                    Text(range.label)
+                    Text(range.rawValue)
                         .font(GoosieTheme.captionFont(12))
                         .fontWeight(selectedRange == range ? .semibold : .regular)
                         .foregroundStyle(
@@ -162,11 +153,11 @@ struct DuckHistoryCard: View {
                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.13))
 
             // Happiness gradient fill
-            ForEach(filtered, id: \.date) { pt in
+            ForEach(filtered) { pt in
                 AreaMark(
                     x: .value("Date", pt.date),
                     yStart: .value("Base", 0.0),
-                    yEnd: .value("Happiness", pt.happiness)
+                    yEnd: .value("Happiness", pt.joy)
                 )
                 .foregroundStyle(
                     LinearGradient(
@@ -178,7 +169,7 @@ struct DuckHistoryCard: View {
             }
 
             // Health gradient fill
-            ForEach(filtered, id: \.date) { pt in
+            ForEach(filtered) { pt in
                 AreaMark(
                     x: .value("Date", pt.date),
                     yStart: .value("Base", 0.0),
@@ -194,10 +185,10 @@ struct DuckHistoryCard: View {
             }
 
             // Happiness line
-            ForEach(filtered, id: \.date) { pt in
+            ForEach(filtered) { pt in
                 LineMark(
                     x: .value("Date", pt.date),
-                    y: .value("Happiness", pt.happiness),
+                    y: .value("Happiness", pt.joy),
                     series: .value("Series", "Happiness")
                 )
                 .foregroundStyle(happinessColor)
@@ -206,7 +197,7 @@ struct DuckHistoryCard: View {
             }
 
             // Health line
-            ForEach(filtered, id: \.date) { pt in
+            ForEach(filtered) { pt in
                 LineMark(
                     x: .value("Date", pt.date),
                     y: .value("Health", pt.health),
@@ -225,7 +216,7 @@ struct DuckHistoryCard: View {
 
                 PointMark(
                     x: .value("Date", sel.date),
-                    y: .value("Happiness", sel.happiness)
+                    y: .value("Happiness", sel.joy)
                 )
                 .foregroundStyle(happinessColor)
                 .symbolSize(44)
@@ -300,25 +291,25 @@ struct DuckHistoryCard: View {
 
     private var axisLabelCount: Int {
         switch selectedRange {
-        case .week:  7
-        case .month: 5
-        case .all:   4
+        case .week:    7
+        case .month:   5
+        case .quarter: 4
         }
     }
 
     private func xAxisLabel(for date: Date) -> String {
         let f = DateFormatter()
         switch selectedRange {
-        case .week:  f.dateFormat = "EEE"
-        case .month: f.dateFormat = "MMM d"
-        case .all:   f.dateFormat = "MMM"
+        case .week:    f.dateFormat = "EEE"
+        case .month:   f.dateFormat = "MMM d"
+        case .quarter: f.dateFormat = "MMM"
         }
         return f.string(from: date)
     }
 
     // MARK: - Tooltip
 
-    private func tooltipView(for point: DuckHistoryDataPoint) -> some View {
+    private func tooltipView(for point: DayPoint) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(point.date, format: .dateTime.month(.abbreviated).day())
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -330,7 +321,7 @@ struct DuckHistoryCard: View {
                     .font(.system(size: 10, design: .rounded))
                     .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.55))
                 Spacer()
-                Text("\(Int(point.happiness.rounded()))")
+                Text("\(Int(point.joy.rounded()))")
                     .font(.system(size: 10, weight: .bold, design: .rounded))
                     .foregroundStyle(GoosieTheme.charcoalOutline)
             }
@@ -360,23 +351,23 @@ struct DuckHistoryCard: View {
         HStack(spacing: 8) {
             statChip(
                 label: "Avg Joy",
-                value: "\(Int(avgHappiness.rounded()))",
-                trend: avgHappiness - priorAvgHappiness,
+                value: "\(Int(summary.avgHappiness.rounded()))",
+                trend: summary.happyTrend,
                 tint: happinessColor
             )
             statChip(
                 label: "Avg Health",
-                value: "\(Int(avgHealth.rounded()))",
-                trend: avgHealth - priorAvgHealth,
+                value: "\(Int(summary.avgHealthiness.rounded()))",
+                trend: summary.healthTrend,
                 tint: healthColor
             )
-            if let best = bestDay {
-                bestDayChip(date: best.date)
+            if let best = summary.bestDay {
+                bestDayChip(date: best)
             }
         }
     }
 
-    private func statChip(label: String, value: String, trend: Double, tint: Color) -> some View {
+    private func statChip(label: String, value: String, trend: Double?, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label)
                 .font(GoosieTheme.captionFont(10))
@@ -385,13 +376,15 @@ struct DuckHistoryCard: View {
                 Text(value)
                     .font(.system(size: 19, weight: .bold, design: .rounded))
                     .foregroundStyle(GoosieTheme.charcoalOutline)
-                Image(systemName: trend >= 0 ? "arrow.up" : "arrow.down")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(
-                        trend >= 0
-                            ? Color(hue: 0.38, saturation: 0.55, brightness: 0.55)
-                            : GoosieTheme.coralAccent
-                    )
+                if let trend {
+                    Image(systemName: trend >= 0 ? "arrow.up" : "arrow.down")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(
+                            trend >= 0
+                                ? Color(hue: 0.38, saturation: 0.55, brightness: 0.55)
+                                : GoosieTheme.coralAccent
+                        )
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

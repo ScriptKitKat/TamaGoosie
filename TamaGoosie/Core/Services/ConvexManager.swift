@@ -19,7 +19,6 @@ final class ConvexManager {
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
-        // TODO: Replace with your actual Convex deployment URL
         client = ConvexClient(deploymentUrl: "https://small-chinchilla-360.convex.cloud")
     }
 
@@ -57,9 +56,18 @@ final class ConvexManager {
             return false
         }
 
-        let deviceId = KeychainService.getOrCreateDeviceId()
+        // Look up by auth provider ID
+        let authService = AuthService.shared
+        guard let authUserID = authService.authUserID,
+              let provider = authService.authProvider else {
+            return false
+        }
+
         do {
-            let user: ConvexUser? = try await queryOnce("users:getUserByDeviceId", with: ["deviceId": deviceId])
+            let user: ConvexUser? = try await queryOnce("users:getUserByAuthID", with: [
+                "authProvider": provider,
+                "authUserID": authUserID,
+            ])
             if let user {
                 currentUserId = user.id
                 currentUsername = user.username
@@ -75,15 +83,41 @@ final class ConvexManager {
         return false
     }
 
-    // MARK: - Create Account
+    // MARK: - Create Account (linked to auth provider)
 
     @MainActor
-    func createAccount(username: String) async throws {
-        let deviceId = KeychainService.getOrCreateDeviceId()
-        let userId: String = try await client.mutation("users:createUser", with: [
-            "deviceId": deviceId,
+    func createAccount(username: String, gooseName: String? = nil) async throws {
+        let authService = AuthService.shared
+        guard let provider = authService.authProvider,
+              let authUserID = authService.authUserID else {
+            throw AuthError.notSignedIn
+        }
+
+        var args: [String: ConvexEncodable?] = [
+            "authProvider": provider,
             "username": username,
-        ])
+        ]
+
+        if provider == "apple" {
+            args["appleUserID"] = authUserID
+        } else if provider == "google" {
+            args["googleUserID"] = authUserID
+        }
+
+        if let name = authService.displayName {
+            args["displayName"] = name
+        }
+        if let email = authService.email {
+            args["email"] = email
+        }
+        if let avatar = authService.avatarURL {
+            args["avatarURL"] = avatar
+        }
+        if let gooseName {
+            args["gooseName"] = gooseName
+        }
+
+        let userId: String = try await client.mutation("users:createUser", with: args)
 
         KeychainService.write(.userId, value: userId)
         KeychainService.write(.username, value: username.lowercased())
@@ -102,9 +136,120 @@ final class ConvexManager {
             return false
         }
     }
+
+    // MARK: - Returning User Check
+
+    /// Check if the signed-in auth identity already has a Convex account.
+    /// Returns restored data if found, nil for new users.
+    func checkReturningUser() async -> ReturningUserData? {
+        let authService = AuthService.shared
+        guard let provider = authService.authProvider,
+              let authUserID = authService.authUserID else {
+            return nil
+        }
+
+        do {
+            let user: ConvexUser? = try await queryOnce("users:getUserByAuthID", with: [
+                "authProvider": provider,
+                "authUserID": authUserID,
+            ])
+            guard let user else { return nil }
+
+            // Fetch goose state
+            let goose: ConvexGoose? = try await queryOnce("users:getGooseByUserId", with: [
+                "userId": user.id,
+            ])
+
+            // Fetch goals
+            let goals: [ConvexGoal] = try await queryOnce("goals:getGoals", with: [
+                "userId": user.id,
+            ])
+
+            // Persist identity to Keychain
+            KeychainService.write(.userId, value: user.id)
+            KeychainService.write(.username, value: user.username)
+
+            await MainActor.run {
+                currentUserId = user.id
+                currentUsername = user.username
+            }
+
+            return ReturningUserData(
+                convexUserId: user.id,
+                username: user.username,
+                gooseName: goose?.gooseName ?? "Harold",
+                happiness: goose?.happiness ?? 0.7,
+                healthiness: goose?.healthiness ?? 0.8,
+                mood: goose?.mood ?? "content",
+                spriteID: goose?.spriteID ?? "default",
+                streakDays: goose?.streakDays ?? 0,
+                goals: goals
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    // MARK: - Goal Sync
+
+    /// Push local goals to Convex. Call after goal create/update/delete.
+    func syncGoals(goals: [Goal]) {
+        guard let userId = currentUserId else { return }
+
+        let goalData: [ConvexEncodable?] = goals.map { goal -> ConvexEncodable? in
+            var dict: [String: ConvexEncodable?] = [
+                "title": goal.title,
+                "type": goal.type,
+                "category": goal.category,
+                "frequency": goal.frequency,
+                "targetCount": goal.targetCount,
+                "happinessWeight": goal.happinessWeight,
+                "sortOrder": goal.sortOrder,
+                "isActive": goal.isActive,
+            ]
+            if !goal.customDays.isEmpty {
+                dict["customDays"] = goal.customDays
+            }
+            return dict
+        }
+
+        Task {
+            do {
+                let _: String? = try await client.mutation("goals:syncGoals", with: [
+                    "userId": userId,
+                    "goals": goalData,
+                ])
+            } catch {
+                print("[ConvexManager] Goal sync failed: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Sign Out
+
+    @MainActor
+    func signOut() {
+        currentUserId = nil
+        currentUsername = nil
+        KeychainService.delete(.userId)
+        KeychainService.delete(.username)
+        AuthService.shared.signOut()
+    }
 }
 
-// MARK: - Codable User from Convex
+// MARK: - Error
+
+enum AuthError: LocalizedError {
+    case notSignedIn
+
+    var errorDescription: String? {
+        switch self {
+        case .notSignedIn: return "You must sign in before creating an account."
+        }
+    }
+}
+
+// MARK: - Codable Types from Convex
 
 private struct ConvexUser: Decodable {
     let id: String
@@ -114,4 +259,41 @@ private struct ConvexUser: Decodable {
         case id = "_id"
         case username
     }
+}
+
+struct ConvexGoose: Decodable {
+    let gooseName: String
+    let happiness: Double
+    let healthiness: Double
+    let mood: String
+    let spriteID: String
+    let streakDays: Int
+
+    enum CodingKeys: String, CodingKey {
+        case gooseName, happiness, healthiness, mood, spriteID, streakDays
+    }
+}
+
+struct ConvexGoal: Decodable {
+    let title: String
+    let type: String
+    let category: String
+    let frequency: String
+    let targetCount: Int
+    let happinessWeight: Double
+    let sortOrder: Int
+    let isActive: Bool
+    let customDays: String?
+}
+
+struct ReturningUserData {
+    let convexUserId: String
+    let username: String
+    let gooseName: String
+    let happiness: Double
+    let healthiness: Double
+    let mood: String
+    let spriteID: String
+    let streakDays: Int
+    let goals: [ConvexGoal]
 }

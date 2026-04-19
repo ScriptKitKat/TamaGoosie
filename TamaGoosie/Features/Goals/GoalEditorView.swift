@@ -358,8 +358,7 @@ struct GoalEditorView: View {
             Text(label)
                 .font(GoosieTheme.captionFont(12))
                 .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
-                .fixedSize()
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
@@ -400,8 +399,7 @@ struct GoalEditorView: View {
             Text(freq.displayName)
                 .font(GoosieTheme.captionFont(12))
                 .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
-                .fixedSize()
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
@@ -424,6 +422,7 @@ struct GoalEditorView: View {
         guard let goal = existingGoal else { return }
         goal.targetCount = targetCount
         try? modelContext.save()
+        syncAllGoalsToConvex()
         dismiss()
     }
 
@@ -498,7 +497,15 @@ struct GoalEditorView: View {
             scheduleReminderIfNeeded(for: goal)
         }
         try? modelContext.save()
+        syncAllGoalsToConvex()
         dismiss()
+    }
+
+    private func syncAllGoalsToConvex() {
+        let descriptor = FetchDescriptor<Goal>(sortBy: [SortDescriptor(\.sortOrder)])
+        guard let allGoals = try? modelContext.fetch(descriptor) else { return }
+        let activeGoals = allGoals.filter { $0.isActive }
+        ConvexManager.shared.syncGoals(goals: activeGoals)
     }
 
     private func scheduleReminderIfNeeded(for goal: Goal) {

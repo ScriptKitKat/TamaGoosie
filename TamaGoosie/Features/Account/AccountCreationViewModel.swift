@@ -5,6 +5,7 @@ import SwiftUI
 @Observable
 final class AccountCreationViewModel {
     var username = ""
+    var gooseName: String?
     var validationError: String?
     var isAvailable = false
     var isChecking = false
@@ -83,7 +84,7 @@ final class AccountCreationViewModel {
         defer { isCreating = false }
 
         do {
-            try await ConvexManager.shared.createAccount(username: username)
+            try await ConvexManager.shared.createAccount(username: username, gooseName: gooseName)
             return true
         } catch {
             creationError = error.localizedDescription

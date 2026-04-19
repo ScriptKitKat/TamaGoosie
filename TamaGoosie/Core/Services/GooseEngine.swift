@@ -167,6 +167,16 @@ final class GooseEngine {
         saveStatsToAppGroup(state.toSyncPayload())
     }
 
+    // MARK: - End-of-Day Snapshot
+
+    /// Snapshots current goose stats into yesterday's DailyLog.
+    /// Call once when a new day is detected (e.g. on app launch before resetDailyGoals).
+    func snapshotEndOfDay(state: GooseState, yesterdayLog: DailyLog) {
+        guard yesterdayLog.endOfDayHealthiness == 0 && yesterdayLog.endOfDayHappiness == 0 else { return }
+        yesterdayLog.endOfDayHealthiness = state.healthiness
+        yesterdayLog.endOfDayHappiness = state.happiness
+    }
+
     // MARK: - Streak Management
 
     func updateDailyStreak(state: GooseState, goalsCompletedToday: Int, totalGoalsToday: Int) {

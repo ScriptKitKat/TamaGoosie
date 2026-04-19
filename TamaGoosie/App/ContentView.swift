@@ -12,37 +12,42 @@ struct ContentView: View {
     @StateObject private var watchSync = WatchSyncService.shared
     @State private var selectedTab = 0
     @State private var showOnboarding = false
-    @State private var showAccountCreation = false
     /// Tracks whether we've applied one-time health rewards this session
     @State private var healthProcessedThisSession = false
+
+    private var hasCompletedOnboarding: Bool {
+        profiles.first?.hasCompletedOnboarding == true
+    }
 
     var body: some View {
         mainTabView
             .onAppear {
-                if profiles.first?.hasCompletedOnboarding != true {
+                if !hasCompletedOnboarding {
                     showOnboarding = true
                 } else {
                     HealthKitManager.shared.enableBackgroundDelivery()
-                    checkAccountStatus()
                 }
                 scheduleNotifications()
             }
             .task {
-                guard profiles.first?.hasCompletedOnboarding == true else { return }
+                guard hasCompletedOnboarding else { return }
                 await syncHealthData()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
-                    guard profiles.first?.hasCompletedOnboarding == true else { return }
+                    guard hasCompletedOnboarding else { return }
                     Task { await syncHealthData() }
                 }
             }
+            .onChange(of: hasCompletedOnboarding) { _, completed in
+                if !completed {
+                    showOnboarding = true
+                }
+            }
             .onChange(of: showOnboarding) { _, isShowing in
-                // After onboarding completes, kick off health sync + account check
                 if !isShowing {
                     HealthKitManager.shared.enableBackgroundDelivery()
                     Task { await syncHealthData() }
-                    checkAccountStatus()
                 }
             }
             .onChange(of: goals.count) { _, _ in
@@ -57,22 +62,6 @@ struct ContentView: View {
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingContainerView { showOnboarding = false }
             }
-            .fullScreenCover(isPresented: $showAccountCreation) {
-                AccountCreationView {
-                    showAccountCreation = false
-                }
-            }
-    }
-
-    // MARK: - Account Check
-
-    private func checkAccountStatus() {
-        Task {
-            let authenticated = await ConvexManager.shared.loadIdentity()
-            if !authenticated {
-                await MainActor.run { showAccountCreation = true }
-            }
-        }
     }
 
     private func scheduleNotifications() {
@@ -131,7 +120,6 @@ struct ContentView: View {
         let log = fetchOrCreateTodayLog()
 
         if !healthProcessedThisSession {
-            // First fetch this session: update cache + DailyLog + recompute stats
             GooseEngine.shared.processHealthData(
                 steps: snapshot.steps,
                 exerciseMinutes: snapshot.exerciseMinutes,
@@ -145,7 +133,6 @@ struct ContentView: View {
             )
             healthProcessedThisSession = true
         } else {
-            // Subsequent fetches: just refresh the cache + DailyLog
             GooseEngine.shared.refreshHealthCache(
                 steps: snapshot.steps,
                 exerciseMinutes: snapshot.exerciseMinutes,
@@ -156,7 +143,6 @@ struct ContentView: View {
             )
         }
 
-        // Update built-in goal progress from HealthKit values
         GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
     }
 

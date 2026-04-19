@@ -173,6 +173,8 @@ struct GoalListView: View {
         }
         .onAppear {
             viewModel.seedBuiltinGoalsIfNeeded(in: modelContext, isWatchPaired: isWatchPaired)
+            // Snapshot yesterday's stats before resetting goals for the new day
+            snapshotYesterdayIfNeeded()
             viewModel.resetDailyGoals(goals)
             ensureTodayLogExists()
             GooseEngine.shared.refreshGoals(goals)
@@ -211,6 +213,19 @@ struct GoalListView: View {
         let log = DailyLog(date: .now)
         modelContext.insert(log)
         return log
+    }
+
+    /// On a new day, snapshot the current goose stats into yesterday's DailyLog
+    /// so DuckHistoryCard can chart real data.
+    private func snapshotYesterdayIfNeeded() {
+        guard let state = gooseState else { return }
+        let calendar = Calendar.current
+        let yesterdayLog = allDailyLogs.first {
+            calendar.isDateInYesterday($0.date)
+        }
+        if let yesterdayLog {
+            GooseEngine.shared.snapshotEndOfDay(state: state, yesterdayLog: yesterdayLog)
+        }
     }
 
     private var emptyState: some View {

@@ -10,6 +10,7 @@
 
 import type * as friends from "../friends.js";
 import type * as geese from "../geese.js";
+import type * as goals from "../goals.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,6 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   friends: typeof friends;
   geese: typeof geese;
+  goals: typeof goals;
   users: typeof users;
 }>;
 

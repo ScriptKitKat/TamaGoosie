@@ -12,6 +12,9 @@ packages:
   ConvexMobile:
     url: https://github.com/get-convex/convex-swift
     from: "0.5.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "8.0.0"
 
 settings:
   base:
@@ -28,6 +31,8 @@ targets:
     dependencies:
       - package: ConvexMobile
         product: ConvexMobile
+      - package: GoogleSignIn
+        product: GoogleSignIn
       - target: TamaGoosieWidgets
       - target: TamaGoosieWatch
         embed: true
@@ -53,6 +58,8 @@ targets:
         com.apple.security.application-groups:
           - group.com.tamagoosie
         com.apple.developer.healthkit: true
+        com.apple.developer.applesignin:
+          - Default
         # com.apple.developer.family-controls: true  # Screen Time disabled
 
   TamaGoosieWatch:

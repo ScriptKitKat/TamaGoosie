@@ -3,8 +3,14 @@ import { v } from "convex/values";
 
 export const createUser = mutation({
   args: {
-    deviceId: v.string(),
+    authProvider: v.string(),
+    appleUserID: v.optional(v.string()),
+    googleUserID: v.optional(v.string()),
     username: v.string(),
+    displayName: v.optional(v.string()),
+    email: v.optional(v.string()),
+    avatarURL: v.optional(v.string()),
+    gooseName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const normalized = args.username.toLowerCase().trim();
@@ -13,31 +19,50 @@ export const createUser = mutation({
     if (normalized.length < 3 || normalized.length > 20) {
       throw new Error("Username must be 3–20 characters");
     }
-    if (!/^[a-z0-9_]+$/.test(normalized)) {
-      throw new Error("Username can only contain lowercase letters, numbers, and underscores");
+    if (!/^[a-z][a-z0-9_]*$/.test(normalized)) {
+      throw new Error(
+        "Username must start with a letter and contain only lowercase letters, numbers, and underscores"
+      );
     }
 
-    // Check uniqueness
-    const existing = await ctx.db
+    // Check username uniqueness
+    const existingUsername = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", normalized))
       .first();
-    if (existing) {
+    if (existingUsername) {
       throw new Error("Username is already taken");
     }
 
-    // Check deviceId not already registered
-    const existingDevice = await ctx.db
-      .query("users")
-      .withIndex("by_deviceId", (q) => q.eq("deviceId", args.deviceId))
-      .first();
-    if (existingDevice) {
-      throw new Error("Device already has an account");
+    // Check auth provider ID not already registered
+    if (args.authProvider === "apple" && args.appleUserID) {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_apple_id", (q) => q.eq("appleUserID", args.appleUserID))
+        .first();
+      if (existing) {
+        throw new Error("This Apple ID already has an account");
+      }
+    } else if (args.authProvider === "google" && args.googleUserID) {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_google_id", (q) =>
+          q.eq("googleUserID", args.googleUserID)
+        )
+        .first();
+      if (existing) {
+        throw new Error("This Google account already has an account");
+      }
     }
 
     const userId = await ctx.db.insert("users", {
-      deviceId: args.deviceId,
+      authProvider: args.authProvider,
+      appleUserID: args.appleUserID,
+      googleUserID: args.googleUserID,
       username: normalized,
+      displayName: args.displayName,
+      email: args.email,
+      avatarURL: args.avatarURL,
       createdAt: Date.now(),
     });
 
@@ -47,7 +72,7 @@ export const createUser = mutation({
       happiness: 0.7,
       healthiness: 0.8,
       mood: "content",
-      gooseName: "Harold",
+      gooseName: args.gooseName ?? "Harold",
       spriteID: "default",
       streakDays: 0,
       lastUpdated: Date.now(),
@@ -57,12 +82,37 @@ export const createUser = mutation({
   },
 });
 
-export const getUserByDeviceId = query({
-  args: { deviceId: v.string() },
+// Look up user by auth provider ID (used on app launch to restore session)
+export const getUserByAuthID = query({
+  args: {
+    authProvider: v.string(),
+    authUserID: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.authProvider === "apple") {
+      return await ctx.db
+        .query("users")
+        .withIndex("by_apple_id", (q) => q.eq("appleUserID", args.authUserID))
+        .first();
+    } else if (args.authProvider === "google") {
+      return await ctx.db
+        .query("users")
+        .withIndex("by_google_id", (q) =>
+          q.eq("googleUserID", args.authUserID)
+        )
+        .first();
+    }
+    return null;
+  },
+});
+
+// Look up a user's goose by their Convex user ID
+export const getGooseByUserId = query({
+  args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("users")
-      .withIndex("by_deviceId", (q) => q.eq("deviceId", args.deviceId))
+      .query("geese")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .first();
   },
 });
@@ -88,7 +138,6 @@ export const searchUsers = query({
     // For each result, check friendship/request status
     const enriched = await Promise.all(
       filtered.map(async (user) => {
-        // Check if already friends (accepted request in either direction)
         const friendAsFrom = await ctx.db
           .query("friendRequests")
           .withIndex("by_pair", (q) =>
@@ -132,7 +181,7 @@ export const checkUsernameAvailable = query({
   handler: async (ctx, args) => {
     const normalized = args.username.toLowerCase().trim();
     if (normalized.length < 3 || normalized.length > 20) return false;
-    if (!/^[a-z0-9_]+$/.test(normalized)) return false;
+    if (!/^[a-z][a-z0-9_]*$/.test(normalized)) return false;
 
     const existing = await ctx.db
       .query("users")
