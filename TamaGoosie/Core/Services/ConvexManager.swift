@@ -197,14 +197,16 @@ final class ConvexManager {
         guard let userId = currentUserId else { return }
 
         let goalData: [ConvexEncodable?] = goals.map { goal -> ConvexEncodable? in
+            // Cast Int fields to Double so ConvexMobile encodes them as Float64,
+            // matching Convex v.number() validators (Int encodes as $integer/Int64).
             var dict: [String: ConvexEncodable?] = [
                 "title": goal.title,
                 "type": goal.type,
                 "category": goal.category,
                 "frequency": goal.frequency,
-                "targetCount": goal.targetCount,
+                "targetCount": Double(goal.targetCount),
                 "happinessWeight": goal.happinessWeight,
-                "sortOrder": goal.sortOrder,
+                "sortOrder": Double(goal.sortOrder),
                 "isActive": goal.isActive,
             ]
             if !goal.customDays.isEmpty {

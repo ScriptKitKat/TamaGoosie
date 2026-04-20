@@ -31,12 +31,16 @@ struct ContentView: View {
             }
             .task {
                 guard hasCompletedOnboarding else { return }
+                await restoreIdentityIfNeeded()
                 await syncHealthData()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     guard hasCompletedOnboarding else { return }
-                    Task { await syncHealthData() }
+                    Task {
+                        await restoreIdentityIfNeeded()
+                        await syncHealthData()
+                    }
                 }
             }
             .onChange(of: hasCompletedOnboarding) { _, completed in
@@ -46,6 +50,7 @@ struct ContentView: View {
             }
             .onChange(of: showOnboarding) { _, isShowing in
                 if !isShowing {
+                    selectedTab = 0
                     HealthKitManager.shared.enableBackgroundDelivery()
                     Task { await syncHealthData() }
                 }
@@ -103,6 +108,27 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(GoosieTheme.coralAccent)
+    }
+
+    // MARK: - Identity Restoration & Convex Sync
+
+    private func restoreIdentityIfNeeded() async {
+        if !ConvexManager.shared.isAuthenticated {
+            _ = await ConvexManager.shared.loadIdentity()
+        }
+
+        // Push current local stats to Convex immediately after identity is available.
+        // This covers the case where HealthKit is unavailable or hasn't delivered data yet.
+        if ConvexManager.shared.isAuthenticated, let state = gooseStates.first {
+            GooseSyncService.shared.syncToConvex(
+                happiness: state.happiness,
+                healthiness: state.healthiness,
+                mood: state.mood,
+                gooseName: state.name,
+                spriteID: state.spriteID,
+                streakDays: state.streakDays
+            )
+        }
     }
 
     // MARK: - HealthKit Auto-Sync

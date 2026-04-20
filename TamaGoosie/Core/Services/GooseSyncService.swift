@@ -16,19 +16,27 @@ final class GooseSyncService {
         spriteID: String,
         streakDays: Int
     ) {
-        guard let userId = ConvexManager.shared.currentUserId else { return }
+        guard let userId = ConvexManager.shared.currentUserId else {
+            print("[GooseSyncService] Skipped sync — no currentUserId")
+            return
+        }
 
         Task {
             do {
-                try await ConvexManager.shared.client.mutation("geese:upsertGooseState", with: [
-                    "userId": userId,
-                    "happiness": happiness,
-                    "healthiness": healthiness,
-                    "mood": mood,
-                    "gooseName": gooseName,
-                    "spriteID": spriteID,
-                    "streakDays": streakDays,
-                ])
+                // Cast streakDays to Double so ConvexMobile encodes it as Float64,
+                // matching the Convex v.number() validator.
+                let _: String? = try await ConvexManager.shared.client.mutation(
+                    "geese:upsertGooseState",
+                    with: [
+                        "userId": userId,
+                        "happiness": happiness,
+                        "healthiness": healthiness,
+                        "mood": mood,
+                        "gooseName": gooseName,
+                        "spriteID": spriteID,
+                        "streakDays": Double(streakDays),
+                    ]
+                )
             } catch {
                 print("[GooseSyncService] Failed to sync: \(error)")
             }
