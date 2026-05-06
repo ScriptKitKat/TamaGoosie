@@ -170,6 +170,15 @@ struct ContentView: View {
         }
 
         GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
+
+        Task {
+            await GooseEngine.shared.backfillHistory(
+                daysBack: 30,
+                modelContext: modelContext,
+                profile: profiles.first,
+                goals: goals
+            )
+        }
     }
 
     private func fetchOrCreateTodayLog() -> DailyLog {

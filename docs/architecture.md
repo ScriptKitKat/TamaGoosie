@@ -103,12 +103,12 @@ Stats are **never mutated directly** and do not decay. Every update recomputes b
 
 | Layer | Responsibility |
 |-------|----------------|
-| `GooseEngine` | Orchestrates all stat computation. Only entry point for changing `GooseState`. |
+| `GooseEngine` | Orchestrates all stat computation. Only entry point for changing `GooseState`. Also runs `backfillHistory(daysBack:modelContext:profile:goals:)` on launch to populate historical `DailyLog` records from HealthKit. |
 | `RewardEngine` | Two pure formula functions: `computeHealthiness` and `computeHappiness`. Returns `Double`; never mutates state. |
 | `GooseViewModel` | Bridges `GooseState` to the UI. Holds the update timer and current context (log/profile/goals). |
 | `GoalViewModel` | Delegates goal CRUD and DailyLog updates to GooseEngine. Handles goal CRUD. |
 | `NotificationManager` | Schedules/cancels all `UNUserNotificationCenter` requests. |
-| `HealthKitManager` | Fetches `HKStatistics`; writes results to `DailyLog`; does not mutate `GooseState` directly. |
+| `HealthKitManager` | Fetches `HKStatistics` for today (`fetchTodayStats()`) and for any past calendar date (`fetchStats(for:)`); writes results to `DailyLog`; does not mutate `GooseState` directly. |
 | `WatchSyncService` | Sends payloads to Watch; receives goal completion messages. |
 
 ---

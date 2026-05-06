@@ -117,12 +117,12 @@ HealthKitManager → GooseEngine → GooseState (SwiftData @Model)
 **TamaGoosie/Core/Models/** — SwiftData `@Model` classes:
 - `GooseState` — the single goose instance (one row in DB); fields: `healthiness`, `happiness`, `mood`, `streakDays`, `longestStreak`, `lastStreakDate`, `name`, `spriteID`, `hatID`, `colorID`, `lastUpdated`, `createdAt`
 - `Goal` — user goals; `type` is `"recurring" | "deadline" | "builtin"`
-- `DailyLog` — one row per calendar day, accumulates HealthKit + distraction data; fields: steps, exerciseMinutes, sleepHours, standHours, sittingHours, outsideMinutes, distractionOpens, distractionMinutes, goalsCompleted, goalsTotal
+- `DailyLog` — one row per calendar day, accumulates HealthKit + distraction data; fields: steps, exerciseMinutes, sleepHours, standHours, sittingHours, outsideMinutes, distractionOpens, distractionMinutes, goalsCompleted, goalsTotal, endOfDayHealthiness, endOfDayHappiness (0.0–1.0 snapshots written by `snapshotEndOfDay` or backfilled by `backfillHistory`)
 - `DistractionApp` — user-configured distraction apps
 - `UserProfile` — user baselines (auto-updated after 7 days of logs) and settings
 
 **TamaGoosie/Core/Services/**:
-- `GooseEngine` — singleton orchestrator. Entry point: `GooseEngine.shared.update(state:log:profile:goals:)`, `completeGoal(_:state:log:goals:)`, `uncompleteGoal(_:state:log:goals:)`, `resetGoose(state:)`
+- `GooseEngine` — singleton orchestrator. Entry point: `GooseEngine.shared.update(state:log:profile:goals:)`, `completeGoal(_:state:log:goals:)`, `uncompleteGoal(_:state:log:goals:)`, `resetGoose(state:)`, `backfillHistory(daysBack:modelContext:profile:goals:)` (populates historical DailyLogs from HealthKit on launch)
 - `RewardEngine` — two pure formula functions: `computeHealthiness(log:profile:)` and `computeHappiness(log:goals:)`. No delta mutations.
 - `DecayEngine` — **deleted**. Stats do not decay; they are recomputed from real data on every update.
 

@@ -167,6 +167,47 @@ final class GooseEngine {
         saveStatsToAppGroup(state.toSyncPayload())
     }
 
+    // MARK: - History Backfill
+
+    /// Backfills DailyLog records for the past `daysBack` days using real HealthKit data.
+    /// Skips any day that already has a non-zero endOfDayHealthiness snapshot.
+    func backfillHistory(daysBack: Int, modelContext: ModelContext, profile: UserProfile?, goals: [Goal]) async {
+        guard HealthKitManager.shared.isAuthorized else { return }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+
+        for offset in 1...daysBack {
+            guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+
+            // Fetch or create the log for this date
+            let descriptor = FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date == date })
+            let existing = try? modelContext.fetch(descriptor)
+            let log: DailyLog
+
+            if let found = existing?.first {
+                // Skip days already snapshotted
+                guard found.endOfDayHealthiness == 0 && found.endOfDayHappiness == 0 else { continue }
+                log = found
+            } else {
+                log = DailyLog(date: date)
+                modelContext.insert(log)
+            }
+
+            // Fetch real HealthKit data for this day
+            guard let snapshot = try? await HealthKitManager.shared.fetchStats(for: date) else { continue }
+            log.steps = snapshot.steps
+            log.exerciseMinutes = Int(snapshot.exerciseMinutes)
+            log.sleepHours = snapshot.sleepHours
+            log.standHours = snapshot.standHours
+
+            // Compute and store end-of-day scores
+            if let profile {
+                log.endOfDayHealthiness = RewardEngine.computeHealthiness(log: log, profile: profile)
+            }
+            log.endOfDayHappiness = RewardEngine.computeHappiness(log: log, goals: goals)
+        }
+    }
+
     // MARK: - End-of-Day Snapshot
 
     /// Snapshots current goose stats into yesterday's DailyLog.

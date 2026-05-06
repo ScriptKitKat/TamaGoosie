@@ -136,6 +136,10 @@ There are no `xp`, `level`, `phase`, `isDead`, `deathDate`, `deathCause`, `reviv
 | `distractionMinutes` | Double | Minutes in distraction mode |
 | `goalsCompleted` | Int | Count of completed active goals (updated by GooseEngine) |
 | `goalsTotal` | Int | Count of total active goals (updated by GooseEngine) |
+| `endOfDayHealthiness` | Double | 0.0–1.0 snapshot written once when next day begins (via `snapshotEndOfDay`). Also backfilled by `GooseEngine.backfillHistory`. |
+| `endOfDayHappiness` | Double | Same as above for happiness. |
+
+`endOfDayHealthiness` and `endOfDayHappiness` default to `0`. They are read by `DailyLogHistoryProvider` to power the Duck History chart in Settings. `DuckHistoryCard` also appends today's live values from `GooseState` as a virtual data point so the chart always reflects current stats.
 
 There are no `healthinessDelta`, `happinessDelta`, or `xpEarned` fields — stats are recomputed from the raw data above, not accumulated as deltas.
 

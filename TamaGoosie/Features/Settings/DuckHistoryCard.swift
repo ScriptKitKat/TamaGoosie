@@ -25,8 +25,25 @@ struct DuckHistoryCard: View {
 
     // MARK: - Derived
 
+    private var todayPoint: DayPoint? {
+        guard let state = gooseStates.first, state.healthiness > 0 || state.happiness > 0 else { return nil }
+        return DayPoint(
+            id: Calendar.current.startOfDay(for: .now),
+            date: Calendar.current.startOfDay(for: .now),
+            healthiness: state.healthiness,
+            happiness: state.happiness
+        )
+    }
+
     private var filtered: [DayPoint] {
-        provider.fetchPoints(range: selectedRange)
+        var points = provider.fetchPoints(range: selectedRange)
+        if let today = todayPoint {
+            // Replace any existing entry for today, then re-sort
+            points.removeAll { Calendar.current.isDateInToday($0.date) }
+            points.append(today)
+            points.sort { $0.date < $1.date }
+        }
+        return points
     }
 
     private var summary: ChartSummary {
