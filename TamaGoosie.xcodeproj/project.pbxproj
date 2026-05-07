@@ -65,6 +65,7 @@
 		9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A07D96450F3E9A494C35A911 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94FB212D9417DF655E2DFA09 /* OnboardingCompleteView.swift */; };
 		A3D514E4572D517AD6575F58 /* DuckFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138F5488540DB4113C8BBD66 /* DuckFaceView.swift */; };
+		A414B526CEBEEB3D3E52B857 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 254B5C8EA4051942ABEC8C35 /* Assets.xcassets */; };
 		A4BFA7900EE7B0AEAA12E357 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */; };
 		A6597EDA797C71161C9E7053 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
 		A76416F6B06ECCFAA06F0439 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
@@ -168,6 +169,7 @@
 		1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNameView.swift; sourceTree = "<group>"; };
 		20817DC434F39927E7A30358 /* TamaGoosieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamaGoosieApp.swift; sourceTree = "<group>"; };
 		220BD24CBD965B1825F27DF4 /* FocusSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionView.swift; sourceTree = "<group>"; };
+		254B5C8EA4051942ABEC8C35 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionApp.swift; sourceTree = "<group>"; };
 		2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseStats.swift; sourceTree = "<group>"; };
 		2EE23080F0C585620FA2AA80 /* RewardEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardEngine.swift; sourceTree = "<group>"; };
@@ -365,6 +367,7 @@
 			isa = PBXGroup;
 			children = (
 				EBB250A205156D5833BA6B21 /* Complications */,
+				254B5C8EA4051942ABEC8C35 /* Assets.xcassets */,
 				138F5488540DB4113C8BBD66 /* DuckFaceView.swift */,
 				9B880E96B410E34DD097D19C /* GooseGlanceView.swift */,
 				8FA52C55A9DDABB6A6056E1C /* Info.plist */,
@@ -623,6 +626,7 @@
 			buildConfigurationList = CB883A65AEE367D76A36C739 /* Build configuration list for PBXNativeTarget "TamaGoosieWatch" */;
 			buildPhases = (
 				A5925855D5940DAA6C69947D /* Sources */,
+				CCD685CB56C63388E0FDED40 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -685,6 +689,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		CCD685CB56C63388E0FDED40 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A414B526CEBEEB3D3E52B857 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F3346F2780B833D7E01E7BF0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;

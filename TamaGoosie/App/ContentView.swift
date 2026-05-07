@@ -61,6 +61,9 @@ struct ContentView: View {
             .onChange(of: goals.map { $0.isCompleted }) { _, _ in
                 scheduleNotifications()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .goalCompletedFromWatch)) { notification in
+                handleWatchGoalCompletion(notification)
+            }
             .sheet(item: $notificationDelegate.pendingNegotiation) { negotiation in
                 NegotiationView(negotiation: negotiation)
             }
@@ -178,6 +181,32 @@ struct ContentView: View {
                 profile: profiles.first,
                 goals: goals
             )
+        }
+    }
+
+    // MARK: - Watch Goal Completion
+
+    private func handleWatchGoalCompletion(_ notification: Foundation.Notification) {
+        guard let goalID = notification.userInfo?["goalID"] as? UUID else { return }
+        let replyHandler = notification.userInfo?["replyHandler"] as? ([String: Any]) -> Void
+
+        guard let goal = goals.first(where: { $0.id == goalID }),
+              !goal.isCompleted,
+              let state = gooseStates.first else {
+            replyHandler?([:])
+            return
+        }
+
+        let log = fetchOrCreateTodayLog()
+        GooseEngine.shared.completeGoal(goal, state: state, log: log, goals: goals)
+        try? modelContext.save()
+
+        // Send updated payload back to Watch
+        let payload = state.toSyncPayload()
+        if let data = try? JSONEncoder().encode(payload) {
+            replyHandler?(["goosePayload": data])
+        } else {
+            replyHandler?([:])
         }
     }
 
