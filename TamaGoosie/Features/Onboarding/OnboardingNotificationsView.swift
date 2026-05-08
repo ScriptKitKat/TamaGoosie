@@ -27,11 +27,12 @@ struct OnboardingNotificationsView: View {
                 Spacer().frame(height: 28)
 
                 // Title
-                Text("Stay in touch!")
+                Text("Keep Track of\nYour Goals")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(OBTheme.text)
+                    .multilineTextAlignment(.center)
 
-                Text("Get gentle nudges when your goose needs you.")
+                Text("We'll send you gentle reminders to check on your goose.")
                     .font(.system(size: 14, weight: .regular, design: .rounded))
                     .foregroundStyle(OBTheme.secondary)
                     .multilineTextAlignment(.center)
@@ -47,7 +48,7 @@ struct OnboardingNotificationsView: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    OBButton(title: requesting ? "Requesting…" : "Enable Notifications", isEnabled: !requesting) {
+                    OBButton(title: requesting ? "Requesting…" : "Remind Me", isEnabled: !requesting) {
                         requesting = true
                         Task {
                             _ = try? await NotificationManager.shared.requestAuthorization()
@@ -59,7 +60,7 @@ struct OnboardingNotificationsView: View {
                         }
                     }
 
-                    Button("Skip for now") { onAdvance() }
+                    Button("Maybe Later") { onAdvance() }
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(OBTheme.secondary)
                 }

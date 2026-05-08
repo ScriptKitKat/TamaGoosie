@@ -22,7 +22,7 @@ struct OnboardingHealthView: View {
 
                 // Duck + speech bubble
                 VStack(spacing: 0) {
-                    OBSpeechBubble(text: "I get stronger when you stay active!")
+                    OBSpeechBubble(text: "I need to know how you're doing so I can stay healthy too!")
                         .padding(.horizontal, 40)
 
                     Spacer().frame(height: 8)
@@ -34,9 +34,10 @@ struct OnboardingHealthView: View {
                 Spacer().frame(height: 28)
 
                 // Title
-                Text("Connect Health Data")
+                Text("Connect Your\nHealth Data")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(OBTheme.text)
+                    .multilineTextAlignment(.center)
 
                 Spacer().frame(height: 20)
 
@@ -65,7 +66,7 @@ struct OnboardingHealthView: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    OBButton(title: requesting ? "Requesting…" : "Connect Health", isEnabled: !requesting) {
+                    OBButton(title: requesting ? "Connecting..." : "Connect Health Data", isEnabled: !requesting) {
                         requesting = true
                         Task {
                             try? await HealthKitManager.shared.requestAuthorization()
@@ -77,7 +78,7 @@ struct OnboardingHealthView: View {
                         }
                     }
 
-                    Button("Skip for now") { onAdvance() }
+                    Button("Maybe Later") { onAdvance() }
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(OBTheme.secondary)
                 }
