@@ -225,7 +225,7 @@ private struct MessageBubble: View {
                 .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(message.isUser ? GoosieTheme.coralAccent : GoosieTheme.mintBackground)
+                        .fill(message.isUser ? GoosieTheme.coralAccent : GoosieTheme.gooseBubble)
                 )
                 .frame(maxWidth: .infinity, alignment: message.isUser ? .trailing : .leading)
 
