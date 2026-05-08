@@ -20,6 +20,7 @@
 		28342EDC7F7E26F32FEB3CB4 /* OnboardingSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B11597C0B375663C2B2A99 /* OnboardingSignInView.swift */; };
 		2967D41799C4AF2113970315 /* GooseLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */; };
 		2A6CA0467CF18760E6D5F99C /* AccountCreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A53A26A541860CFC61C287DD /* AccountCreationViewModel.swift */; };
+		2D540C1C3236CE43E7EEF1C4 /* DuckHistoryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0414AE7A9F76C5FFD0D7B94 /* DuckHistoryCard.swift */; };
 		2F3E292F809B7EE6E15DD73E /* DistractionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */; };
 		301077A680DDD645E5EAF4E3 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB696A4E3DA4C74DEDB95EBC /* OnboardingWelcomeView.swift */; };
 		39A0B5BBFFB5E737EE1F64EB /* DailyLogHistoryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */; };
@@ -57,7 +58,6 @@
 		8011B9135369B9163BF57D74 /* GoosieTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF97FF359441B0799D8CB3D /* GoosieTheme.swift */; };
 		8419E33385FCF2CB275FF24C /* FriendCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50D0DBE78165C290BCA6BA2C /* FriendCardView.swift */; };
 		8686CC50662892F36DFC53F7 /* NegotiationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22F43B4030D8528B8B2B0DD /* NegotiationView.swift */; };
-		8A103094533512CB477BC98C /* DuckHistoryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E6240F2287715F71C13997 /* DuckHistoryCard.swift */; };
 		8A1C3754E0D255985FC38D18 /* GoalEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E44C8076495B92B17387492 /* GoalEditorView.swift */; };
 		8AFF2413D1D0DAA538DCEA4B /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616EF88AFFEC4F12F716F987 /* OnboardingState.swift */; };
 		8C53B0EA1FA080395F5865B4 /* OnboardingUsernameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059C65D5074E896A7DE5CD4E /* OnboardingUsernameView.swift */; };
@@ -74,6 +74,7 @@
 		A4BFA7900EE7B0AEAA12E357 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */; };
 		A6597EDA797C71161C9E7053 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
 		A76416F6B06ECCFAA06F0439 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
+		A946FAE25F38B598EBD6DEF4 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAFD3A058135758BD8BE261 /* StatsView.swift */; };
 		AA92ACAC594E76062C7C5C71 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2CBC4425DDF588BD10E856 /* NotificationScheduler.swift */; };
 		ABF9CF827C3739BE790208A4 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		B0544B8CEC98A4FB74057644 /* OnboardingNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */; };
@@ -82,6 +83,7 @@
 		B92237203FC40BDFB18D1283 /* FriendRequestSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79CF4AEE7DB44EA15A7D22C /* FriendRequestSheetView.swift */; };
 		BF08625F0ADE7547DDF9ADD5 /* OnboardingCreateAccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81E1E1EF01F2B29A4E6DB9B2 /* OnboardingCreateAccountView.swift */; };
 		BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5121AC95426E42B580756F /* SyncPayloadTests.swift */; };
+		C1E5E811E25DFADD5A40E1D5 /* CoinAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF93B1A9A785F410FC571D04 /* CoinAnimationView.swift */; };
 		C20ECD2853A27096D410D90A /* TamaGoosieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20817DC434F39927E7A30358 /* TamaGoosieApp.swift */; };
 		C88DC6083737B7DE13732DBE /* GooseSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849E37EA66128E6400098165 /* GooseSyncService.swift */; };
 		CF2A2DA87AA6A0F57E753A5E /* DistractionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE71510B695CABD03828F0D4 /* DistractionOverlay.swift */; };
@@ -180,7 +182,6 @@
 		2EE23080F0C585620FA2AA80 /* RewardEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardEngine.swift; sourceTree = "<group>"; };
 		2F4E8216FE4F12721B999D82 /* SyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayload.swift; sourceTree = "<group>"; };
 		2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
-		31E6240F2287715F71C13997 /* DuckHistoryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuckHistoryCard.swift; sourceTree = "<group>"; };
 		347903A27040413E68451AD9 /* GoalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewModel.swift; sourceTree = "<group>"; };
 		3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3DDC68452E992AE126D3FFFF /* GooseComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseComplication.swift; sourceTree = "<group>"; };
@@ -225,9 +226,11 @@
 		A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivity.swift; sourceTree = "<group>"; };
 		A47CB8B4BE05AD7BADEE3357 /* GoosieComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosieComponents.swift; sourceTree = "<group>"; };
 		A53A26A541860CFC61C287DD /* AccountCreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCreationViewModel.swift; sourceTree = "<group>"; };
+		ABAFD3A058135758BD8BE261 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		ABF97FF359441B0799D8CB3D /* GoosieTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosieTheme.swift; sourceTree = "<group>"; };
 		AE9FF2C893266ED149C99A6F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B02DE509E35AEACBA41B53EB /* InitialGoalPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialGoalPickerSheet.swift; sourceTree = "<group>"; };
+		B0414AE7A9F76C5FFD0D7B94 /* DuckHistoryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuckHistoryCard.swift; sourceTree = "<group>"; };
 		B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivityManager.swift; sourceTree = "<group>"; };
 		B922DD91F0DE3DB923769BD1 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
@@ -246,6 +249,7 @@
 		DA5121AC95426E42B580756F /* SyncPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayloadTests.swift; sourceTree = "<group>"; };
 		DA9950FF3C0746D604E8C756 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		DB2CBC4425DDF588BD10E856 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
+		DF93B1A9A785F410FC571D04 /* CoinAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinAnimationView.swift; sourceTree = "<group>"; };
 		DFE2AA0E74D8601C6EFEE46D /* GooseChatPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseChatPanel.swift; sourceTree = "<group>"; };
 		E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLogHistoryProvider.swift; sourceTree = "<group>"; };
 		E129223B490F8E32CA9DF16B /* HealthDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDashboard.swift; sourceTree = "<group>"; };
@@ -322,6 +326,7 @@
 		1B8464E5BCCF5D87E582A416 /* Goose */ = {
 			isa = PBXGroup;
 			children = (
+				DF93B1A9A785F410FC571D04 /* CoinAnimationView.swift */,
 				86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */,
 				DFE2AA0E74D8601C6EFEE46D /* GooseChatPanel.swift */,
 				CD33BE0166FD9A8236216974 /* GooseChatService.swift */,
@@ -404,11 +409,19 @@
 			isa = PBXGroup;
 			children = (
 				E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */,
-				31E6240F2287715F71C13997 /* DuckHistoryCard.swift */,
 				6A1CD1FB33CE72E4D48E8EA0 /* NotificationManager.swift */,
 				5C031B61EC6D7BE366BE5676 /* SettingsView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		8049E60785678A8B76DFDDDC /* Stats */ = {
+			isa = PBXGroup;
+			children = (
+				B0414AE7A9F76C5FFD0D7B94 /* DuckHistoryCard.swift */,
+				ABAFD3A058135758BD8BE261 /* StatsView.swift */,
+			);
+			path = Stats;
 			sourceTree = "<group>";
 		};
 		86C376D77E790E9917E5D499 /* Services */ = {
@@ -460,6 +473,7 @@
 				097223DC20844C7805015849 /* Notifications */,
 				2B22E48DC91A055D63904ACF /* Onboarding */,
 				5E414F3A0770D3E29A70DA68 /* Settings */,
+				8049E60785678A8B76DFDDDC /* Stats */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -758,6 +772,7 @@
 				2A6CA0467CF18760E6D5F99C /* AccountCreationViewModel.swift in Sources */,
 				EBB9880751116991E8464909 /* AuthService.swift in Sources */,
 				3A2F5442CADFFECAB9FFE653 /* ChatView.swift in Sources */,
+				C1E5E811E25DFADD5A40E1D5 /* CoinAnimationView.swift in Sources */,
 				48444724C3D21789368ECF65 /* Constants.swift in Sources */,
 				1344CABD800068004099CC07 /* ContentView.swift in Sources */,
 				7BF10BBE8852A8B71C3B5D68 /* ConvexManager.swift in Sources */,
@@ -766,7 +781,7 @@
 				2F3E292F809B7EE6E15DD73E /* DistractionApp.swift in Sources */,
 				50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */,
 				CF2A2DA87AA6A0F57E753A5E /* DistractionOverlay.swift in Sources */,
-				8A103094533512CB477BC98C /* DuckHistoryCard.swift in Sources */,
+				2D540C1C3236CE43E7EEF1C4 /* DuckHistoryCard.swift in Sources */,
 				F5F423CF6403344DEF0857A4 /* EscalationTracker.swift in Sources */,
 				F5F770EBC685C351BAD13695 /* FocusSession.swift in Sources */,
 				1DAC8FD935D9C210CEDEC056 /* FocusSessionView.swift in Sources */,
@@ -824,6 +839,7 @@
 				65219561A649089002577B30 /* ScreenTimeManager.swift in Sources */,
 				D0DDD308DD96993F2E9DE905 /* SettingsView.swift in Sources */,
 				B58015436BCCD9B7C4D2F570 /* SignInView.swift in Sources */,
+				A946FAE25F38B598EBD6DEF4 /* StatsView.swift in Sources */,
 				9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */,
 				C20ECD2853A27096D410D90A /* TamaGoosieApp.swift in Sources */,
 				4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */,

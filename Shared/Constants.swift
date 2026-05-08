@@ -34,6 +34,12 @@ public enum GoosieConstants {
     // MARK: - Streak
     public static let streakResetAfterMissedDays: Int = 2
 
+    // MARK: - Coins
+    public static let coinsPerGoalCompletion: Int = 5
+    public static let coinsPerAllGoalsDone: Int = 10
+    public static let coinsPerStreakMilestone: Int = 20
+    public static let streakMilestoneInterval: Int = 7
+
     // MARK: - Focus
     public static let focusMinMinutes: Int = 5
     public static let focusMaxMinutes: Int = 120

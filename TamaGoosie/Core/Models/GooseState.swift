@@ -13,6 +13,9 @@ final class GooseState {
     var healthiness: Double = 0.8
     var happiness: Double = 0.7
 
+    // Coins
+    var coins: Int = 0
+
     // Streak
     var streakDays: Int = 0
     var longestStreak: Int = 0

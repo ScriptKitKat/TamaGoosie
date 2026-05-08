@@ -117,7 +117,8 @@ struct ContentView: View {
             MenuItem(id: 1, title: "Goals", systemImage: "checklist"),
             MenuItem(id: 2, title: "Chat", systemImage: "bubble.left.fill"),
             MenuItem(id: 3, title: "Friends", systemImage: "person.2.fill"),
-            MenuItem(id: 4, title: "Settings", systemImage: "gearshape.fill"),
+            MenuItem(id: 4, title: "Stats", systemImage: "chart.line.uptrend.xyaxis"),
+            MenuItem(id: 5, title: "Settings", systemImage: "gearshape.fill"),
         ]
     }
 
@@ -175,7 +176,8 @@ struct ContentView: View {
         case 1: return "Goals"
         case 2: return "Chat"
         case 3: return "Friends"
-        case 4: return "Settings"
+        case 4: return "Stats"
+        case 5: return "Settings"
         default: return ""
         }
     }
@@ -227,7 +229,8 @@ struct ContentView: View {
         case 1: GoalListView()
         case 2: ChatView()
         case 3: FriendsView()
-        case 4: SettingsView()
+        case 4: StatsView()
+        case 5: SettingsView()
         default: GooseView()
         }
     }

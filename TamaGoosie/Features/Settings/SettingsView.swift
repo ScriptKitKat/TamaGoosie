@@ -81,14 +81,6 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Baselines
-                    if let profile {
-                        baselinesCard(profile: profile)
-                    }
-
-                    // Duck History
-                    DuckHistoryCard()
-
                     // Notifications
                     GoosieCard {
                         VStack(alignment: .leading, spacing: 12) {
@@ -288,46 +280,6 @@ struct SettingsView: View {
                     }
                 }
             }
-        }
-    }
-
-    // MARK: - Baselines Card
-
-    private func baselinesCard(profile: UserProfile) -> some View {
-        GoosieCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Your Baselines")
-                    .font(GoosieTheme.bodyFont())
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
-
-                Text("Used to normalize your health scores. Auto-updates after 7 days of data.")
-                    .font(GoosieTheme.captionFont(11))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-
-                Divider()
-
-                baselineRow("Sleep", value: "\(String(format: "%.1f", profile.avgSleepHours))h", icon: "moon.fill")
-                baselineRow("Steps", value: "\(profile.avgSteps)", icon: "figure.walk")
-                baselineRow("Exercise", value: "\(profile.avgExerciseMinutes)min", icon: "heart.fill")
-                baselineRow("Sitting", value: "\(String(format: "%.1f", profile.avgSittingHours))h", icon: "chair.lounge.fill")
-            }
-        }
-    }
-
-    private func baselineRow(_ label: String, value: String, icon: String) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundStyle(GoosieTheme.coralAccent)
-                .frame(width: 16)
-            Text(label)
-                .font(GoosieTheme.captionFont())
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-            Spacer()
-            Text(value)
-                .font(GoosieTheme.captionFont())
-                .fontWeight(.semibold)
-                .foregroundStyle(GoosieTheme.charcoalOutline)
         }
     }
 

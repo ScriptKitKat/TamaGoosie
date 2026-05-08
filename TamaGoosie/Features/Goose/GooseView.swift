@@ -9,6 +9,7 @@ struct GooseView: View {
     @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
 
     @State private var viewModel = GooseViewModel()
+    @State private var coinAnimationAmount: Int? = nil
 
     var onMenuTap: (() -> Void)?
 
@@ -81,6 +82,11 @@ struct GooseView: View {
         .onChange(of: allGoals) { _, _ in
             viewModel.updateContext(log: todayLog, profile: profile, goals: activeGoals)
         }
+        .onChange(of: GooseEngine.shared.lastCoinEarn) { _, earned in
+            if earned > 0 {
+                coinAnimationAmount = earned
+            }
+        }
     }
 
     // MARK: - Top Bar
@@ -112,20 +118,31 @@ struct GooseView: View {
 
                 Spacer()
 
-                // Goose points
-                HStack(spacing: 4) {
-                    Image(systemName: "circle.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(GoosieTheme.sunYellow)
-                    Text("100")
-                        .font(GoosieTheme.bodyFont(14))
-                        .foregroundStyle(GoosieTheme.charcoalOutline)
-                    Button {
-                        // Points action placeholder
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                // Coins
+                ZStack(alignment: .top) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(GoosieTheme.sunYellow)
+                        Text("\(viewModel.coins)")
+                            .font(GoosieTheme.bodyFont(14))
+                            .foregroundStyle(GoosieTheme.charcoalOutline)
+                            .contentTransition(.numericText())
+                            .animation(.spring(response: 0.3), value: viewModel.coins)
+                        Button {
+                            // Points action placeholder
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16))
+                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                        }
+                    }
+
+                    if let amount = coinAnimationAmount {
+                        CoinAnimationView(amount: amount) {
+                            coinAnimationAmount = nil
+                        }
+                        .offset(y: -8)
                     }
                 }
             }

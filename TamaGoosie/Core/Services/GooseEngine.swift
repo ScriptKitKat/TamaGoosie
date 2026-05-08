@@ -8,6 +8,9 @@ final class GooseEngine {
 
     private(set) var isUpdating = false
 
+    /// Most recent coin earn amount — views observe this to trigger animation.
+    private(set) var lastCoinEarn: Int = 0
+
     // Cached health data populated by processHealthData; included in every sync payload
     private(set) var cachedSteps: Int = 0
     private(set) var cachedExerciseMinutes: Int = 0
@@ -43,7 +46,9 @@ final class GooseEngine {
 
     // MARK: - Goal Completion
 
-    func completeGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) {
+    /// Completes a goal and awards coins. Returns total coins earned for animation.
+    @discardableResult
+    func completeGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) -> Int {
         goal.complete()
 
         // Immediately cancel all pending notifications for this goal so nothing stale fires.
@@ -68,8 +73,22 @@ final class GooseEngine {
             log.goalsTotal = goals.filter { $0.isActive }.count
             state.happiness = RewardEngine.computeHappiness(log: log, goals: goals)
         }
+
+        // Award coins
+        var coinsEarned = GoosieConstants.coinsPerGoalCompletion
+
+        // All active goals done bonus
+        let activeGoals = goals.filter { $0.isActive }
+        if !activeGoals.isEmpty && activeGoals.allSatisfy({ $0.isCompleted }) {
+            coinsEarned += GoosieConstants.coinsPerAllGoalsDone
+        }
+
+        state.coins += coinsEarned
+        lastCoinEarn = coinsEarned
         state.updateMood()
         saveStatsToAppGroup(state.toSyncPayload())
+
+        return coinsEarned
     }
 
     // MARK: - Goal Uncompletion
@@ -169,6 +188,7 @@ final class GooseEngine {
     func resetGoose(state: GooseState) {
         state.healthiness = 0.8
         state.happiness = 0.7
+        state.coins = 0
         state.streakDays = 0
         state.lastStreakDate = nil
         state.createdAt = .now
@@ -230,8 +250,12 @@ final class GooseEngine {
 
     // MARK: - Streak Management
 
-    func updateDailyStreak(state: GooseState, goalsCompletedToday: Int, totalGoalsToday: Int) {
+    /// Updates daily streak and awards milestone coins. Returns coins earned (0 or milestone amount).
+    @discardableResult
+    func updateDailyStreak(state: GooseState, goalsCompletedToday: Int, totalGoalsToday: Int) -> Int {
         let completionRate = totalGoalsToday > 0 ? Double(goalsCompletedToday) / Double(totalGoalsToday) : 0
+        let previousStreak = state.streakDays
+        var coinsEarned = 0
 
         if completionRate >= 0.8 {
             if let lastStreak = state.lastStreakDate,
@@ -244,12 +268,22 @@ final class GooseEngine {
             }
             state.lastStreakDate = .now
             state.longestStreak = max(state.longestStreak, state.streakDays)
+
+            // Streak milestone bonus (every N days)
+            let interval = GoosieConstants.streakMilestoneInterval
+            if state.streakDays >= interval &&
+               state.streakDays / interval != previousStreak / interval {
+                coinsEarned = GoosieConstants.coinsPerStreakMilestone
+                state.coins += coinsEarned
+            }
         } else if let lastStreak = state.lastStreakDate {
             let daysSinceStreak = Calendar.current.dateComponents([.day], from: lastStreak, to: .now).day ?? 0
             if daysSinceStreak >= GoosieConstants.streakResetAfterMissedDays {
                 state.streakDays = 0
             }
         }
+
+        return coinsEarned
     }
 
     // MARK: - UserProfile Baseline Auto-Calculation

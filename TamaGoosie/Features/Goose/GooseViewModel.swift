@@ -37,6 +37,10 @@ final class GooseViewModel {
         gooseState?.name ?? "Harold"
     }
 
+    var coins: Int {
+        gooseState?.coins ?? 0
+    }
+
     var streakDays: Int {
         gooseState?.streakDays ?? 0
     }
