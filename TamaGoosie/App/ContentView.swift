@@ -69,7 +69,7 @@ struct ContentView: View {
                 NegotiationView(negotiation: negotiation)
             }
             .fullScreenCover(isPresented: $showOnboarding) {
-                OnboardingContainerView { showOnboarding = false }
+                OnboardingContainerView(entryPath: .freshInstall) { showOnboarding = false }
             }
     }
 

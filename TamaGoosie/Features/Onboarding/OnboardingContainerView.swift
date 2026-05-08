@@ -18,93 +18,228 @@ enum OBTheme {
 // MARK: - Container
 
 struct OnboardingContainerView: View {
+    let entryPath: OnboardingEntryPath
     let onComplete: () -> Void
 
-    @State private var step = 0
+    @State private var step: Int = 0
     @State private var obState = OnboardingState()
 
-    // All logical steps: 0=signIn, 1=hatch, 2=name, 3=goals, 4=health, 5=notifications, 6=username, 7=complete
-    // Returning user skips: 1 (hatch), 2 (name), 3 (goals), 6 (username)
-    // Additionally skips health/notifications if already authorized on this device
+    // Steps 0-12:
+    //  0  = welcome (freshInstall) or returnWelcome (loggedOutReturn)
+    //  1  = hatch
+    //  2  = name
+    //  3-6 = tutorial (4 screens)
+    //  7  = signIn
+    //  8  = createAccount (email)
+    //  9  = username
+    // 10  = notifications
+    // 11  = health
+    // 12  = complete
 
-    /// Steps that should be shown for the current user type
+    // MARK: - Visible Steps
+
     private var visibleSteps: [Int] {
-        if obState.isReturningUser {
-            // Returning: sign-in(0), optionally health(4), optionally notifications(5), complete(7)
-            var steps = [0]
-            if !obState.healthAlreadyAuthorized { steps.append(4) }
-            if !obState.notificationsAlreadyAuthorized { steps.append(5) }
-            steps.append(7)
+        switch obState.entryPath {
+        case .freshInstall:
+            var steps = [0, 1, 2, 3, 4, 5, 6, 7]
+            if obState.choseEmailSignUp {
+                steps.append(8)
+            }
+            if !obState.isReturningUser {
+                steps.append(9)
+            }
+            // Permissions
+            if !obState.notificationsAlreadyAuthorized { steps.append(10) }
+            if !obState.healthAlreadyAuthorized { steps.append(11) }
+            steps.append(12)
             return steps
-        } else {
-            // New user: all steps
-            return [0, 1, 2, 3, 4, 5, 6, 7]
+
+        case .returningAccount:
+            var steps = [7]
+            if !obState.isReturningUser {
+                if obState.choseEmailSignUp { steps.append(8) }
+                steps.append(9)
+            }
+            if !obState.notificationsAlreadyAuthorized { steps.append(10) }
+            if !obState.healthAlreadyAuthorized { steps.append(11) }
+            steps.append(12)
+            return steps
+
+        case .loggedOutReturn:
+            var steps = [0, 7]
+            if !obState.isReturningUser {
+                if obState.choseEmailSignUp { steps.append(8) }
+                steps.append(9)
+            }
+            if !obState.notificationsAlreadyAuthorized { steps.append(10) }
+            if !obState.healthAlreadyAuthorized { steps.append(11) }
+            steps.append(12)
+            return steps
         }
     }
 
-    /// Number of dots = visible steps minus sign-in screen
-    private var totalDots: Int {
-        max(visibleSteps.count - 1, 1)
+    // MARK: - Section-Scoped Dots
+
+    /// Tutorial section: steps 3-6 (4 dots)
+    private var tutorialDotInfo: (index: Int, total: Int)? {
+        let tutorialSteps = [3, 4, 5, 6]
+        guard tutorialSteps.contains(step) else { return nil }
+        let idx = step - 3
+        return (index: idx, total: 4)
     }
 
-    /// Current dot index (step 0 has no dot)
-    private var currentDotIndex: Int {
-        guard let idx = visibleSteps.firstIndex(of: step) else { return 0 }
-        return max(idx - 1, 0)
+    /// Permissions section: steps 10-11 (only visible ones)
+    private var permissionsDotInfo: (index: Int, total: Int)? {
+        let permSteps = visibleSteps.filter { $0 == 10 || $0 == 11 }
+        guard permSteps.contains(step), permSteps.count > 1 else { return nil }
+        guard let idx = permSteps.firstIndex(of: step) else { return nil }
+        return (index: idx, total: permSteps.count)
     }
+
+    /// Active dot info for the current step, if any
+    private var activeDotInfo: (index: Int, total: Int)? {
+        tutorialDotInfo ?? permissionsDotInfo
+    }
+
+    // MARK: - Body
 
     var body: some View {
         ZStack(alignment: .bottom) {
             OBTheme.cream.ignoresSafeArea()
 
             ZStack {
-                if step == 0 {
-                    OnboardingSignInView(obState: obState, onAdvance: { advance() }, onChooseEmail: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 1 {
-                    OnboardingHatchView(obState: obState, onAdvance: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 2 {
-                    OnboardingNameView(obState: obState, onAdvance: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 3 {
-                    OnboardingGoalsView(obState: obState, onAdvance: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 4 {
-                    OnboardingHealthView(obState: obState, onAdvance: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 5 {
-                    OnboardingNotificationsView(obState: obState, onAdvance: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 6 {
-                    OnboardingUsernameView(obState: obState, onAdvance: { advance() })
-                        .transition(forwardTransition)
-                }
-                if step == 7 {
-                    OnboardingCompleteView(obState: obState, onComplete: onComplete)
-                        .transition(forwardTransition)
-                }
+                stepView
             }
             .animation(.spring(response: 0.42, dampingFraction: 0.86), value: step)
 
-            // Page indicator — hidden on sign-in screen
-            if step > 0 {
-                PageDots(current: currentDotIndex, total: totalDots)
+            if let dots = activeDotInfo {
+                PageDots(current: dots.index, total: dots.total)
                     .padding(.bottom, 20)
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
             }
         }
         .ignoresSafeArea(edges: .bottom)
         .task {
+            obState.entryPath = entryPath
+            // Set starting step based on entry path
+            switch entryPath {
+            case .freshInstall:
+                step = 0
+            case .returningAccount:
+                step = 7
+            case .loggedOutReturn:
+                step = 0
+            }
             await checkDevicePermissions()
         }
     }
+
+    // MARK: - Step Router
+
+    @ViewBuilder
+    private var stepView: some View {
+        switch step {
+        case 0:
+            if obState.entryPath == .loggedOutReturn {
+                OnboardingReturnWelcomeView(onStartNow: { advance() })
+                    .transition(forwardTransition)
+            } else {
+                OnboardingWelcomeView(
+                    obState: obState,
+                    onGetStarted: { advance() },
+                    onAlreadyHaveAccount: {
+                        obState.entryPath = .returningAccount
+                        step = 7
+                    }
+                )
+                .transition(forwardTransition)
+            }
+
+        case 1:
+            OnboardingHatchView(obState: obState, onAdvance: { advance() })
+                .transition(forwardTransition)
+
+        case 2:
+            OnboardingNameView(obState: obState, onAdvance: { advance() })
+                .transition(forwardTransition)
+
+        case 3:
+            OnboardingTutorialView(
+                mood: .sad,
+                title: "If you treat yourself badly, your goose will reflect that",
+                buttonTitle: "I'll treat myself well",
+                checkmarks: nil,
+                onAdvance: { advance() }
+            )
+            .transition(forwardTransition)
+
+        case 4:
+            OnboardingTutorialView(
+                mood: .happy,
+                title: "Take care of yourself, and your goose will thrive",
+                buttonTitle: "I will!",
+                checkmarks: nil,
+                onAdvance: { advance() }
+            )
+            .transition(forwardTransition)
+
+        case 5:
+            OnboardingTutorialView(
+                mood: .ecstatic,
+                title: "Every action adds up \u{2014} watch your goose grow",
+                buttonTitle: "Let's grow!",
+                checkmarks: nil,
+                onAdvance: { advance() }
+            )
+            .transition(forwardTransition)
+
+        case 6:
+            OnboardingTutorialView(
+                mood: .ecstatic,
+                title: "Every goal is tracked.\nBuild habits, see progress.",
+                buttonTitle: "Let's go!",
+                checkmarks: ["Track your health", "Build daily habits", "Watch your goose thrive"],
+                onAdvance: { advance() }
+            )
+            .transition(forwardTransition)
+
+        case 7:
+            OnboardingSignInView(
+                obState: obState,
+                onAdvance: { advance() },
+                onChooseEmail: {
+                    obState.choseEmailSignUp = true
+                    advance()
+                }
+            )
+            .transition(forwardTransition)
+
+        case 8:
+            OnboardingCreateAccountView(obState: obState, onAdvance: { advance() })
+                .transition(forwardTransition)
+
+        case 9:
+            OnboardingUsernameView(obState: obState, onAdvance: { advance() })
+                .transition(forwardTransition)
+
+        case 10:
+            OnboardingNotificationsView(obState: obState, onAdvance: { advance() })
+                .transition(forwardTransition)
+
+        case 11:
+            OnboardingHealthView(obState: obState, onAdvance: { advance() })
+                .transition(forwardTransition)
+
+        case 12:
+            OnboardingCompleteView(obState: obState, onComplete: onComplete)
+                .transition(forwardTransition)
+
+        default:
+            EmptyView()
+        }
+    }
+
+    // MARK: - Navigation
 
     private var forwardTransition: AnyTransition {
         .asymmetric(
@@ -114,9 +249,8 @@ struct OnboardingContainerView: View {
     }
 
     private func advance() {
-        // Find the next visible step after the current one
         guard let currentIdx = visibleSteps.firstIndex(of: step) else {
-            step = visibleSteps.last ?? 7
+            step = visibleSteps.last ?? 12
             return
         }
         let nextIdx = currentIdx + 1
@@ -125,7 +259,8 @@ struct OnboardingContainerView: View {
         }
     }
 
-    /// Check if HealthKit and notifications are already authorized on this device
+    // MARK: - Permission Checks
+
     private func checkDevicePermissions() async {
         // Check HealthKit
         if HKHealthStore.isHealthDataAvailable() {
