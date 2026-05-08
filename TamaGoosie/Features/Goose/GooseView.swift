@@ -91,6 +91,7 @@ struct GooseView: View {
             Text(viewModel.gooseName)
                 .font(GoosieTheme.titleFont(28))
                 .foregroundStyle(GoosieTheme.charcoalOutline)
+                .padding(.leading, 36)
 
             Spacer()
 

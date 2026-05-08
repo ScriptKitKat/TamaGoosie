@@ -63,11 +63,8 @@ struct GoalListView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    // Header
+                    // Add goal button
                     HStack {
-                        Text("Goals")
-                            .font(GoosieTheme.titleFont(28))
-                            .foregroundStyle(GoosieTheme.charcoalOutline)
                         Spacer()
                         Button {
                             viewModel.startCreating()

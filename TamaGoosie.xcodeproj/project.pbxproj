@@ -185,7 +185,7 @@
 		484BBB124DE9BDCACB850932 /* EscalationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationTracker.swift; sourceTree = "<group>"; };
 		497F92C8C33F54CCA7A58FD1 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
 		50D0DBE78165C290BCA6BA2C /* FriendCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendCardView.swift; sourceTree = "<group>"; };
-		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		53B20907C2511E6CD56CC290 /* GooseSpeechGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSpeechGenerator.swift; sourceTree = "<group>"; };
 		53C5205B9F9287BB3E870F0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosieWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -244,7 +244,7 @@
 		E2E3270DF17E2F22F9077425 /* WatchSyncReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncReceiver.swift; sourceTree = "<group>"; };
 		E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionConfigView.swift; sourceTree = "<group>"; };
 		E7119B3A0869220100DF3B9D /* GooseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseWidget.swift; sourceTree = "<group>"; };
-		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestViewModel.swift; sourceTree = "<group>"; };
 		F364D3304C552899B83259F9 /* ConvexManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexManager.swift; sourceTree = "<group>"; };
 		F79CF4AEE7DB44EA15A7D22C /* FriendRequestSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestSheetView.swift; sourceTree = "<group>"; };
@@ -651,15 +651,6 @@
 					2967A832F6E06D9198E4D9D3 = {
 						DevelopmentTeam = "";
 					};
-					3212585604C1E2524B96F439 = {
-						DevelopmentTeam = "";
-					};
-					828D1BDA4ABFF8D091834CB1 = {
-						DevelopmentTeam = "";
-					};
-					F328FFA5B3C55DB8650693FC = {
-						DevelopmentTeam = "";
-					};
 				};
 			};
 			buildConfigurationList = 6760D016B07310E134124FA7 /* Build configuration list for PBXProject "TamaGoosie" */;
@@ -853,6 +844,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -869,6 +861,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -887,6 +880,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -904,6 +898,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -917,6 +912,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -1084,6 +1080,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

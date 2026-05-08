@@ -10,12 +10,8 @@ struct FriendsView: View {
             GoosieTheme.mintBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
+                // Add friend button
                 HStack {
-                    Text("Friends")
-                        .font(GoosieTheme.titleFont(28))
-                        .foregroundStyle(GoosieTheme.charcoalOutline)
-
                     Spacer()
 
                     Button {
