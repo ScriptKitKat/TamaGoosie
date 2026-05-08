@@ -7,20 +7,38 @@ struct GoalEditorView: View {
     @Query private var gooseStates: [GooseState]
 
     var existingGoal: Goal?
+    var prefill: GoalDraft?
 
-    @State private var title = ""
-    @State private var goalType = "recurring"
-    @State private var category: GoalCategory = .custom
-    @State private var frequency: GoalFrequency = .daily
-    @State private var customDays: Set<Int> = []
-    @State private var targetCount = 1
-    @State private var happinessWeight: Double = 1.0
-    @State private var dueDate = Date()
-    @State private var enableReminder = false
-    @State private var preferredTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
+    @State private var title: String
+    @State private var goalType: String
+    @State private var category: GoalCategory
+    @State private var frequency: GoalFrequency
+    @State private var customDays: Set<Int>
+    @State private var targetCount: Int
+    @State private var happinessWeight: Double
+    @State private var dueDate: Date
+    @State private var enableReminder: Bool
+    @State private var preferredTime: Date
     @State private var notificationPermissionDenied = false
     @State private var toastMessage: String?
     @State private var toastTask: Task<Void, Never>?
+
+    init(existingGoal: Goal? = nil, prefill: GoalDraft? = nil) {
+        self.existingGoal = existingGoal
+        self.prefill = prefill
+        let draft = (existingGoal == nil) ? prefill : nil
+        let defaultTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
+        _title          = State(initialValue: draft?.title ?? "")
+        _goalType       = State(initialValue: draft?.goalType ?? "recurring")
+        _category       = State(initialValue: draft?.category ?? .custom)
+        _frequency      = State(initialValue: draft?.frequency ?? .daily)
+        _customDays     = State(initialValue: draft?.customDays ?? [])
+        _targetCount    = State(initialValue: draft?.targetCount ?? 1)
+        _happinessWeight = State(initialValue: draft?.happinessWeight ?? 1.0)
+        _dueDate        = State(initialValue: draft?.dueDate ?? Date())
+        _enableReminder = State(initialValue: draft?.enableReminder ?? false)
+        _preferredTime  = State(initialValue: draft?.preferredTime ?? defaultTime)
+    }
 
     var isEditing: Bool { existingGoal != nil }
     var isBuiltin: Bool { existingGoal?.type == "builtin" }
@@ -71,7 +89,9 @@ struct GoalEditorView: View {
                     }
                 }
             }
-            .onAppear { loadExistingGoal() }
+            .onAppear {
+                if existingGoal != nil { loadExistingGoal() }
+            }
         }
     }
 
@@ -338,8 +358,7 @@ struct GoalEditorView: View {
             Text(label)
                 .font(GoosieTheme.captionFont(12))
                 .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
-                .fixedSize()
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
@@ -380,8 +399,7 @@ struct GoalEditorView: View {
             Text(freq.displayName)
                 .font(GoosieTheme.captionFont(12))
                 .foregroundStyle(isSelected ? .white : GoosieTheme.charcoalOutline)
-                .fixedSize()
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
@@ -404,13 +422,14 @@ struct GoalEditorView: View {
         guard let goal = existingGoal else { return }
         goal.targetCount = targetCount
         try? modelContext.save()
+        syncAllGoalsToConvex()
         dismiss()
     }
 
     private func requestNotificationPermissionIfNeeded() {
         Task {
             do {
-                let granted = try await NotificationManager.shared.requestAuthorization()
+                let granted = try await GooseNotificationSystem.shared.requestAuthorization()
                 await MainActor.run {
                     notificationPermissionDenied = !granted
                 }
@@ -478,15 +497,22 @@ struct GoalEditorView: View {
             scheduleReminderIfNeeded(for: goal)
         }
         try? modelContext.save()
+        syncAllGoalsToConvex()
         dismiss()
     }
 
+    private func syncAllGoalsToConvex() {
+        let descriptor = FetchDescriptor<Goal>(sortBy: [SortDescriptor(\.sortOrder)])
+        guard let allGoals = try? modelContext.fetch(descriptor) else { return }
+        let activeGoals = allGoals.filter { $0.isActive }
+        ConvexManager.shared.syncGoals(goals: activeGoals)
+    }
+
     private func scheduleReminderIfNeeded(for goal: Goal) {
-        let gooseName = gooseStates.first?.name ?? "your goose"
-        if goal.preferredTime != nil {
-            NotificationManager.shared.scheduleGoalReminder(goal, gooseName: gooseName)
-        } else {
-            NotificationManager.shared.cancelGoalReminder(goalID: goal.id)
+        // GooseNotificationSystem.rescheduleAll (called from ContentView) handles all scheduling.
+        // Cancel pushes here only when a reminder is explicitly removed.
+        if goal.preferredTime == nil {
+            GooseNotificationSystem.shared.cancelPushes(for: goal.id)
         }
     }
 }

@@ -27,7 +27,7 @@ struct QuickLogView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 12)
         }
-        .background(WatchTheme.cream)
+        .background(WatchTheme.creamWhite)
         .navigationTitle("Goals")
         .navigationBarTitleDisplayMode(.inline)
     }

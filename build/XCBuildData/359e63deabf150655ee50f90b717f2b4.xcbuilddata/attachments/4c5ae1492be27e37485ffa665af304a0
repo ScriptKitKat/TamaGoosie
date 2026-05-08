@@ -1,0 +1,19 @@
+{
+  "" : {
+    "diagnostics" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/TamaGoosieDeviceActivity-primary.dia",
+    "emit-module-dependencies" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/TamaGoosieDeviceActivity-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/TamaGoosieDeviceActivity-primary-emit-module.dia",
+    "pch" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/TamaGoosieDeviceActivity-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/TamaGoosieDeviceActivity-primary.swiftdeps"
+  },
+  "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/TamaGoosieDeviceActivity/DeviceActivityMonitorExtension.swift" : {
+    "const-values" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.swiftconstvalues",
+    "dependencies" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.d",
+    "diagnostics" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.dia",
+    "index-unit-output-path" : "/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.o",
+    "llvm-bc" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.bc",
+    "object" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.o",
+    "swift-dependencies" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension.swiftdeps",
+    "swiftmodule" : "/Users/PriscillaYe/Documents/GitHub/TamaGoosie/build/TamaGoosie.build/Debug-iphoneos/TamaGoosieDeviceActivity.build/Objects-normal/arm64/DeviceActivityMonitorExtension~partial.swiftmodule"
+  }
+}

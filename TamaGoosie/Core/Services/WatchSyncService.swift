@@ -1,27 +1,21 @@
 import Foundation
 import WatchConnectivity
 
-final class WatchSyncService: NSObject, WCSessionDelegate, ObservableObject {
+final class WatchSyncService: NSObject, ObservableObject, WCSessionDelegate {
     static let shared = WatchSyncService()
 
-    private var session: WCSession?
+    @Published private(set) var isWatchPaired = false
 
-    /// Whether WatchConnectivity is supported on this device (false on iPad, etc.)
-    @Published private(set) var isSupported = false
-    /// Whether an Apple Watch is currently paired to this iPhone.
-    /// Auto-detected via WCSession — never set manually.
-    @Published private(set) var isPaired = false
+    private var session: WCSession?
 
     private override init() {
         super.init()
     }
 
+    // MARK: - Activation
+
     func activate() {
-        guard WCSession.isSupported() else {
-            isSupported = false
-            return
-        }
-        isSupported = true
+        guard WCSession.isSupported() else { return }
         session = WCSession.default
         session?.delegate = self
         session?.activate()
@@ -33,71 +27,64 @@ final class WatchSyncService: NSObject, WCSessionDelegate, ObservableObject {
         guard let session, session.activationState == .activated else { return }
         guard let data = try? JSONEncoder().encode(payload) else { return }
 
-        // Always update applicationContext: latest-state-wins snapshot, survives Watch relaunch
-        if session.isPaired {
-            try? session.updateApplicationContext(["goosePayload": data])
-        }
+        let context: [String: Any] = ["goosePayload": data]
 
-        // Try sendMessage first (immediate delivery); fall back to transferUserInfo (queued, guaranteed)
+        // Update application context (persists, delivered on next Watch wake)
+        try? session.updateApplicationContext(context)
+
+        // Also send a live message if Watch is reachable for immediate update
         if session.isReachable {
-            session.sendMessage(["goosePayload": data], replyHandler: nil)
-        } else if session.isPaired {
-            session.transferUserInfo(["goosePayload": data])
+            session.sendMessage(context, replyHandler: nil, errorHandler: nil)
         }
     }
 
-    // MARK: - WCSessionDelegate
+    // MARK: - WCSessionDelegate (iPhone side)
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         DispatchQueue.main.async {
-            self.isPaired = (activationState == .activated) && session.isPaired
+            self.isWatchPaired = session.isPaired
         }
     }
 
     func sessionDidBecomeInactive(_ session: WCSession) {}
 
     func sessionDidDeactivate(_ session: WCSession) {
-        DispatchQueue.main.async { self.isPaired = false }
+        // Re-activate for quick Watch switching
         session.activate()
     }
 
-    /// Called when watch pairing state changes (paired/unpaired).
+    func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+        handleIncomingMessage(message, replyHandler: replyHandler)
+    }
+
+    func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        handleIncomingMessage(message, replyHandler: nil)
+    }
+
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        handleIncomingMessage(userInfo, replyHandler: nil)
+    }
+
+    #if os(iOS)
     func sessionWatchStateDidChange(_ session: WCSession) {
         DispatchQueue.main.async {
-            self.isPaired = session.isPaired
+            self.isWatchPaired = session.isPaired
         }
     }
+    #endif
 
-    // Handle goal completion from Watch via immediate message (Watch is reachable)
-    func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
+    // MARK: - Handle Watch → Phone Messages
+
+    private func handleIncomingMessage(_ message: [String: Any], replyHandler: (([String: Any]) -> Void)?) {
         if let goalIDString = message["completedGoalID"] as? String,
-           let _ = UUID(uuidString: goalIDString) {
-            NotificationCenter.default.post(
-                name: .goalCompletedFromWatch,
-                object: nil,
-                userInfo: ["goalID": goalIDString]
-            )
-        }
-
-        // Reply with the current payload snapshot from the app group so the Watch
-        // can update immediately without waiting for the next push.
-        if let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID),
-           let data = defaults.data(forKey: GoosieConstants.gooseStatsKey) {
-            replyHandler(["goosePayload": data])
-        } else {
-            replyHandler([:])
-        }
-    }
-
-    // Handle goal completion from Watch via transferUserInfo (Watch was not reachable)
-    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
-        if let goalIDString = userInfo["completedGoalID"] as? String,
-           let _ = UUID(uuidString: goalIDString) {
-            NotificationCenter.default.post(
-                name: .goalCompletedFromWatch,
-                object: nil,
-                userInfo: ["goalID": goalIDString]
-            )
+           let goalID = UUID(uuidString: goalIDString) {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: .goalCompletedFromWatch,
+                    object: nil,
+                    userInfo: ["goalID": goalID, "replyHandler": replyHandler as Any]
+                )
+            }
         }
     }
 }

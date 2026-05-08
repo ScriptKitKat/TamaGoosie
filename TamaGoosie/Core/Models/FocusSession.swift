@@ -9,8 +9,6 @@ final class FocusSession {
     var targetMinutes: Int
     var actualMinutes: Int
     var wasCompleted: Bool
-    var xpEarned: Int
-    var happinessBonus: Double
 
     init(targetMinutes: Int = GoosieConstants.focusDefaultMinutes) {
         self.id = UUID()
@@ -18,8 +16,6 @@ final class FocusSession {
         self.targetMinutes = targetMinutes
         self.actualMinutes = 0
         self.wasCompleted = false
-        self.xpEarned = 0
-        self.happinessBonus = 0
     }
 
     func finish(completed: Bool) {
@@ -30,9 +26,5 @@ final class FocusSession {
         }
 
         wasCompleted = completed
-        if completed {
-            xpEarned = actualMinutes * GoosieConstants.focusXPPerMinute
-            happinessBonus = Double(actualMinutes) * GoosieConstants.focusHappinessBonus
-        }
     }
 }

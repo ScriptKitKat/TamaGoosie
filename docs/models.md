@@ -16,30 +16,21 @@ All persistent data uses SwiftData (`@Model`). Models live in `TamaGoosie/Core/M
 | `spriteID` | String | Goose sprite variant |
 | `hatID` | String? | Optional cosmetic hat |
 | `colorID` | String | Goose color variant |
-| `healthiness` | Double | 0.0–1.0. Only stat that triggers death |
-| `happiness` | Double | 0.0–1.0 |
-| `xp` | Int | Current XP within current level |
-| `level` | Int | 1–50 |
-| `phase` | String | Cached: `GoosePhase.rawValue` |
+| `healthiness` | Double | 0.0–1.0. Computed from HealthKit formula |
+| `happiness` | Double | 0.0–1.0. Computed from goal adherence formula |
 | `mood` | String | Cached: `GooseMood.rawValue` |
 | `streakDays` | Int | Consecutive days with ≥80% goals done |
 | `longestStreak` | Int | All-time best streak |
 | `lastStreakDate` | Date? | Last day streak was incremented |
-| `isDead` | Bool | Death state |
-| `deathDate` | Date? | When the goose died |
-| `deathCause` | String? | Human-readable cause |
-| `reviveCount` | Int | Total times revived |
-| `isVacationMode` | Bool | Suppresses decay when true |
-| `lastUpdated` | Date | Used by DecayEngine for elapsed time |
+| `lastUpdated` | Date | Timestamp of last `GooseEngine.update` call |
 | `createdAt` | Date | Birth date |
 
 **Key computed properties**:
 - `currentMood: GooseMood` — parses `mood` string; falls back to `.content`
-- `currentPhase: GoosePhase` — parses `phase` string; falls back to `.baby`
-- `clampStats()` — enforces both stats in [0.0, 1.0]
 - `updateMood()` — recaches `mood` via `GooseMood.deriveMood(healthiness:happiness:)`
-- `updatePhase()` — recaches `phase` via `GoosePhase.phase(forLevel:)`
 - `toSyncPayload(topGoals:)` — creates `GooseSyncPayload` for Watch/widget
+
+There are no `xp`, `level`, `phase`, `isDead`, `deathDate`, `deathCause`, `reviveCount`, or `isVacationMode` fields.
 
 ---
 
@@ -116,7 +107,6 @@ All persistent data uses SwiftData (`@Model`). Models live in `TamaGoosie/Core/M
 | `joinDate` | Date | |
 | `hasCompletedOnboarding` | Bool | Controls first-launch gate in ContentView |
 | `wantsNotifications` | Bool | |
-| `isVacationMode` | Bool | Mirrors to GooseState |
 | `wantsWatchSync` | Bool | |
 | `avgSleepHours` | Double | Auto-calibrated from last 7 DailyLogs |
 | `avgSteps` | Int | Auto-calibrated |
@@ -130,7 +120,7 @@ All persistent data uses SwiftData (`@Model`). Models live in `TamaGoosie/Core/M
 ## DailyLog
 
 **File**: `DailyLog.swift`  
-**Purpose**: One row per calendar day. Aggregates HealthKit metrics and game deltas.
+**Purpose**: One row per calendar day. Feeds both stat formulas. Created eagerly by `ensureTodayLogExists()` in views.
 
 | Property | Type | Notes |
 |----------|------|-------|
@@ -144,11 +134,14 @@ All persistent data uses SwiftData (`@Model`). Models live in `TamaGoosie/Core/M
 | `outsideMinutes` | Double | Time outdoors (Watch only) |
 | `distractionOpens` | Int | Count of distraction overlay opens |
 | `distractionMinutes` | Double | Minutes in distraction mode |
-| `goalsCompleted` | Int | Snapshot of completed goal count |
-| `goalsTotal` | Int | Snapshot of active goal count |
-| `healthinessDelta` | Double | Net healthiness change that day |
-| `happinessDelta` | Double | Net happiness change that day |
-| `xpEarned` | Int | Total XP earned that day |
+| `goalsCompleted` | Int | Count of completed active goals (updated by GooseEngine) |
+| `goalsTotal` | Int | Count of total active goals (updated by GooseEngine) |
+| `endOfDayHealthiness` | Double | 0.0–1.0 snapshot written once when next day begins (via `snapshotEndOfDay`). Also backfilled by `GooseEngine.backfillHistory`. |
+| `endOfDayHappiness` | Double | Same as above for happiness. |
+
+`endOfDayHealthiness` and `endOfDayHappiness` default to `0`. They are read by `DailyLogHistoryProvider` to power the Duck History chart in Settings. `DuckHistoryCard` also appends today's live values from `GooseState` as a virtual data point so the chart always reflects current stats.
+
+There are no `healthinessDelta`, `happinessDelta`, or `xpEarned` fields — stats are recomputed from the raw data above, not accumulated as deltas.
 
 ---
 
@@ -165,10 +158,8 @@ All persistent data uses SwiftData (`@Model`). Models live in `TamaGoosie/Core/M
 | `targetMinutes` | Int | User-selected duration (5–120) |
 | `actualMinutes` | Int | How long they actually focused |
 | `wasCompleted` | Bool | True if ran to 0 without aborting |
-| `xpEarned` | Int | 2 XP per minute |
-| `happinessBonus` | Double | Bonus for completing vs. aborting |
 
-`finish(completed:)` — calculates elapsed time, XP (2/min), happiness bonus, sets `endedAt`.
+`finish(completed:)` — calculates elapsed time and sets `endedAt`. Focus sessions do not directly affect stats; distraction minutes are tracked separately via `DailyLog`.
 
 ---
 
@@ -184,26 +175,6 @@ All persistent data uses SwiftData (`@Model`). Models live in `TamaGoosie/Core/M
 | `displayName` | String | Human-readable name |
 | `iconName` | String | SF Symbol or asset name |
 | `dailyLimitMinutes` | Int | Minutes before full penalty |
-
----
-
-## HealthSnapshot
-
-**File**: `HealthSnapshot.swift`  
-**Purpose**: Stores a HealthKit data point at a specific time, with a processed flag.
-
-| Property | Type | Notes |
-|----------|------|-------|
-| `id` | UUID | |
-| `date` | Date | Snapshot date |
-| `steps` | Int | |
-| `activeCalories` | Double | |
-| `exerciseMinutes` | Double | |
-| `sleepHours` | Double | |
-| `standHours` | Int | |
-| `restingHeartRate` | Double | |
-| `workoutCount` | Int | |
-| `wasProcessed` | Bool | Prevents double-applying to GooseState |
 
 ---
 

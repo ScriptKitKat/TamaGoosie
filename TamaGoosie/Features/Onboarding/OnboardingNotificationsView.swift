@@ -20,7 +20,7 @@ struct OnboardingNotificationsView: View {
 
                     Spacer().frame(height: 8)
 
-                    GooseCharacterView(mood: .happy, phase: .baby)
+                    GooseCharacterView(mood: .happy)
                         .frame(height: 160)
                 }
 
@@ -75,8 +75,9 @@ struct OnboardingNotificationsView: View {
                 .fill(OBTheme.teal)
                 .frame(width: 40, height: 40)
                 .overlay(
-                    Image(systemName: "bird.fill")
-                        .font(.system(size: 18))
+                    Image("goose_icon")
+                        .resizable()
+                        .frame(width: 20, height: 20)
                         .foregroundStyle(.white)
                 )
 

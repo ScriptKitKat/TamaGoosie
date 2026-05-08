@@ -2,11 +2,19 @@ name: TamaGoosie
 options:
   bundleIdPrefix: com.tamagoosie
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "26.0"
     watchOS: "10.0"
   xcodeVersion: "15.0"
   groupSortPosition: top
   createIntermediateGroups: true
+
+packages:
+  ConvexMobile:
+    url: https://github.com/get-convex/convex-swift
+    from: "0.5.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "8.0.0"
 
 settings:
   base:
@@ -21,14 +29,24 @@ targets:
       - TamaGoosie
       - Shared
     dependencies:
+      - package: ConvexMobile
+        product: ConvexMobile
+      - package: GoogleSignIn
+        product: GoogleSignIn
       - target: TamaGoosieWidgets
       - target: TamaGoosieWatch
         embed: true
       # Screen Time disabled — uncomment when re-enabling
       # - target: TamaGoosieDeviceActivity
       #   embed: true
+      # - target: TamaGoosieShield
+      #   embed: true
+      # - target: TamaGoosieReport
+      #   embed: true
       # - sdk: FamilyControls.framework
       # - sdk: DeviceActivity.framework
+      # - sdk: ManagedSettings.framework
+      - sdk: FoundationModels.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app
@@ -40,6 +58,8 @@ targets:
         com.apple.security.application-groups:
           - group.com.tamagoosie
         com.apple.developer.healthkit: true
+        com.apple.developer.applesignin:
+          - Default
         # com.apple.developer.family-controls: true  # Screen Time disabled
 
   TamaGoosieWatch:
@@ -84,12 +104,54 @@ targets:
   #     - TamaGoosieDeviceActivity
   #   dependencies:
   #     - sdk: DeviceActivity.framework
+  #     - sdk: ManagedSettings.framework
+  #     - sdk: UserNotifications.framework
   #   settings:
   #     base:
   #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.deviceactivity
   #       INFOPLIST_FILE: TamaGoosieDeviceActivity/Info.plist
   #   entitlements:
   #     path: TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements
+  #     properties:
+  #       com.apple.security.application-groups:
+  #         - group.com.tamagoosie
+  #       com.apple.developer.family-controls: true
+
+  # TamaGoosieShield — disabled (requires Family Controls capability)
+  # TamaGoosieShield:
+  #   type: app-extension
+  #   platform: iOS
+  #   sources:
+  #     - Extensions/Shield
+  #   dependencies:
+  #     - sdk: ManagedSettings.framework
+  #     - sdk: ManagedSettingsUI.framework
+  #     - sdk: FamilyControls.framework
+  #   settings:
+  #     base:
+  #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.shield
+  #       INFOPLIST_FILE: Extensions/Shield/Info.plist
+  #   entitlements:
+  #     path: Extensions/Shield/TamaGoosieShield.entitlements
+  #     properties:
+  #       com.apple.security.application-groups:
+  #         - group.com.tamagoosie
+  #       com.apple.developer.family-controls: true
+
+  # TamaGoosieReport — disabled (requires Family Controls capability)
+  # TamaGoosieReport:
+  #   type: app-extension
+  #   platform: iOS
+  #   sources:
+  #     - Extensions/Report
+  #   dependencies:
+  #     - sdk: DeviceActivity.framework
+  #   settings:
+  #     base:
+  #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.report
+  #       INFOPLIST_FILE: Extensions/Report/Info.plist
+  #   entitlements:
+  #     path: Extensions/Report/TamaGoosieReport.entitlements
   #     properties:
   #       com.apple.security.application-groups:
   #         - group.com.tamagoosie
@@ -113,6 +175,9 @@ schemes:
       targets:
         TamaGoosie: all
         TamaGoosieWidgets: all
+        # TamaGoosieDeviceActivity: all  # Screen Time disabled
+        # TamaGoosieShield: all  # Family Controls disabled
+        # TamaGoosieReport: all  # Family Controls disabled
         TamaGoosieTests: testing
     run:
       config: Debug

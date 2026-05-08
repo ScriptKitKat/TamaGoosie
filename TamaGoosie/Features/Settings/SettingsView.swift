@@ -1,10 +1,14 @@
 import SwiftUI
 import SwiftData
-
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var gooseStates: [GooseState]
     @Query private var profiles: [UserProfile]
+
+    @AppStorage("chatProvider") private var chatProvider: String = "apple"
+    @AppStorage("geminiAPIKey") private var geminiAPIKey: String = ""
+    @State private var geminiAPIKeyInput: String = ""
+    @State private var showGeminiKey: Bool = false
 
     @State private var gooseName = ""
     @State private var morningReminderEnabled = true
@@ -14,6 +18,7 @@ struct SettingsView: View {
     @State private var decayWarningsEnabled = true
     @State private var goalRemindersEnabled = true
     @State private var showResetConfirmation = false
+    @State private var showSignOutConfirmation = false
 
     private var gooseState: GooseState? { gooseStates.first }
     private var profile: UserProfile? { profiles.first }
@@ -24,15 +29,49 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    Text("Settings")
-                        .font(GoosieTheme.titleFont(28))
-                        .foregroundStyle(GoosieTheme.charcoalOutline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    // Account
+                    if let username = ConvexManager.shared.currentUsername {
+                        GoosieCard {
+                            VStack(spacing: 12) {
+                                HStack {
+                                    Image(systemName: "person.circle.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundStyle(GoosieTheme.coralAccent)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("@\(username)")
+                                            .font(GoosieTheme.bodyFont())
+                                            .foregroundStyle(GoosieTheme.charcoalOutline)
+                                        if let provider = AuthService.shared.authProvider {
+                                            Text("Signed in with \(provider == "apple" ? "Apple" : "Google")")
+                                                .font(GoosieTheme.captionFont(11))
+                                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                                        }
+                                    }
+                                    Spacer()
+                                }
+
+                                Button {
+                                    showSignOutConfirmation = true
+                                } label: {
+                                    Text("Sign Out")
+                                        .font(GoosieTheme.captionFont(13))
+                                        .foregroundStyle(GoosieTheme.coralAccent)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                    }
 
                     // Goose Name
                     GoosieCard {
                         VStack(alignment: .leading, spacing: 8) {
-                            Label("Goose Name", systemImage: "bird.fill")
+                            Label {
+                                Text("Goose Name")
+                            } icon: {
+                                Image("goose_icon")
+                                    .resizable()
+                                    .frame(width: 16, height: 16)
+                            }
                                 .font(GoosieTheme.captionFont())
                                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
                             TextField("Name", text: $gooseName)
@@ -47,26 +86,8 @@ struct SettingsView: View {
                         baselinesCard(profile: profile)
                     }
 
-                    // Vacation Mode
-                    GoosieCard {
-                        Toggle(isOn: Binding(
-                            get: { gooseState?.isVacationMode ?? false },
-                            set: { newValue in
-                                gooseState?.isVacationMode = newValue
-                                profile?.vacationMode = newValue
-                            }
-                        )) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Vacation Mode")
-                                    .font(GoosieTheme.bodyFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
-                                Text("Pauses decay, disables reminders, freezes streak")
-                                    .font(GoosieTheme.captionFont())
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                            }
-                        }
-                        .tint(GoosieTheme.mintBackground)
-                    }
+                    // Duck History
+                    DuckHistoryCard()
 
                     // Notifications
                     GoosieCard {
@@ -100,17 +121,33 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Distraction Apps
-                    GoosieCard {
-                        NavigationLink(destination: DistractionConfigView()) {
-                            HStack {
-                                Label("Distraction Apps", systemImage: "iphone.slash")
+                    // AI Model
+                    aiModelCard
+
+                    // Live Activity
+                    if let profile {
+                        GoosieCard {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Live Activity")
                                     .font(GoosieTheme.bodyFont())
                                     .foregroundStyle(GoosieTheme.charcoalOutline)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+
+                                Toggle("Show Goose in Dynamic Island", isOn: Binding(
+                                    get: { profile.liveActivityEnabled },
+                                    set: { enabled in
+                                        profile.liveActivityEnabled = enabled
+                                        let manager = GooseLiveActivityManager.shared
+                                        if enabled {
+                                            if !manager.isActive, let state = gooseState {
+                                                manager.startPetActivity(gooseName: state.name, state: state)
+                                            }
+                                        } else {
+                                            manager.endActivity()
+                                        }
+                                    }
+                                ))
+                                .font(GoosieTheme.captionFont())
+                                .tint(GoosieTheme.mintBackground)
                             }
                         }
                     }
@@ -129,6 +166,7 @@ struct SettingsView: View {
                                     .foregroundStyle(GoosieTheme.coralAccent)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     // Danger Zone
@@ -145,6 +183,7 @@ struct SettingsView: View {
                                     .foregroundStyle(GoosieTheme.coralAccent)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     // About
@@ -165,12 +204,90 @@ struct SettingsView: View {
         }
         .onAppear {
             gooseName = gooseState?.name ?? "Harold"
+            geminiAPIKeyInput = geminiAPIKey
         }
         .alert("Reset Goose?", isPresented: $showResetConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Reset", role: .destructive) { resetGoose() }
         } message: {
             Text("This will reset your goose to a fresh egg. Your longest streak and revive count will be preserved.")
+        }
+        .alert("Sign Out?", isPresented: $showSignOutConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Sign Out", role: .destructive) {
+                signOutAndReset()
+            }
+        } message: {
+            Text("This will sign you out and return to the welcome screen. Your local data will be cleared.")
+        }
+    }
+
+    // MARK: - AI Model Card
+
+    private var aiModelCard: some View {
+        GoosieCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("AI Model")
+                    .font(GoosieTheme.bodyFont())
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                Picker("", selection: $chatProvider) {
+                    Text("Apple Intelligence").tag("apple")
+                    Text("Gemini").tag("gemini")
+                }
+                .pickerStyle(.segmented)
+
+                if chatProvider == "gemini" {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Gemini API Key")
+                            .font(GoosieTheme.captionFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+
+                        HStack {
+                            if showGeminiKey {
+                                TextField("paste your api key", text: $geminiAPIKeyInput)
+                                    .font(GoosieTheme.captionFont())
+                                    .textFieldStyle(.plain)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
+                            } else {
+                                SecureField("paste your api key", text: $geminiAPIKeyInput)
+                                    .font(GoosieTheme.captionFont())
+                                    .textFieldStyle(.plain)
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.never)
+                            }
+
+                            Button {
+                                showGeminiKey.toggle()
+                            } label: {
+                                Image(systemName: showGeminiKey ? "eye.slash" : "eye")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                            }
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(GoosieTheme.charcoalOutline.opacity(0.05))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .strokeBorder(GoosieTheme.charcoalOutline.opacity(0.12), lineWidth: 1)
+                                )
+                        )
+                        .onChange(of: geminiAPIKeyInput) { _, newValue in
+                            geminiAPIKey = newValue
+                        }
+
+                        Text("uses gemini-2.5-flash-lite. your key is stored locally.")
+                            .font(GoosieTheme.captionFont(11))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                    }
+                }
+            }
         }
     }
 
@@ -224,8 +341,26 @@ struct SettingsView: View {
 
     private func resetGoose() {
         guard let state = gooseState else { return }
-        GooseEngine.shared.hatchNewEgg(state: state)
+        GooseEngine.shared.resetGoose(state: state)
         gooseName = state.name
+    }
+
+    private func signOutAndReset() {
+        // Sign out of Convex + auth provider
+        ConvexManager.shared.signOut()
+
+        // Delete all local SwiftData entities so onboarding triggers again
+        for state in gooseStates { modelContext.delete(state) }
+        for profile in profiles { modelContext.delete(profile) }
+        let allGoals = (try? modelContext.fetch(FetchDescriptor<Goal>())) ?? []
+        for goal in allGoals { modelContext.delete(goal) }
+        let allLogs = (try? modelContext.fetch(FetchDescriptor<DailyLog>())) ?? []
+        for log in allLogs { modelContext.delete(log) }
+
+        try? modelContext.save()
+
+        // Clear the onboarding UserDefaults flag
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
     }
 
     private func rescheduleMorningReminder() {

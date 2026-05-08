@@ -51,7 +51,7 @@ struct OnboardingView: View {
 
             ZStack {
                 if eggHatched {
-                    GooseCharacterView(mood: .ecstatic, phase: .baby)
+                    GooseCharacterView(mood: .ecstatic)
                         .transition(.scale.combined(with: .opacity))
                 } else {
                     eggView
@@ -108,7 +108,7 @@ struct OnboardingView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            GooseCharacterView(mood: .happy, phase: .baby)
+            GooseCharacterView(mood: .happy)
                 .frame(height: 180)
 
             Text("Name your goose")

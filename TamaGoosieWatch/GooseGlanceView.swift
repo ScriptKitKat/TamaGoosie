@@ -5,65 +5,141 @@ struct GooseGlanceView: View {
 
     private var payload: GooseSyncPayload { syncService.currentPayload }
 
+    // Map mood to the same goose image used on iOS
+    private var gooseImageName: String {
+        let mood = payload.moodEnum
+        let h = payload.happiness
+        let hp = payload.healthiness
+        // Mirror GooseDisplayState logic from iOS GooseAnimations
+        if h >= 0.70 && hp >= 0.70 { return "goose_happy" }
+        if h < 0.40 || hp < 0.40 { return "goose_tired" }
+        return "goose_normal"
+    }
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 10) {
+                // MARK: - Goose character
+                gooseSection
 
-                // MARK: - Glance (screen 1)
-                glanceSection
+                // MARK: - Stat bars
+                statBarsSection
 
-                // MARK: - Goals (scroll down)
+                // MARK: - Goals
                 goalsSection
 
-                // MARK: - Stats (scroll further)
-                statsSection
+                // MARK: - Health stats
+                healthStatsSection
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 6)
             .padding(.top, 2)
             .padding(.bottom, 10)
         }
-        .background(WatchTheme.cream)
+        .background(WatchTheme.mintBackground)
         .navigationTitle("")
     }
 
-    // MARK: - Glance section
+    // MARK: - Goose Section
 
-    private var glanceSection: some View {
+    private var gooseSection: some View {
         VStack(spacing: 4) {
-            doubleRing
+            Image(gooseImageName)
+                .resizable()
+                .scaledToFit()
+                .frame(height: 80)
 
-            VStack(spacing: 1) {
-                Text(payload.name)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(WatchTheme.text)
-                Text("Lvl \(payload.level) · \(payload.moodEnum.displayName.lowercased())")
-                    .font(.system(size: 9, design: .rounded))
-                    .foregroundStyle(WatchTheme.textSecondary)
-            }
+            Text(payload.name)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundStyle(WatchTheme.charcoal)
 
-            HStack(spacing: 10) {
-                miniStatBar("Health", value: payload.healthiness, color: WatchTheme.teal)
-                miniStatBar("Happy",  value: payload.happiness,   color: WatchTheme.coral)
+            Text(payload.moodEnum.displayName)
+                .font(.system(size: 10, design: .rounded))
+                .foregroundStyle(WatchTheme.charcoal.opacity(0.7))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(WatchTheme.creamWhite))
+
+            if payload.streakDays > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(WatchTheme.warmOrange)
+                    Text("\(payload.streakDays)")
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(WatchTheme.charcoal)
+                }
             }
-            .padding(.horizontal, 6)
         }
     }
 
-    // MARK: - Goals section
+    // MARK: - Stat Bars (Health & Happiness - matching iOS)
+
+    private var statBarsSection: some View {
+        VStack(spacing: 6) {
+            watchStatBar(
+                label: "Health",
+                icon: "heart.fill",
+                value: payload.healthiness,
+                color: WatchTheme.healthRed
+            )
+            watchStatBar(
+                label: "Happy",
+                icon: "face.smiling.fill",
+                value: payload.happiness,
+                color: WatchTheme.happinessYellow
+            )
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(WatchTheme.creamWhite)
+        )
+    }
+
+    private func watchStatBar(label: String, icon: String, value: Double, color: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(color)
+                .frame(width: 14)
+
+            Text(label)
+                .font(.system(size: 9, design: .rounded))
+                .foregroundStyle(WatchTheme.charcoal)
+                .frame(width: 36, alignment: .leading)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(color.opacity(0.2))
+                    Capsule().fill(color)
+                        .frame(width: max(0, geo.size.width * max(0, min(1, value))))
+                }
+            }
+            .frame(height: 6)
+
+            Text("\(Int(value * 100))")
+                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .foregroundStyle(WatchTheme.charcoal.opacity(0.6))
+                .frame(width: 20, alignment: .trailing)
+        }
+    }
+
+    // MARK: - Goals Section
 
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Today's goals")
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(WatchTheme.text)
+            Text("Goals")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(WatchTheme.charcoal)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             if syncService.activeGoals.isEmpty {
                 Text("No active goals")
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.system(size: 10, design: .rounded))
                     .foregroundStyle(WatchTheme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 6)
             } else {
                 ForEach(syncService.activeGoals.prefix(5)) { goal in
                     goalCard(goal)
@@ -72,83 +148,62 @@ struct GooseGlanceView: View {
         }
     }
 
-    // MARK: - Stats section
+    // MARK: - Health Stats Section
 
-    private var statsSection: some View {
-        VStack(spacing: 0) {
+    private var healthStatsSection: some View {
+        VStack(spacing: 6) {
             Text("Today")
-                .font(.system(size: 11, weight: .medium, design: .rounded))
-                .foregroundStyle(WatchTheme.text)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(WatchTheme.charcoal)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 8)
 
-            VStack(spacing: 8) {
-                statRow(dot: WatchTheme.stepsBlue, label: "Steps",
-                        value: payload.steps.formatted(),
-                        valueColor: WatchTheme.stepsBlue,
-                        fraction: Double(payload.steps) / 10_000)
-                statRow(dot: WatchTheme.coral, label: "Exercise",
-                        value: "\(payload.exerciseMinutes) min",
-                        valueColor: WatchTheme.exerciseDark,
-                        fraction: Double(payload.exerciseMinutes) / 30)
-                statRow(dot: WatchTheme.sleepPurple, label: "Sleep",
-                        value: String(format: "%.1f hr", payload.sleepHours),
-                        valueColor: WatchTheme.sleepPurpleDark,
-                        fraction: payload.sleepHours / 9.0)
-                statRow(dot: WatchTheme.teal, label: "Stand",
-                        value: "\(payload.standHours) hr",
-                        valueColor: WatchTheme.standDark,
-                        fraction: Double(payload.standHours) / 12)
+            VStack(spacing: 6) {
+                healthRow(dot: WatchTheme.stepsBlue, label: "Steps",
+                          value: payload.steps.formatted(),
+                          fraction: Double(payload.steps) / 10_000)
+                healthRow(dot: WatchTheme.coral, label: "Exercise",
+                          value: "\(payload.exerciseMinutes) min",
+                          fraction: Double(payload.exerciseMinutes) / 30)
+                healthRow(dot: WatchTheme.sleepPurple, label: "Sleep",
+                          value: String(format: "%.1f hr", payload.sleepHours),
+                          fraction: payload.sleepHours / 9.0)
+                healthRow(dot: WatchTheme.teal, label: "Stand",
+                          value: "\(payload.standHours) hr",
+                          fraction: Double(payload.standHours) / 12)
             }
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(WatchTheme.creamWhite)
+        )
     }
 
-    // MARK: - Double ring
-
-    private var doubleRing: some View {
-        ZStack {
-            Circle()
-                .stroke(WatchTheme.border, lineWidth: 5)
-                .frame(width: 84, height: 84)
-            Circle()
-                .trim(from: 0, to: payload.healthiness)
-                .stroke(WatchTheme.teal, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                .frame(width: 84, height: 84)
-                .rotationEffect(.degrees(-90))
-
-            Circle()
-                .stroke(WatchTheme.border, lineWidth: 4)
-                .frame(width: 68, height: 68)
-            Circle()
-                .trim(from: 0, to: payload.happiness)
-                .stroke(WatchTheme.coral, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                .frame(width: 68, height: 68)
-                .rotationEffect(.degrees(-90))
-
-            DuckFaceView(size: 30)
-        }
-        .frame(width: 84, height: 84)
-    }
-
-    // MARK: - Mini stat bar
-
-    private func miniStatBar(_ label: String, value: Double, color: Color) -> some View {
-        VStack(alignment: .center, spacing: 2) {
-            Text(label)
-                .font(.system(size: 9, design: .rounded))
-                .foregroundStyle(WatchTheme.textSecondary)
+    private func healthRow(dot: Color, label: String, value: String, fraction: Double) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Circle().fill(dot).frame(width: 5, height: 5)
+                Text(label)
+                    .font(.system(size: 9, design: .rounded))
+                    .foregroundStyle(WatchTheme.charcoal)
+                Spacer()
+                Text(value)
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                    .foregroundStyle(dot)
+            }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(WatchTheme.border)
-                    Capsule().fill(color)
-                        .frame(width: geo.size.width * max(0, min(1, value)))
+                    Capsule().fill(dot.opacity(0.2))
+                    Capsule().fill(dot)
+                        .frame(width: geo.size.width * max(0, min(1, fraction)))
                 }
             }
             .frame(height: 3)
         }
     }
 
-    // MARK: - Goal card
+    // MARK: - Goal Card
 
     private func goalCard(_ goal: GoalSummary) -> some View {
         Button {
@@ -159,14 +214,14 @@ struct GooseGlanceView: View {
                 HStack {
                     Text(goal.title)
                         .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(WatchTheme.text)
+                        .foregroundStyle(WatchTheme.charcoal)
                         .lineLimit(1)
                     Spacer()
                     radioIndicator(progress: goal.progress)
                 }
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(WatchTheme.border)
+                        Capsule().fill(barColor(for: goal).opacity(0.2))
                         Capsule()
                             .fill(barColor(for: goal))
                             .frame(width: geo.size.width * max(0, min(1, goal.progress)))
@@ -179,36 +234,13 @@ struct GooseGlanceView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
-            .background(WatchTheme.card)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(WatchTheme.creamWhite)
+            )
         }
         .buttonStyle(.plain)
         .disabled(goal.progress >= 1.0)
-    }
-
-    // MARK: - Stat row
-
-    private func statRow(dot: Color, label: String, value: String, valueColor: Color, fraction: Double) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack {
-                Circle().fill(dot).frame(width: 6, height: 6)
-                Text(label)
-                    .font(.system(size: 10, design: .rounded))
-                    .foregroundStyle(WatchTheme.text)
-                Spacer()
-                Text(value)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(valueColor)
-            }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(WatchTheme.border)
-                    Capsule().fill(dot)
-                        .frame(width: geo.size.width * max(0, min(1, fraction)))
-                }
-            }
-            .frame(height: 3)
-        }
     }
 
     // MARK: - Helpers
@@ -217,18 +249,18 @@ struct GooseGlanceView: View {
     private func radioIndicator(progress: Double) -> some View {
         if progress >= 1.0 {
             ZStack {
-                Circle().fill(WatchTheme.teal).frame(width: 16, height: 16)
+                Circle().fill(WatchTheme.teal).frame(width: 14, height: 14)
                 Image(systemName: "checkmark")
                     .font(.system(size: 7, weight: .bold))
                     .foregroundStyle(.white)
             }
         } else if progress > 0 {
             ZStack {
-                Circle().stroke(WatchTheme.teal, lineWidth: 1.5).frame(width: 16, height: 16)
-                Circle().fill(WatchTheme.teal).frame(width: 8, height: 8)
+                Circle().stroke(WatchTheme.teal, lineWidth: 1.5).frame(width: 14, height: 14)
+                Circle().fill(WatchTheme.teal).frame(width: 7, height: 7)
             }
         } else {
-            Circle().stroke(WatchTheme.border, lineWidth: 1.5).frame(width: 16, height: 16)
+            Circle().stroke(WatchTheme.border, lineWidth: 1.5).frame(width: 14, height: 14)
         }
     }
 

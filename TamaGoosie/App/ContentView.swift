@@ -5,83 +5,339 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @Query private var profiles: [UserProfile]
+    @Query private var goals: [Goal]
     @Query private var gooseStates: [GooseState]
+    @EnvironmentObject private var notificationDelegate: AppNotificationDelegate
     @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @StateObject private var watchSync = WatchSyncService.shared
     @State private var selectedTab = 0
     @State private var showOnboarding = false
+    @State private var showMenu = false
     /// Tracks whether we've applied one-time health rewards this session
     @State private var healthProcessedThisSession = false
 
+    private var hasCompletedOnboarding: Bool {
+        profiles.first?.hasCompletedOnboarding == true
+    }
+
     var body: some View {
-        mainTabView
+        mainContentView
             .onAppear {
-                if profiles.first?.hasCompletedOnboarding != true {
+                if !hasCompletedOnboarding {
                     showOnboarding = true
                 } else {
                     HealthKitManager.shared.enableBackgroundDelivery()
                 }
+                scheduleNotifications()
             }
             .task {
-                guard profiles.first?.hasCompletedOnboarding == true else { return }
+                guard hasCompletedOnboarding else { return }
+                await restoreIdentityIfNeeded()
                 await syncHealthData()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
-                    guard profiles.first?.hasCompletedOnboarding == true else { return }
-                    // processScreenTimeEvents()  // Screen time tracking removed
-                    Task { await syncHealthData() }
+                    guard hasCompletedOnboarding else { return }
+                    Task {
+                        await restoreIdentityIfNeeded()
+                        await syncHealthData()
+                    }
+                }
+            }
+            .onChange(of: hasCompletedOnboarding) { _, completed in
+                if !completed {
+                    showOnboarding = true
                 }
             }
             .onChange(of: showOnboarding) { _, isShowing in
-                // After onboarding completes, kick off health sync
                 if !isShowing {
+                    selectedTab = 0
                     HealthKitManager.shared.enableBackgroundDelivery()
                     Task { await syncHealthData() }
                 }
             }
-            .onChange(of: watchSync.isPaired) { _, paired in
-                // Auto-sync watch pairing state to UserProfile
-                if let profile = profiles.first {
-                    profile.watchPaired = paired
-                }
+            .onChange(of: goals.count) { _, _ in
+                scheduleNotifications()
+            }
+            .onChange(of: goals.map { $0.isCompleted }) { _, _ in
+                scheduleNotifications()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .goalCompletedFromWatch)) { notification in
+                handleWatchGoalCompletion(notification)
+            }
+            .sheet(item: $notificationDelegate.pendingNegotiation) { negotiation in
+                NegotiationView(negotiation: negotiation)
             }
             .fullScreenCover(isPresented: $showOnboarding) {
                 OnboardingContainerView { showOnboarding = false }
             }
     }
 
-    private var mainTabView: some View {
-        TabView(selection: $selectedTab) {
-            GooseView()
-                .tabItem {
-                    Image(systemName: "bird.fill")
-                    Text("Goose")
-                }
-                .tag(0)
-
-            GoalListView()
-                .tabItem {
-                    Image(systemName: "checklist")
-                    Text("Goals")
-                }
-                .tag(1)
-
-            FocusSessionView()
-                .tabItem {
-                    Image(systemName: "timer")
-                    Text("Focus")
-                }
-                .tag(2)
-
-            SettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape.fill")
-                    Text("Settings")
-                }
-                .tag(3)
+    private func scheduleNotifications() {
+        let activeGoals = goals.filter { $0.isActive }
+        let gooseName = gooseStates.first?.name ?? "your goose"
+        Task {
+            await GooseNotificationSystem.shared.rescheduleAll(goals: activeGoals, gooseName: gooseName)
         }
-        .tint(GoosieTheme.coralAccent)
+    }
+
+    // MARK: - Menu Items
+
+    private struct MenuItem: Identifiable {
+        let id: Int
+        let title: String
+        let icon: String
+        let isSystemImage: Bool
+
+        init(id: Int, title: String, systemImage: String) {
+            self.id = id
+            self.title = title
+            self.icon = systemImage
+            self.isSystemImage = true
+        }
+
+        init(id: Int, title: String, assetImage: String) {
+            self.id = id
+            self.title = title
+            self.icon = assetImage
+            self.isSystemImage = false
+        }
+    }
+
+    private var menuItems: [MenuItem] {
+        [
+            MenuItem(id: 0, title: "Goose", assetImage: "goose_icon"),
+            MenuItem(id: 1, title: "Goals", systemImage: "checklist"),
+            MenuItem(id: 2, title: "Chat", systemImage: "bubble.left.fill"),
+            MenuItem(id: 3, title: "Friends", systemImage: "person.2.fill"),
+            MenuItem(id: 4, title: "Settings", systemImage: "gearshape.fill"),
+        ]
+    }
+
+    // MARK: - Main Content
+
+    private var mainContentView: some View {
+        ZStack(alignment: .leading) {
+            // Current page content with top bar overlay
+            VStack(spacing: 0) {
+                if selectedTab == 0 {
+                    // Goose page: hamburger in top-left
+                    currentPageView
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .overlay(alignment: .topLeading) {
+                            Button {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                    showMenu.toggle()
+                                }
+                            } label: {
+                                Image(systemName: "line.3.horizontal")
+                                    .font(.system(size: 20, weight: .medium))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                                    .frame(width: 28, height: 34)
+                            }
+                            .padding(.leading, GoosieTheme.padding)
+                            .padding(.top, 10)
+                        }
+                } else {
+                    // Other pages: X button + centered title bar
+                    subpageHeader
+                    currentPageView
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+            .offset(x: showMenu ? 260 : 0)
+            .disabled(showMenu)
+
+            // Dimming overlay when menu is open
+            if showMenu {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .offset(x: 260)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            showMenu = false
+                        }
+                    }
+            }
+
+            // Side menu
+            sideMenu
+                .frame(width: 260)
+                .offset(x: showMenu ? 0 : -260)
+        }
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width > 80 && !showMenu {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            showMenu = true
+                        }
+                    } else if value.translation.width < -80 && showMenu {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            showMenu = false
+                        }
+                    }
+                }
+        )
+        .background(Self.subpageHeaderColor.ignoresSafeArea())
+    }
+
+    private var currentPageTitle: String {
+        switch selectedTab {
+        case 1: return "Goals"
+        case 2: return "Chat"
+        case 3: return "Friends"
+        case 4: return "Settings"
+        default: return ""
+        }
+    }
+
+    private static let subpageHeaderColor = Color(
+        UIColor(
+            red: 0.72 * 0.92 + 0.08 * 0,
+            green: 0.91 * 0.92 + 0.08 * 0,
+            blue: 0.82 * 0.92 + 0.08 * 0,
+            alpha: 1
+        )
+    )
+
+    private var subpageHeader: some View {
+        ZStack {
+            Self.subpageHeaderColor
+
+            Text(currentPageTitle)
+                .font(GoosieTheme.titleFont(20))
+                .foregroundStyle(GoosieTheme.charcoalOutline)
+
+            HStack {
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                        selectedTab = 0
+                    }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                        .frame(width: 32, height: 32)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, GoosieTheme.padding)
+        }
+        .frame(height: 44)
+        .background(Self.subpageHeaderColor.ignoresSafeArea(edges: .top))
+    }
+
+    @ViewBuilder
+    private var currentPageView: some View {
+        switch selectedTab {
+        case 0: GooseView()
+        case 1: GoalListView()
+        case 2: ChatView()
+        case 3: FriendsView()
+        case 4: SettingsView()
+        default: GooseView()
+        }
+    }
+
+    private var sideMenu: some View {
+        ZStack {
+            GoosieTheme.mintBackground
+                .ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Header
+                VStack(alignment: .leading, spacing: 6) {
+                    Image("goose_icon")
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                    Text(gooseStates.first?.name ?? "Harold")
+                        .font(GoosieTheme.titleFont(22))
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
+                .padding(.bottom, 28)
+
+                // Menu items
+                ForEach(menuItems) { item in
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            selectedTab = item.id
+                            showMenu = false
+                        }
+                    } label: {
+                        HStack(spacing: 16) {
+                            Group {
+                                if item.isSystemImage {
+                                    Image(systemName: item.icon)
+                                        .font(.system(size: 20))
+                                } else {
+                                    Image(item.icon)
+                                        .resizable()
+                                        .frame(width: 22, height: 22)
+                                }
+                            }
+                            .frame(width: 28)
+                            .foregroundStyle(
+                                selectedTab == item.id
+                                    ? GoosieTheme.charcoalOutline
+                                    : GoosieTheme.charcoalOutline.opacity(0.5)
+                            )
+
+                            Text(item.title)
+                                .font(GoosieTheme.bodyFont())
+                                .foregroundStyle(
+                                    selectedTab == item.id
+                                        ? GoosieTheme.charcoalOutline
+                                        : GoosieTheme.charcoalOutline.opacity(0.5)
+                                )
+
+                            Spacer()
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .background(
+                            selectedTab == item.id
+                                ? GoosieTheme.creamWhite.opacity(0.4)
+                                : Color.clear
+                        )
+                    }
+                }
+
+                Spacer()
+
+                // Version footer
+                Text("TamaGoosie v1.0")
+                    .font(GoosieTheme.captionFont(11))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 20)
+            }
+        }
+    }
+
+    // MARK: - Identity Restoration & Convex Sync
+
+    private func restoreIdentityIfNeeded() async {
+        if !ConvexManager.shared.isAuthenticated {
+            _ = await ConvexManager.shared.loadIdentity()
+        }
+
+        // Push current local stats to Convex immediately after identity is available.
+        // This covers the case where HealthKit is unavailable or hasn't delivered data yet.
+        if ConvexManager.shared.isAuthenticated, let state = gooseStates.first {
+            GooseSyncService.shared.syncToConvex(
+                happiness: state.happiness,
+                healthiness: state.healthiness,
+                mood: state.mood,
+                gooseName: state.name,
+                spriteID: state.spriteID,
+                streakDays: state.streakDays
+            )
+        }
     }
 
     // MARK: - HealthKit Auto-Sync
@@ -93,13 +349,12 @@ struct ContentView: View {
         }
         guard hk.isAuthorized else { return }
 
-        guard let state = gooseStates.first, !state.isDead else { return }
+        guard let state = gooseStates.first else { return }
         guard let snapshot = try? await hk.fetchTodayStats() else { return }
 
         let log = fetchOrCreateTodayLog()
 
         if !healthProcessedThisSession {
-            // First fetch this session: apply rewards
             GooseEngine.shared.processHealthData(
                 steps: snapshot.steps,
                 exerciseMinutes: snapshot.exerciseMinutes,
@@ -107,11 +362,12 @@ struct ContentView: View {
                 activeCalories: snapshot.activeCalories,
                 standHours: snapshot.standHours,
                 state: state,
-                dailyLog: log
+                dailyLog: log,
+                profile: profiles.first,
+                goals: goals
             )
             healthProcessedThisSession = true
         } else {
-            // Subsequent fetches: just refresh the cache + DailyLog
             GooseEngine.shared.refreshHealthCache(
                 steps: snapshot.steps,
                 exerciseMinutes: snapshot.exerciseMinutes,
@@ -122,27 +378,42 @@ struct ContentView: View {
             )
         }
 
-        // Update built-in goal progress from HealthKit values
         GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
+
+        Task {
+            await GooseEngine.shared.backfillHistory(
+                daysBack: 30,
+                modelContext: modelContext,
+                profile: profiles.first,
+                goals: goals
+            )
+        }
     }
 
-    // MARK: - Screen Time Event Processing
+    // MARK: - Watch Goal Completion
 
-    private func processScreenTimeEvents() {
-        guard let state = gooseStates.first, !state.isDead else { return }
-        let events = ScreenTimeManager.shared.consumePendingThresholdEvents()
-        guard events > 0 else { return }
+    private func handleWatchGoalCompletion(_ notification: Foundation.Notification) {
+        guard let goalID = notification.userInfo?["goalID"] as? UUID else { return }
+        let replyHandler = notification.userInfo?["replyHandler"] as? ([String: Any]) -> Void
 
-        let minutesAdded = events * GoosieConstants.screenTimeThresholdMinutes
-        let log = fetchOrCreateTodayLog()
-        log.distractionMinutes += minutesAdded
-        GooseEngine.shared.updateDistractMinutes(log.distractionMinutes)
-
-        let penalty = RewardEngine.penaltyForDistractionOpen()
-        for _ in 0..<events {
-            RewardEngine.applyDelta(penalty, to: state)
+        guard let goal = goals.first(where: { $0.id == goalID }),
+              !goal.isCompleted,
+              let state = gooseStates.first else {
+            replyHandler?([:])
+            return
         }
-        GooseEngine.shared.update(state: state)
+
+        let log = fetchOrCreateTodayLog()
+        GooseEngine.shared.completeGoal(goal, state: state, log: log, goals: goals)
+        try? modelContext.save()
+
+        // Send updated payload back to Watch
+        let payload = state.toSyncPayload()
+        if let data = try? JSONEncoder().encode(payload) {
+            replyHandler?(["goosePayload": data])
+        } else {
+            replyHandler?([:])
+        }
     }
 
     private func fetchOrCreateTodayLog() -> DailyLog {

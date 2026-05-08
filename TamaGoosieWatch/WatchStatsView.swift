@@ -48,7 +48,7 @@ struct WatchStatsView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 12)
         }
-        .background(WatchTheme.cream)
+        .background(WatchTheme.creamWhite)
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.inline)
     }

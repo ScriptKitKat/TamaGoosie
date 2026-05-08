@@ -1,19 +1,90 @@
 import SwiftUI
 import SwiftData
+import UserNotifications
+import GoogleSignIn
+
+// MARK: - Notification Delegate
+
+final class AppNotificationDelegate: NSObject, UNUserNotificationCenterDelegate, ObservableObject {
+    @Published var pendingNegotiation: PendingNegotiation? = nil
+    @Published var completedGoalID: UUID? = nil
+
+    // Show notifications as banners even while app is foregrounded
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge])
+    }
+
+    // Handle action button taps
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let info = response.notification.request.content.userInfo
+        guard let goalIDString = info["goalID"] as? String,
+              let goalID = UUID(uuidString: goalIDString) else {
+            completionHandler()
+            return
+        }
+
+        switch response.actionIdentifier {
+        case "ACK":
+            GooseNotificationSystem.shared.markAcknowledged(goalID: goalID)
+
+        case "BUSY":
+            let goalTitle = info["goalTitle"] as? String ?? "your goal"
+            DispatchQueue.main.async {
+                self.pendingNegotiation = PendingNegotiation(
+                    goalID: goalID,
+                    goalTitle: goalTitle,
+                    gooseName: "your goose"
+                )
+            }
+
+        case "COMPLETE":
+            // Mark goal as completed via notification action — post for the view layer to handle
+            DispatchQueue.main.async {
+                self.completedGoalID = goalID
+            }
+
+        case "SNOOZE":
+            let goalTitle = info["goalTitle"] as? String ?? "your goal"
+            NotificationScheduler.shared.handleSnooze(goalID: goalID, goalTitle: goalTitle)
+
+        case "UPDATE":
+            break  // Future: deep link to goal editor
+
+        case "HARDER":
+            EscalationTracker.shared.resetFailures(for: goalID)
+
+        default:
+            break
+        }
+
+        completionHandler()
+    }
+}
+
+// MARK: - App
 
 @main
 struct TamaGoosieApp: App {
     let container: ModelContainer
+    @StateObject private var notificationDelegate = AppNotificationDelegate()
 
     init() {
         let schema = Schema([
             GooseState.self,
             Goal.self,
             GoalProgress.self,
+            GoalCompletionEvent.self,
             FocusSession.self,
             HealthSnapshot.self,
             DailyLog.self,
-            DistractionApp.self,
             UserProfile.self,
         ])
 
@@ -35,6 +106,9 @@ struct TamaGoosieApp: App {
             container = try! ModelContainer(for: schema)
         }
 
+        GooseNotificationSystem.shared.registerCategories()
+        NotificationScheduler.shared.registerCategories()
+
         // Activate WatchConnectivity early so the session is ready
         // before any GooseEngine updates try to send payloads.
         WatchSyncService.shared.activate()
@@ -43,6 +117,15 @@ struct TamaGoosieApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(notificationDelegate)
+                .onAppear {
+                    UNUserNotificationCenter.current().delegate = notificationDelegate
+                    // Restore previous Google session silently
+                    AuthService.shared.restoreGoogleSession()
+                }
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
         .modelContainer(container)
     }

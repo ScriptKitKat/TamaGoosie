@@ -25,6 +25,15 @@ final class WatchSyncReceiver: NSObject, WCSessionDelegate {
         session?.activate()
     }
 
+    /// Load the most recent payload from receivedApplicationContext (persists across launches)
+    private func restoreFromApplicationContext() {
+        guard let session else { return }
+        if let data = session.receivedApplicationContext["goosePayload"] as? Data,
+           let payload = try? JSONDecoder().decode(GooseSyncPayload.self, from: data) {
+            self.currentPayload = payload
+        }
+    }
+
     // MARK: - Send Goal Completion to Phone
 
     func sendGoalCompletion(goalID: UUID) {
@@ -54,7 +63,13 @@ final class WatchSyncReceiver: NSObject, WCSessionDelegate {
 
     // MARK: - WCSessionDelegate
 
-    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        if activationState == .activated {
+            DispatchQueue.main.async {
+                self.restoreFromApplicationContext()
+            }
+        }
+    }
 
     // Receives payload pushed via updateApplicationContext (persistent, survives relaunch)
     func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {

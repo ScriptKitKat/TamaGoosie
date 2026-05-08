@@ -4,13 +4,17 @@ import SwiftData
 struct HealthDashboard: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var gooseStates: [GooseState]
+    @Query private var profiles: [UserProfile]
+    @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
     @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @State private var healthManager = HealthKitManager.shared
     @State private var snapshot: HealthSnapshot?
     @State private var isLoading = false
 
-    private var gooseState: GooseState? {
-        gooseStates.first
+    private var gooseState: GooseState? { gooseStates.first }
+    private var profile: UserProfile? { profiles.first }
+    private var todayLog: DailyLog? {
+        allDailyLogs.first { Calendar.current.isDateInToday($0.date) }
     }
 
     var body: some View {
@@ -165,11 +169,13 @@ struct HealthDashboard: View {
                     activeCalories: data.activeCalories,
                     standHours: data.standHours,
                     state: state,
-                    dailyLog: log
+                    dailyLog: log,
+                    profile: profile,
+                    goals: allGoals
                 )
                 data.wasProcessed = true
             } else {
-                // Already processed rewards; just refresh the cache + DailyLog
+                // Already processed; just refresh the cache + DailyLog
                 GooseEngine.shared.refreshHealthCache(
                     steps: data.steps,
                     exerciseMinutes: data.exerciseMinutes,

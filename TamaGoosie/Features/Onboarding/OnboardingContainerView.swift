@@ -1,4 +1,6 @@
 import SwiftUI
+import HealthKit
+import UserNotifications
 
 // MARK: - Shared Onboarding Color Palette (internal — visible to all onboarding files)
 
@@ -21,49 +23,87 @@ struct OnboardingContainerView: View {
     @State private var step = 0
     @State private var obState = OnboardingState()
 
-    private let totalDots = 5   // dots for steps 1-5 (step 0 = egg hatch, no dots)
+    // All logical steps: 0=signIn, 1=hatch, 2=name, 3=goals, 4=health, 5=notifications, 6=username, 7=complete
+    // Returning user skips: 1 (hatch), 2 (name), 3 (goals), 6 (username)
+    // Additionally skips health/notifications if already authorized on this device
+
+    /// Steps that should be shown for the current user type
+    private var visibleSteps: [Int] {
+        if obState.isReturningUser {
+            // Returning: sign-in(0), optionally health(4), optionally notifications(5), complete(7)
+            var steps = [0]
+            if !obState.healthAlreadyAuthorized { steps.append(4) }
+            if !obState.notificationsAlreadyAuthorized { steps.append(5) }
+            steps.append(7)
+            return steps
+        } else {
+            // New user: all steps
+            return [0, 1, 2, 3, 4, 5, 6, 7]
+        }
+    }
+
+    /// Number of dots = visible steps minus sign-in screen
+    private var totalDots: Int {
+        max(visibleSteps.count - 1, 1)
+    }
+
+    /// Current dot index (step 0 has no dot)
+    private var currentDotIndex: Int {
+        guard let idx = visibleSteps.firstIndex(of: step) else { return 0 }
+        return max(idx - 1, 0)
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
             OBTheme.cream.ignoresSafeArea()
 
-            // Step content — each view manages its own layout
             ZStack {
                 if step == 0 {
-                    OnboardingHatchView(obState: obState, onAdvance: { advance() })
+                    OnboardingSignInView(obState: obState, onAdvance: { advance() })
                         .transition(forwardTransition)
                 }
                 if step == 1 {
-                    OnboardingNameView(obState: obState, onAdvance: { advance() })
+                    OnboardingHatchView(obState: obState, onAdvance: { advance() })
                         .transition(forwardTransition)
                 }
                 if step == 2 {
-                    OnboardingGoalsView(obState: obState, onAdvance: { advance() })
+                    OnboardingNameView(obState: obState, onAdvance: { advance() })
                         .transition(forwardTransition)
                 }
                 if step == 3 {
-                    OnboardingHealthView(obState: obState, onAdvance: { advance() })
+                    OnboardingGoalsView(obState: obState, onAdvance: { advance() })
                         .transition(forwardTransition)
                 }
                 if step == 4 {
-                    OnboardingNotificationsView(obState: obState, onAdvance: { advance() })
+                    OnboardingHealthView(obState: obState, onAdvance: { advance() })
                         .transition(forwardTransition)
                 }
                 if step == 5 {
+                    OnboardingNotificationsView(obState: obState, onAdvance: { advance() })
+                        .transition(forwardTransition)
+                }
+                if step == 6 {
+                    OnboardingUsernameView(obState: obState, onAdvance: { advance() })
+                        .transition(forwardTransition)
+                }
+                if step == 7 {
                     OnboardingCompleteView(obState: obState, onComplete: onComplete)
                         .transition(forwardTransition)
                 }
             }
             .animation(.spring(response: 0.42, dampingFraction: 0.86), value: step)
 
-            // Custom page indicator — hidden on egg hatch screen
+            // Page indicator — hidden on sign-in screen
             if step > 0 {
-                PageDots(current: step - 1, total: totalDots)
+                PageDots(current: currentDotIndex, total: totalDots)
                     .padding(.bottom, 20)
                     .transition(.opacity.animation(.easeInOut(duration: 0.2)))
             }
         }
         .ignoresSafeArea(edges: .bottom)
+        .task {
+            await checkDevicePermissions()
+        }
     }
 
     private var forwardTransition: AnyTransition {
@@ -74,7 +114,37 @@ struct OnboardingContainerView: View {
     }
 
     private func advance() {
-        step = min(step + 1, 5)
+        // Find the next visible step after the current one
+        guard let currentIdx = visibleSteps.firstIndex(of: step) else {
+            step = visibleSteps.last ?? 7
+            return
+        }
+        let nextIdx = currentIdx + 1
+        if nextIdx < visibleSteps.count {
+            step = visibleSteps[nextIdx]
+        }
+    }
+
+    /// Check if HealthKit and notifications are already authorized on this device
+    private func checkDevicePermissions() async {
+        // Check HealthKit
+        if HKHealthStore.isHealthDataAvailable() {
+            let store = HKHealthStore()
+            if let stepType = HKQuantityType.quantityType(forIdentifier: .stepCount) {
+                let status = store.authorizationStatus(for: stepType)
+                if status == .sharingAuthorized {
+                    obState.healthAlreadyAuthorized = true
+                    obState.healthAuthorized = true
+                }
+            }
+        }
+
+        // Check notifications
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        if settings.authorizationStatus == .authorized {
+            obState.notificationsAlreadyAuthorized = true
+            obState.notificationsAuthorized = true
+        }
     }
 }
 

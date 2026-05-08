@@ -52,6 +52,20 @@ final class GooseLiveActivityManager {
         updateCurrentActivity()
     }
 
+    /// Updates stats from a sync payload — used by GooseEngine.saveStatsToAppGroup
+    /// so the Live Activity reflects the latest healthiness/happiness/mood/spriteKey
+    /// without needing a full GooseState reference.
+    func updateStats(payload: GooseSyncPayload) {
+        guard var cs = cachedContentState else { return }
+        cs.healthiness = payload.healthiness
+        cs.happiness = payload.happiness
+        cs.mood = payload.mood
+        cs.streakDays = payload.streakDays
+        cs.spriteKey = spriteKey(for: payload.moodEnum)
+        cachedContentState = cs
+        updateCurrentActivity()
+    }
+
     func startFocusMode(state: GooseState, minutesRemaining: Int) {
         guard let activity = currentActivity else { return }
 
@@ -124,7 +138,6 @@ final class GooseLiveActivityManager {
             healthiness: state.healthiness,
             happiness: state.happiness,
             mood: state.mood,
-            level: state.level,
             streakDays: state.streakDays,
             currentGoalTitle: currentGoal?.title,
             currentGoalProgress: currentGoal?.progress,
@@ -137,15 +150,15 @@ final class GooseLiveActivityManager {
     }
 
     private func spriteKey(for state: GooseState) -> String {
-        let phase = state.currentPhase.rawValue  // "egg" / "baby" / "teen" / "adult"
-        let bucket: String
-        switch state.currentMood {
-        case .ecstatic, .happy:   bucket = "happy"
-        case .content, .bored:    bucket = "neutral"
-        case .sad:                bucket = "sad"
-        case .sick:               bucket = "sick"
-        case .dead:               bucket = "dead"
+        spriteKey(for: state.currentMood)
+    }
+
+    private func spriteKey(for mood: GooseMood) -> String {
+        switch mood {
+        case .ecstatic, .happy:   return "happy"
+        case .content, .bored:    return "neutral"
+        case .sad:                return "sad"
+        case .sick:               return "sick"
         }
-        return "\(phase)_\(bucket)"
     }
 }

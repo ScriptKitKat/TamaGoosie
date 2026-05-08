@@ -2,23 +2,6 @@ import Foundation
 import FamilyControls
 import DeviceActivity
 
-// MARK: - DeviceActivity name constants
-
-extension DeviceActivityName {
-    static let daily = Self("daily")
-}
-
-extension DeviceActivityEvent.Name {
-    static let distractionThreshold = Self("distractionThreshold")
-}
-
-// MARK: - ScreenTimeManager
-
-/// Manages FamilyControls authorization, app selection, and DeviceActivity monitoring.
-/// Communicates threshold events to the main app via App Group UserDefaults.
-///
-/// - Note: Requires the `com.apple.developer.family-controls` entitlement.
-///   For App Store distribution, request approval at developer.apple.com.
 @Observable
 @MainActor
 final class ScreenTimeManager {
@@ -55,7 +38,6 @@ final class ScreenTimeManager {
                 startDailyMonitoring()
             }
         } catch {
-            // Authorization may be denied or already in a terminal state.
             authorizationStatus = authCenter.authorizationStatus
         }
     }
@@ -77,6 +59,20 @@ final class ScreenTimeManager {
         selection = loaded
     }
 
+    // MARK: - Limit Management
+
+    var userLimitMinutes: Int {
+        get {
+            let stored = defaults.integer(forKey: GoosieConstants.screenTimeLimitKey)
+            return stored > 0 ? stored : GoosieConstants.screenTimeDefaultLimitMinutes
+        }
+        set { defaults.set(newValue, forKey: GoosieConstants.screenTimeLimitKey) }
+    }
+
+    var approxMinutesToday: Int {
+        defaults.integer(forKey: GoosieConstants.screenTimeApproxMinutesKey)
+    }
+
     // MARK: - Monitoring
 
     func startDailyMonitoring() {
@@ -90,38 +86,31 @@ final class ScreenTimeManager {
             repeats: true
         )
 
-        let event = DeviceActivityEvent(
-            applications: selection.applicationTokens,
-            categories: selection.categoryTokens,
-            webDomains: selection.webDomainTokens,
-            threshold: DateComponents(minute: GoosieConstants.screenTimeThresholdMinutes)
+        let events: [DeviceActivityEvent.Name: DeviceActivityEvent] = Dictionary(
+            uniqueKeysWithValues: GoosieConstants.screenTimeThresholds.map { mins in
+                let name = DeviceActivityEvent.Name("distraction-\(mins)")
+                let event = DeviceActivityEvent(
+                    applications: selection.applicationTokens,
+                    categories: selection.categoryTokens,
+                    webDomains: selection.webDomainTokens,
+                    threshold: DateComponents(minute: mins)
+                )
+                return (name, event)
+            }
         )
 
         do {
             try activityCenter.startMonitoring(
-                .daily,
+                DeviceActivityName("daily-distraction"),
                 during: schedule,
-                events: [.distractionThreshold: event]
+                events: events
             )
         } catch {
-            // Monitoring may fail if entitlement is missing or selection is invalid.
             print("[ScreenTimeManager] startMonitoring failed: \(error)")
         }
     }
 
     func stopMonitoring() {
         activityCenter.stopMonitoring()
-    }
-
-    // MARK: - Threshold Event Consumption
-
-    /// Returns the number of threshold events that fired since last call, then clears the counter.
-    /// Each event represents `GoosieConstants.screenTimeThresholdMinutes` of tracked app usage.
-    func consumePendingThresholdEvents() -> Int {
-        let count = defaults.integer(forKey: GoosieConstants.screenTimeThresholdEventsKey)
-        if count > 0 {
-            defaults.set(0, forKey: GoosieConstants.screenTimeThresholdEventsKey)
-        }
-        return count
     }
 }

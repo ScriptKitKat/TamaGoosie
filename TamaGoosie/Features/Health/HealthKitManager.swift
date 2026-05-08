@@ -61,7 +61,33 @@ final class HealthKitManager {
         snapshot.standHours = try await fetchStandHours(predicate: predicate)
 
         // Sleep (last night)
-        snapshot.sleepHours = try await fetchSleepHours()
+        snapshot.sleepHours = try await fetchSleepHours(relativeTo: .now)
+
+        return snapshot
+    }
+
+    // MARK: - Fetch Historical Stats
+
+    func fetchStats(for date: Date) async throws -> HealthSnapshot {
+        let snapshot = HealthSnapshot()
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            return snapshot
+        }
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay, options: .strictStartDate)
+
+        if let stepsType = HKQuantityType.quantityType(forIdentifier: .stepCount) {
+            snapshot.steps = Int(try await fetchSum(type: stepsType, predicate: predicate, unit: .count()))
+        }
+        if let calType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) {
+            snapshot.activeCalories = try await fetchSum(type: calType, predicate: predicate, unit: .kilocalorie())
+        }
+        if let exType = HKQuantityType.quantityType(forIdentifier: .appleExerciseTime) {
+            snapshot.exerciseMinutes = try await fetchSum(type: exType, predicate: predicate, unit: .minute())
+        }
+        snapshot.standHours = try await fetchStandHours(predicate: predicate)
+        snapshot.sleepHours = try await fetchSleepHours(relativeTo: date)
 
         return snapshot
     }
@@ -113,9 +139,9 @@ final class HealthKitManager {
         }
     }
 
-    private func fetchSleepHours() async throws -> Double {
+    private func fetchSleepHours(relativeTo reference: Date = .now) async throws -> Double {
         let calendar = Calendar.current
-        let now = Date.now
+        let now = reference
         let yesterdayEvening = calendar.date(bySettingHour: 18, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: -1, to: now)!)!
         let thisMorning = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: now)!
 

@@ -46,5 +46,5 @@ struct DuckFaceView: View {
 #Preview {
     DuckFaceView(size: 80)
         .padding()
-        .background(WatchTheme.cream)
+        .background(WatchTheme.creamWhite)
 }
