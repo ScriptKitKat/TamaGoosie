@@ -93,48 +93,21 @@ struct OnboardingCompleteView: View {
         )
         modelContext.insert(profile)
 
-        // Create goose
-        let goose = GooseState(name: gooseName)
+        // Create goose with full stats for new users
+        let goose = GooseState(
+            name: gooseName,
+            healthiness: 1.0,
+            happiness: 1.0,
+            mood: GooseMood.ecstatic.rawValue
+        )
         goose.userProfile = profile
         modelContext.insert(goose)
         profile.gooseState = goose
-
-        // Create goals from onboarding selection
-        let goalDefs: [(String, GoalCategory)] = [
-            ("Drink 8 glasses of water", .water),
-            ("Take a 30-minute walk",    .fitness),
-            ("Meditate for 10 minutes",  .mindfulness),
-            ("Read for 20 minutes",      .learning),
-            ("Stretch for 10 minutes",   .fitness),
-            ("Journal before bed",       .mindfulness),
-            ("Eat a healthy meal",       .health),
-            ("Call a friend or family",  .social),
-        ]
-
-        var createdGoals: [Goal] = []
-        for (idx, (title, category)) in goalDefs.enumerated() {
-            guard obState.selectedGoals.contains(title) else { continue }
-            let goal = Goal(
-                title: title,
-                type: "recurring",
-                category: category,
-                frequency: .daily,
-                happinessWeight: 1.0,
-                sortOrder: idx
-            )
-            goal.userProfile = profile
-            modelContext.insert(goal)
-            profile.goals.append(goal)
-            createdGoals.append(goal)
-        }
 
         // Mark completion in UserDefaults
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
         try? modelContext.save()
-
-        // Sync goals to Convex
-        ConvexManager.shared.syncGoals(goals: createdGoals)
 
         // Schedule morning reminder
         NotificationManager.shared.scheduleMorningReminder(
