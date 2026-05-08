@@ -98,8 +98,12 @@ final class Goal {
     var isHealthKitTracked: Bool {
         guard type == "builtin" else { return false }
         return title.localizedCaseInsensitiveContains("steps") ||
+               title.localizedCaseInsensitiveContains("walk") ||
                title.localizedCaseInsensitiveContains("sleep") ||
-               title.localizedCaseInsensitiveContains("screen time")
+               title.localizedCaseInsensitiveContains("screen time") ||
+               title.localizedCaseInsensitiveContains("exercise") ||
+               title.localizedCaseInsensitiveContains("outside") ||
+               title.localizedCaseInsensitiveContains("daylight")
     }
 
     func toSummary() -> GoalSummary {

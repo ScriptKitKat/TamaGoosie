@@ -349,12 +349,14 @@ final class NotificationScheduler {
     /// Returns 0.0–1.0 progress for a HealthKit-tracked goal based on today's log.
     private func healthProgress(for goal: Goal, log: DailyLog) -> Double {
         guard goal.targetCount > 0 else { return 0 }
-        if goal.title.localizedCaseInsensitiveContains("steps") {
+        if goal.title.localizedCaseInsensitiveContains("steps") || goal.title.localizedCaseInsensitiveContains("walk") {
             return Double(log.steps) / Double(goal.targetCount)
         } else if goal.title.localizedCaseInsensitiveContains("sleep") {
             return log.sleepHours / Double(goal.targetCount)
         } else if goal.title.localizedCaseInsensitiveContains("exercise") {
             return Double(log.exerciseMinutes) / Double(goal.targetCount)
+        } else if goal.title.localizedCaseInsensitiveContains("outside") || goal.title.localizedCaseInsensitiveContains("daylight") {
+            return Double(log.outsideMinutes) / Double(goal.targetCount)
         }
         return Double(goal.currentCount) / Double(goal.targetCount)
     }
@@ -407,12 +409,14 @@ final class NotificationScheduler {
     /// Human-readable remaining amount, e.g. "4,200 steps" or "3.5 hours of sleep".
     private func remainingDescription(for goal: Goal, progress: Double) -> String {
         let remaining = max(0, Double(goal.targetCount) - Double(goal.targetCount) * progress)
-        if goal.title.localizedCaseInsensitiveContains("steps") {
+        if goal.title.localizedCaseInsensitiveContains("steps") || goal.title.localizedCaseInsensitiveContains("walk") {
             return "\(Int(remaining).formatted()) steps"
         } else if goal.title.localizedCaseInsensitiveContains("sleep") {
             return String(format: "%.1f hours of sleep", remaining)
         } else if goal.title.localizedCaseInsensitiveContains("exercise") {
             return "\(Int(remaining)) min of exercise"
+        } else if goal.title.localizedCaseInsensitiveContains("outside") || goal.title.localizedCaseInsensitiveContains("daylight") {
+            return "\(Int(remaining)) min outside"
         }
         return "\(Int(remaining)) more"
     }

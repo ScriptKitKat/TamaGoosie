@@ -13,6 +13,7 @@ final class GooseEngine {
     private(set) var cachedExerciseMinutes: Int = 0
     private(set) var cachedSleepHours: Double = 0.0
     private(set) var cachedActiveCalories: Double = 0.0
+    private(set) var cachedOutsideMinutes: Int = 0
     private var cachedStandHours: Int = 0
     // Cached distraction minutes updated by DistractionOverlay each minute
     private(set) var cachedDistractMinutes: Int = 0
@@ -99,6 +100,7 @@ final class GooseEngine {
         sleepHours: Double,
         activeCalories: Double = 0,
         standHours: Int = 0,
+        outsideMinutes: Double = 0,
         state: GooseState,
         dailyLog: DailyLog? = nil,
         profile: UserProfile? = nil,
@@ -111,6 +113,7 @@ final class GooseEngine {
             sleepHours: sleepHours,
             activeCalories: activeCalories,
             standHours: standHours,
+            outsideMinutes: outsideMinutes,
             dailyLog: dailyLog
         )
 
@@ -126,12 +129,14 @@ final class GooseEngine {
         sleepHours: Double,
         activeCalories: Double = 0,
         standHours: Int = 0,
+        outsideMinutes: Double = 0,
         dailyLog: DailyLog? = nil
     ) {
         cachedSteps = steps
         cachedExerciseMinutes = Int(exerciseMinutes)
         cachedSleepHours = sleepHours
         cachedActiveCalories = activeCalories
+        cachedOutsideMinutes = Int(outsideMinutes)
         cachedStandHours = standHours
 
         if let log = dailyLog {
@@ -139,6 +144,7 @@ final class GooseEngine {
             log.exerciseMinutes = Int(exerciseMinutes)
             log.sleepHours = sleepHours
             log.standHours = standHours
+            log.outsideMinutes = Int(outsideMinutes)
         }
     }
 
@@ -146,10 +152,14 @@ final class GooseEngine {
     /// persists across app restarts.
     func syncBuiltinGoalProgress(_ goals: [Goal]) {
         for goal in goals where goal.isHealthKitTracked && !goal.isCompleted {
-            if goal.title.localizedCaseInsensitiveContains("steps") {
+            if goal.title.localizedCaseInsensitiveContains("steps") || goal.title.localizedCaseInsensitiveContains("walk") {
                 goal.currentCount = min(cachedSteps, goal.targetCount)
             } else if goal.title.localizedCaseInsensitiveContains("sleep") {
                 goal.currentCount = min(Int(cachedSleepHours), goal.targetCount)
+            } else if goal.title.localizedCaseInsensitiveContains("exercise") {
+                goal.currentCount = min(cachedExerciseMinutes, goal.targetCount)
+            } else if goal.title.localizedCaseInsensitiveContains("outside") || goal.title.localizedCaseInsensitiveContains("daylight") {
+                goal.currentCount = min(cachedOutsideMinutes, goal.targetCount)
             }
         }
     }
@@ -302,6 +312,7 @@ final class GooseEngine {
         enrichedPayload.sleepHours = cachedSleepHours
         enrichedPayload.standHours = cachedStandHours
         enrichedPayload.activeCalories = cachedActiveCalories
+        enrichedPayload.outsideMinutes = cachedOutsideMinutes
         enrichedPayload.topGoals = cachedTopGoals
 
         guard let defaults = UserDefaults(suiteName: GoosieConstants.appGroupID) else { return }

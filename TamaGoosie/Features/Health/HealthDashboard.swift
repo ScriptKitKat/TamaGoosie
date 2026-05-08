@@ -168,6 +168,7 @@ struct HealthDashboard: View {
                     sleepHours: data.sleepHours,
                     activeCalories: data.activeCalories,
                     standHours: data.standHours,
+                    outsideMinutes: data.outsideMinutes,
                     state: state,
                     dailyLog: log,
                     profile: profile,
@@ -182,6 +183,7 @@ struct HealthDashboard: View {
                     sleepHours: data.sleepHours,
                     activeCalories: data.activeCalories,
                     standHours: data.standHours,
+                    outsideMinutes: data.outsideMinutes,
                     dailyLog: log
                 )
             }

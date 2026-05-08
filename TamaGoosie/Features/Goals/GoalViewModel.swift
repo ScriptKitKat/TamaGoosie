@@ -50,12 +50,14 @@ final class GoalViewModel {
     func seedBuiltinGoalsIfNeeded(in context: ModelContext, isWatchPaired: Bool) {
         // (title, category, frequency, happinessWeight, targetCount, sortOrder)
         let alwaysGoals: [(String, GoalCategory, GoalFrequency, Double, Int, Int)] = [
-            ("Daily walk (10,000 steps)", .health,     .daily, 1.2, 10_000, 0),
+            ("Daily walk goal", .health,     .daily, 1.2, 10_000, 0),
             // Screen time tracking disabled — will re-enable later
             // ("Limit screen time to 2 hrs", .screentime, .daily, 1.0, 120,   1),
         ]
         let watchGoals: [(String, GoalCategory, GoalFrequency, Double, Int, Int)] = [
-            ("8 hours of sleep", .health, .daily, 1.2, 8, 2),
+            ("Sleep goal",    .health,   .daily, 1.2, 8,  2),
+            ("Exercise goal", .exercise, .daily, 1.2, 30, 3),
+            ("Outside goal",  .health,   .daily, 1.0, 30, 4),
         ]
 
         for (title, category, frequency, weight, count, order) in alwaysGoals {
@@ -113,10 +115,16 @@ final class GoalViewModel {
 
     /// Call when fresh HealthKit values arrive. Completes walk/sleep goals if threshold met.
     func autoCompleteHealthKitGoals(goals: [Goal], steps: Int, sleepHours: Double, state: GooseState, log: DailyLog? = nil) {
+        let engine = GooseEngine.shared
         for goal in goals where goal.isHealthKitTracked && !goal.isCompleted {
-            if goal.title.localizedCaseInsensitiveContains("steps"), steps >= goal.targetCount {
+            if (goal.title.localizedCaseInsensitiveContains("steps") || goal.title.localizedCaseInsensitiveContains("walk")), steps >= goal.targetCount {
                 completeGoal(goal, gooseState: state, log: log, goals: goals)
             } else if goal.title.localizedCaseInsensitiveContains("sleep"), sleepHours >= Double(goal.targetCount) {
+                completeGoal(goal, gooseState: state, log: log, goals: goals)
+            } else if goal.title.localizedCaseInsensitiveContains("exercise"), engine.cachedExerciseMinutes >= goal.targetCount {
+                completeGoal(goal, gooseState: state, log: log, goals: goals)
+            } else if (goal.title.localizedCaseInsensitiveContains("outside") || goal.title.localizedCaseInsensitiveContains("daylight")),
+                      engine.cachedOutsideMinutes >= goal.targetCount {
                 completeGoal(goal, gooseState: state, log: log, goals: goals)
             }
         }

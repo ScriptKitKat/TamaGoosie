@@ -1,0 +1,38 @@
+{
+  "name": "apple-kit-skills",
+  "version": "3.1.0",
+  "description": "Apple Kit framework skills for iOS and Swift development.",
+  "author": {
+    "name": "Derek Pearson"
+  },
+  "homepage": "https://github.com/dpearson2699/swift-ios-skills",
+  "repository": "https://github.com/dpearson2699/swift-ios-skills",
+  "license": "MIT",
+  "keywords": [
+    "ios",
+    "swift",
+    "apple",
+    "frameworks",
+    "swiftui"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Apple Kit Skills",
+    "shortDescription": "Apple framework skills for iOS and Swift development",
+    "longDescription": "Use Apple Kit Skills for framework-specific guidance across ActivityKit, App Intents, CloudKit, HealthKit, MapKit, StoreKit, WidgetKit, and related Apple platform APIs.",
+    "developerName": "Derek Pearson",
+    "category": "Coding",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/dpearson2699/swift-ios-skills",
+    "defaultPrompt": [
+      "Use Apple framework guidance for this iOS feature.",
+      "Review this Swift implementation against Apple API patterns.",
+      "Help integrate an Apple Kit framework."
+    ],
+    "brandColor": "#0A84FF",
+    "screenshots": []
+  }
+}

@@ -8,42 +8,51 @@ struct StatBar: View {
     let value: Double // 0...100
     let color: Color
 
+    private let barHeight: CGFloat = 38
+
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(color)
-                .frame(width: 22)
+        GeometryReader { geo in
+            let fillWidth = max(0, geo.size.width * (value / 100))
 
-            Text(label)
-                .font(GoosieTheme.captionFont())
-                .foregroundStyle(GoosieTheme.charcoalOutline)
-                .frame(width: 70, alignment: .leading)
+            ZStack(alignment: .leading) {
+                // Border outline
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(color.opacity(0.45), lineWidth: 2.5)
 
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(color.opacity(0.18))
-
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [color, color.opacity(0.8)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                // Fill bar
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.82)],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
-                        .frame(width: max(0, geo.size.width * (value / 100)))
-                        .shadow(color: color.opacity(0.3), radius: 4, y: 2)
-                }
-            }
-            .frame(height: 12)
+                    )
+                    .frame(width: fillWidth)
+                    .padding(2)
+                    .shadow(color: color.opacity(0.25), radius: 4, y: 2)
 
-            Text("\(Int(value))")
-                .font(GoosieTheme.captionFont(12))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                .frame(width: 28, alignment: .trailing)
+                // Label inside the fill (white text)
+                HStack(spacing: 5) {
+                    Image(systemName: icon)
+                        .font(.system(size: 13, weight: .heavy))
+                    Text(label)
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                }
+                .foregroundStyle(.white)
+                .padding(.leading, 12)
+                // Only show when fill is wide enough
+                .opacity(fillWidth > 80 ? 1 : 0)
+
+                // Percentage on the right
+                Text("\(Int(value))%")
+                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                    .foregroundStyle(color)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, 12)
+            }
         }
+        .frame(height: barHeight)
     }
 }
 
@@ -134,11 +143,11 @@ struct GoalProgressRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(GoosieTheme.hygieneGreen.opacity(0.25), lineWidth: lineWidth)
+                .stroke(GoosieTheme.warmOrange.opacity(0.25), lineWidth: lineWidth)
 
             Circle()
                 .trim(from: 0, to: min(progress, 1.0))
-                .stroke(GoosieTheme.hygieneGreen, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .stroke(GoosieTheme.warmOrange, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
 
             Text("\(completed)/\(total)")

@@ -86,48 +86,47 @@ struct GooseView: View {
     // MARK: - Top Bar
 
     private var topBar: some View {
-        HStack(spacing: 0) {
-            // Hamburger menu
-            Button {
-                onMenuTap?()
-            } label: {
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-                    .frame(width: 34, height: 34)
+        ZStack {
+            // Goals + Streak centered together
+            HStack(spacing: 16) {
+                GoalProgressRing(
+                    progress: viewModel.goalProgress,
+                    completed: viewModel.completedGoalsCount,
+                    total: viewModel.totalGoalsCount
+                )
+
+                StreakFlame(days: viewModel.streakDays)
+                    .frame(minWidth: 40)
             }
 
-            Spacer()
-
-            // Goals progress ring
-            GoalProgressRing(
-                progress: viewModel.goalProgress,
-                completed: viewModel.completedGoalsCount,
-                total: viewModel.totalGoalsCount
-            )
-
-            Spacer()
-
-            // Streak flame
-            StreakFlame(days: viewModel.streakDays)
-                .frame(minWidth: 40)
-
-            Spacer()
-
-            // Goose points
-            HStack(spacing: 4) {
-                Image(systemName: "circle.fill")
-                    .font(.system(size: 10))
-                    .foregroundStyle(GoosieTheme.sunYellow)
-                Text("100")
-                    .font(GoosieTheme.bodyFont(14))
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
+            HStack(spacing: 0) {
+                // Hamburger menu
                 Button {
-                    // Points action placeholder
+                    onMenuTap?()
                 } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                    Image(systemName: "line.3.horizontal")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                        .frame(width: 34, height: 34)
+                }
+
+                Spacer()
+
+                // Goose points
+                HStack(spacing: 4) {
+                    Image(systemName: "circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(GoosieTheme.sunYellow)
+                    Text("100")
+                        .font(GoosieTheme.bodyFont(14))
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
+                    Button {
+                        // Points action placeholder
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                    }
                 }
             }
         }
@@ -152,7 +151,7 @@ struct GooseView: View {
     // MARK: - Stat Bars
 
     private var statBars: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthinessPercent, color: GoosieTheme.healthRed)
             StatBar(label: "Happiness", icon: "face.smiling.fill", value: viewModel.happinessPercent, color: GoosieTheme.happinessYellow)
         }

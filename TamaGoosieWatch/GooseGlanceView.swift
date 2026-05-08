@@ -167,6 +167,9 @@ struct GooseGlanceView: View {
                 healthRow(dot: WatchTheme.sleepPurple, label: "Sleep",
                           value: String(format: "%.1f hr", payload.sleepHours),
                           fraction: payload.sleepHours / 9.0)
+                healthRow(dot: WatchTheme.sunYellow, label: "Outside",
+                          value: "\(payload.outsideMinutes) min",
+                          fraction: Double(payload.outsideMinutes) / 30)
                 healthRow(dot: WatchTheme.teal, label: "Stand",
                           value: "\(payload.standHours) hr",
                           fraction: Double(payload.standHours) / 12)

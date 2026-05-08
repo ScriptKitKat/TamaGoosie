@@ -16,6 +16,7 @@ public struct GooseSyncPayload: Codable, Sendable, Hashable {
     public var sleepHours: Double
     public var standHours: Int
     public var activeCalories: Double
+    public var outsideMinutes: Int
 
     public init(
         healthiness: Double = 0.8,
@@ -29,7 +30,8 @@ public struct GooseSyncPayload: Codable, Sendable, Hashable {
         exerciseMinutes: Int = 0,
         sleepHours: Double = 0.0,
         standHours: Int = 0,
-        activeCalories: Double = 0.0
+        activeCalories: Double = 0.0,
+        outsideMinutes: Int = 0
     ) {
         self.healthiness = healthiness
         self.happiness = happiness
@@ -43,6 +45,7 @@ public struct GooseSyncPayload: Codable, Sendable, Hashable {
         self.sleepHours = sleepHours
         self.standHours = standHours
         self.activeCalories = activeCalories
+        self.outsideMinutes = outsideMinutes
     }
 
     public var moodEnum: GooseMood {

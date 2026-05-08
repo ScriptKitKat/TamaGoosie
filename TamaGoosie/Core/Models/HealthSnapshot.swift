@@ -10,6 +10,7 @@ final class HealthSnapshot {
     var exerciseMinutes: Double
     var sleepHours: Double
     var standHours: Int
+    var outsideMinutes: Double
     var restingHeartRate: Double?
     var workoutCount: Int
     var wasProcessed: Bool
@@ -24,6 +25,7 @@ final class HealthSnapshot {
         exerciseMinutes: Double = 0,
         sleepHours: Double = 0,
         standHours: Int = 0,
+        outsideMinutes: Double = 0,
         restingHeartRate: Double? = nil,
         workoutCount: Int = 0
     ) {
@@ -34,6 +36,7 @@ final class HealthSnapshot {
         self.exerciseMinutes = exerciseMinutes
         self.sleepHours = sleepHours
         self.standHours = standHours
+        self.outsideMinutes = outsideMinutes
         self.restingHeartRate = restingHeartRate
         self.workoutCount = workoutCount
         self.wasProcessed = false

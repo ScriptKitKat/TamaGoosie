@@ -15,6 +15,7 @@ final class HealthKitManager {
         if let activeCalories = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) { types.insert(activeCalories) }
         if let exerciseMinutes = HKQuantityType.quantityType(forIdentifier: .appleExerciseTime) { types.insert(exerciseMinutes) }
         if let restingHR = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) { types.insert(restingHR) }
+        if let daylight = HKQuantityType.quantityType(forIdentifier: .timeInDaylight) { types.insert(daylight) }
         types.insert(HKCategoryType.categoryType(forIdentifier: .appleStandHour)!)
         types.insert(HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)!)
         return types
@@ -57,6 +58,11 @@ final class HealthKitManager {
             snapshot.exerciseMinutes = try await fetchSum(type: exType, predicate: predicate, unit: .minute())
         }
 
+        // Time in daylight (outside minutes — requires Watch)
+        if let daylightType = HKQuantityType.quantityType(forIdentifier: .timeInDaylight) {
+            snapshot.outsideMinutes = try await fetchSum(type: daylightType, predicate: predicate, unit: .minute())
+        }
+
         // Stand hours
         snapshot.standHours = try await fetchStandHours(predicate: predicate)
 
@@ -85,6 +91,9 @@ final class HealthKitManager {
         }
         if let exType = HKQuantityType.quantityType(forIdentifier: .appleExerciseTime) {
             snapshot.exerciseMinutes = try await fetchSum(type: exType, predicate: predicate, unit: .minute())
+        }
+        if let daylightType = HKQuantityType.quantityType(forIdentifier: .timeInDaylight) {
+            snapshot.outsideMinutes = try await fetchSum(type: daylightType, predicate: predicate, unit: .minute())
         }
         snapshot.standHours = try await fetchStandHours(predicate: predicate)
         snapshot.sleepHours = try await fetchSleepHours(relativeTo: date)

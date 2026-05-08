@@ -346,6 +346,7 @@ struct ContentView: View {
                 sleepHours: snapshot.sleepHours,
                 activeCalories: snapshot.activeCalories,
                 standHours: snapshot.standHours,
+                outsideMinutes: snapshot.outsideMinutes,
                 state: state,
                 dailyLog: log,
                 profile: profiles.first,
@@ -359,6 +360,7 @@ struct ContentView: View {
                 sleepHours: snapshot.sleepHours,
                 activeCalories: snapshot.activeCalories,
                 standHours: snapshot.standHours,
+                outsideMinutes: snapshot.outsideMinutes,
                 dailyLog: log
             )
         }
