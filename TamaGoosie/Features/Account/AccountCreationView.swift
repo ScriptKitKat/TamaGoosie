@@ -62,11 +62,11 @@ struct AccountCreationView: View {
                                     .foregroundStyle(GoosieTheme.coralAccent)
                             } else if viewModel.isAvailable {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(GoosieTheme.mintBackground)
+                                    .foregroundStyle(GoosieTheme.hygieneGreen)
                                     .font(.system(size: 12))
                                 Text("Available!")
                                     .font(GoosieTheme.captionFont(12))
-                                    .foregroundStyle(GoosieTheme.mintBackground)
+                                    .foregroundStyle(GoosieTheme.hygieneGreen)
                             }
                         }
                     }
