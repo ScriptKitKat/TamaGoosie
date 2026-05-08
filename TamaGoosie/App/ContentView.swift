@@ -108,8 +108,9 @@ struct ContentView: View {
         [
             MenuItem(id: 0, title: "Goose", assetImage: "goose_icon"),
             MenuItem(id: 1, title: "Goals", systemImage: "checklist"),
-            MenuItem(id: 2, title: "Friends", systemImage: "person.2.fill"),
-            MenuItem(id: 3, title: "Settings", systemImage: "gearshape.fill"),
+            MenuItem(id: 2, title: "Chat", systemImage: "bubble.left.fill"),
+            MenuItem(id: 3, title: "Friends", systemImage: "person.2.fill"),
+            MenuItem(id: 4, title: "Settings", systemImage: "gearshape.fill"),
         ]
     }
 
@@ -184,8 +185,9 @@ struct ContentView: View {
     private var currentPageTitle: String {
         switch selectedTab {
         case 1: return "Goals"
-        case 2: return "Friends"
-        case 3: return "Settings"
+        case 2: return "Chat"
+        case 3: return "Friends"
+        case 4: return "Settings"
         default: return ""
         }
     }
@@ -231,8 +233,9 @@ struct ContentView: View {
         switch selectedTab {
         case 0: GooseView()
         case 1: GoalListView()
-        case 2: FriendsView()
-        case 3: SettingsView()
+        case 2: ChatView()
+        case 3: FriendsView()
+        case 4: SettingsView()
         default: GooseView()
         }
     }

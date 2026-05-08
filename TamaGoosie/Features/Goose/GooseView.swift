@@ -9,8 +9,6 @@ struct GooseView: View {
     @Query(sort: \DailyLog.date, order: .reverse) private var allDailyLogs: [DailyLog]
 
     @State private var viewModel = GooseViewModel()
-    @State private var chatService = GooseChatService()
-    @State private var goalViewModel = GoalViewModel()
 
     private var gooseState: GooseState {
         gooseStates.first ?? GooseState()
@@ -44,27 +42,14 @@ struct GooseView: View {
                 moodLabel
                 statBars
                     .padding(.horizontal, GoosieTheme.padding)
-
-                GooseChatPanel(service: chatService) { draft in
-                    goalViewModel.pendingDraft = draft
-                    goalViewModel.editingGoal = nil
-                    goalViewModel.showEditor = true
-                }
-                .frame(height: 248)
-                .padding(.horizontal, GoosieTheme.padding)
-                .padding(.bottom, 8)
+                    .padding(.bottom, 8)
             }
-        }
-        .sheet(isPresented: $goalViewModel.showEditor) {
-            GoalEditorView(existingGoal: goalViewModel.editingGoal, prefill: goalViewModel.pendingDraft)
         }
         .onAppear {
             ensureGooseExists()
             snapshotYesterdayIfNeeded()
             let log = ensureTodayLogExists()
             viewModel.onAppear(state: gooseState, log: log, profile: profile, goals: activeGoals)
-            chatService.refreshAvailability()
-            syncChatService()
         }
         .onDisappear {
             viewModel.onDisappear()
@@ -72,7 +57,6 @@ struct GooseView: View {
         .onChange(of: gooseStates) { _, newStates in
             if let state = newStates.first {
                 viewModel.updateState(state)
-                syncChatService()
             }
         }
         .onChange(of: allDailyLogs) { _, _ in
@@ -80,7 +64,6 @@ struct GooseView: View {
         }
         .onChange(of: allGoals) { _, _ in
             viewModel.updateContext(log: todayLog, profile: profile, goals: activeGoals)
-            syncChatService()
         }
     }
 
@@ -126,16 +109,6 @@ struct GooseView: View {
     }
 
     // MARK: - Helpers
-
-    private func syncChatService() {
-        chatService.configure(
-            name: viewModel.gooseName,
-            health: Int(viewModel.healthinessPercent),
-            happiness: Int(viewModel.happinessPercent),
-            streak: viewModel.streakDays,
-            goals: activeGoals
-        )
-    }
 
     private func ensureGooseExists() {
         if gooseStates.isEmpty {
