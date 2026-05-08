@@ -29,6 +29,7 @@
 		40972CFF22F4411A11F5D7B1 /* OnboardingReturnWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E747FB746BFBA87BF9DF882 /* OnboardingReturnWelcomeView.swift */; };
 		43E6356D4997A1B62A274444 /* GooseChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD33BE0166FD9A8236216974 /* GooseChatService.swift */; };
 		45A0AB0B4C6AD741A245043E /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9F686670F7CA74D19AB1BD /* WatchApp.swift */; };
+		461E317A6611D8B4CF430099 /* InitialGoalPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02DE509E35AEACBA41B53EB /* InitialGoalPickerSheet.swift */; };
 		4641DE71A6A7AAD75B9019C2 /* TamaGoosieWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		48444724C3D21789368ECF65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A088FE71FAEE764B51B4E397 /* UserProfile.swift */; };
@@ -73,7 +74,6 @@
 		A4BFA7900EE7B0AEAA12E357 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */; };
 		A6597EDA797C71161C9E7053 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
 		A76416F6B06ECCFAA06F0439 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
-		A9716F03CD5E2418FDD90778 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A2E274D0CC79E9693624851 /* OnboardingView.swift */; };
 		AA92ACAC594E76062C7C5C71 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2CBC4425DDF588BD10E856 /* NotificationScheduler.swift */; };
 		ABF9CF827C3739BE790208A4 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		B0544B8CEC98A4FB74057644 /* OnboardingNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */; };
@@ -219,7 +219,6 @@
 		94FB212D9417DF655E2DFA09 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
 		952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
 		96D8FFA4499285869D1C942D /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
-		9A2E274D0CC79E9693624851 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9B880E96B410E34DD097D19C /* GooseGlanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseGlanceView.swift; sourceTree = "<group>"; };
 		9EDDD2DC5109B05AB1A3A6BE /* Goal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal.swift; sourceTree = "<group>"; };
 		A088FE71FAEE764B51B4E397 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
@@ -228,6 +227,7 @@
 		A53A26A541860CFC61C287DD /* AccountCreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCreationViewModel.swift; sourceTree = "<group>"; };
 		ABF97FF359441B0799D8CB3D /* GoosieTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoosieTheme.swift; sourceTree = "<group>"; };
 		AE9FF2C893266ED149C99A6F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B02DE509E35AEACBA41B53EB /* InitialGoalPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialGoalPickerSheet.swift; sourceTree = "<group>"; };
 		B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivityManager.swift; sourceTree = "<group>"; };
 		B922DD91F0DE3DB923769BD1 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
@@ -280,6 +280,7 @@
 				7E44C8076495B92B17387492 /* GoalEditorView.swift */,
 				6BCA0686348168B60F7AB827 /* GoalListView.swift */,
 				347903A27040413E68451AD9 /* GoalViewModel.swift */,
+				B02DE509E35AEACBA41B53EB /* InitialGoalPickerSheet.swift */,
 			);
 			path = Goals;
 			sourceTree = "<group>";
@@ -347,7 +348,6 @@
 				616EF88AFFEC4F12F716F987 /* OnboardingState.swift */,
 				7E0C3B783E1A0DEB45F3A005 /* OnboardingTutorialView.swift */,
 				059C65D5074E896A7DE5CD4E /* OnboardingUsernameView.swift */,
-				9A2E274D0CC79E9693624851 /* OnboardingView.swift */,
 				CB696A4E3DA4C74DEDB95EBC /* OnboardingWelcomeView.swift */,
 			);
 			path = Onboarding;
@@ -802,6 +802,7 @@
 				DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */,
 				E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */,
 				68E1ADD5A49B6F106B8692B0 /* HealthSnapshot.swift in Sources */,
+				461E317A6611D8B4CF430099 /* InitialGoalPickerSheet.swift in Sources */,
 				09B1533E68A74A85D1DBCF75 /* KeychainService.swift in Sources */,
 				8686CC50662892F36DFC53F7 /* NegotiationView.swift in Sources */,
 				6C420832D884DEB8E7135990 /* NotificationManager.swift in Sources */,
@@ -818,7 +819,6 @@
 				8AFF2413D1D0DAA538DCEA4B /* OnboardingState.swift in Sources */,
 				6640EAD69F900ECAEE727B41 /* OnboardingTutorialView.swift in Sources */,
 				8C53B0EA1FA080395F5865B4 /* OnboardingUsernameView.swift in Sources */,
-				A9716F03CD5E2418FDD90778 /* OnboardingView.swift in Sources */,
 				301077A680DDD645E5EAF4E3 /* OnboardingWelcomeView.swift in Sources */,
 				0BF180C0CF793DA035E31032 /* RewardEngine.swift in Sources */,
 				65219561A649089002577B30 /* ScreenTimeManager.swift in Sources */,
