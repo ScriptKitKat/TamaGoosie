@@ -27,6 +27,7 @@ struct GoalListView: View {
         allDailyLogs.first { Calendar.current.isDateInToday($0.date) }
     }
 
+    @State private var showInitialGoalPicker = false
     @State private var confettiBursts: [ConfettiBurst] = []
 
     @State private var viewModel = GoalViewModel()
@@ -140,6 +141,12 @@ struct GoalListView: View {
             viewModel.resetDailyGoals(goals)
             ensureTodayLogExists()
             GooseEngine.shared.refreshGoals(goals)
+            if profiles.first?.hasPickedInitialGoals == false {
+                showInitialGoalPicker = true
+            }
+        }
+        .sheet(isPresented: $showInitialGoalPicker) {
+            InitialGoalPickerSheet()
         }
         .onChange(of: goals) { _, newGoals in
             GooseEngine.shared.refreshGoals(newGoals)
