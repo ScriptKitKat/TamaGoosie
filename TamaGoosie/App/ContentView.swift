@@ -175,9 +175,9 @@ struct ContentView: View {
 
     private static let subpageHeaderColor = Color(
         UIColor(
-            red: 0.72 * 0.92 + 0.08 * 0,
-            green: 0.91 * 0.92 + 0.08 * 0,
-            blue: 0.82 * 0.92 + 0.08 * 0,
+            red: 1.0 * 0.96 + 0.04 * 0.91,
+            green: 0.96 * 0.96 + 0.04 * 0.59,
+            blue: 0.90 * 0.96 + 0.04 * 0.23,
             alpha: 1
         )
     )
