@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var showMenu = false
     /// Tracks whether we've applied one-time health rewards this session
     @State private var healthProcessedThisSession = false
+    @State private var onboardingEntryPath: OnboardingEntryPath = .freshInstall
 
     private var hasCompletedOnboarding: Bool {
         profiles.first?.hasCompletedOnboarding == true
@@ -25,6 +26,11 @@ struct ContentView: View {
             .onAppear {
                 if !hasCompletedOnboarding {
                     showOnboarding = true
+                    onboardingEntryPath = .freshInstall
+                } else if !AuthService.shared.isSignedIn {
+                    // Path C: completed onboarding before but logged out
+                    showOnboarding = true
+                    onboardingEntryPath = .loggedOutReturn
                 } else {
                     HealthKitManager.shared.enableBackgroundDelivery()
                 }
@@ -46,6 +52,7 @@ struct ContentView: View {
             }
             .onChange(of: hasCompletedOnboarding) { _, completed in
                 if !completed {
+                    onboardingEntryPath = .freshInstall
                     showOnboarding = true
                 }
             }
@@ -69,7 +76,7 @@ struct ContentView: View {
                 NegotiationView(negotiation: negotiation)
             }
             .fullScreenCover(isPresented: $showOnboarding) {
-                OnboardingContainerView(entryPath: .freshInstall) { showOnboarding = false }
+                OnboardingContainerView(entryPath: onboardingEntryPath) { showOnboarding = false }
             }
     }
 
