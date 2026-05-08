@@ -108,20 +108,45 @@ struct GoosieCard<Content: View>: View {
     }
 }
 
+// MARK: - Goal Progress Ring
+
+struct GoalProgressRing: View {
+    let progress: Double // 0.0–1.0
+    let completed: Int
+    let total: Int
+    var size: CGFloat = 32
+    var lineWidth: CGFloat = 4
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(GoosieTheme.hygieneGreen.opacity(0.25), lineWidth: lineWidth)
+
+            Circle()
+                .trim(from: 0, to: min(progress, 1.0))
+                .stroke(GoosieTheme.hygieneGreen, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+
+            Text("\(completed)/\(total)")
+                .font(.system(size: size * 0.28, weight: .bold, design: .rounded))
+                .foregroundStyle(GoosieTheme.charcoalOutline)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
 // MARK: - Streak Flame
 
 struct StreakFlame: View {
     let days: Int
 
     var body: some View {
-        if days > 0 {
-            HStack(spacing: 3) {
-                Image(systemName: "flame.fill")
-                    .foregroundStyle(GoosieTheme.warmOrange)
-                Text("\(days)")
-                    .font(GoosieTheme.bodyFont(14))
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
-            }
+        HStack(spacing: 3) {
+            Image(systemName: "flame.fill")
+                .foregroundStyle(days > 0 ? GoosieTheme.warmOrange : GoosieTheme.charcoalOutline.opacity(0.25))
+            Text("\(days)")
+                .font(GoosieTheme.bodyFont(14))
+                .foregroundStyle(days > 0 ? GoosieTheme.charcoalOutline : GoosieTheme.charcoalOutline.opacity(0.4))
         }
     }
 }

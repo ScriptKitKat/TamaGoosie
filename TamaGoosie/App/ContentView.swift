@@ -120,30 +120,11 @@ struct ContentView: View {
         ZStack(alignment: .leading) {
             // Current page content with top bar overlay
             VStack(spacing: 0) {
-                if selectedTab == 0 {
-                    // Goose page: hamburger in top-left
-                    currentPageView
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .overlay(alignment: .topLeading) {
-                            Button {
-                                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                    showMenu.toggle()
-                                }
-                            } label: {
-                                Image(systemName: "line.3.horizontal")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-                                    .frame(width: 28, height: 34)
-                            }
-                            .padding(.leading, GoosieTheme.padding)
-                            .padding(.top, 10)
-                        }
-                } else {
-                    // Other pages: X button + centered title bar
+                if selectedTab != 0 {
                     subpageHeader
-                    currentPageView
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                currentPageView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .offset(x: showMenu ? 260 : 0)
             .disabled(showMenu)
@@ -231,7 +212,11 @@ struct ContentView: View {
     @ViewBuilder
     private var currentPageView: some View {
         switch selectedTab {
-        case 0: GooseView()
+        case 0: GooseView(onMenuTap: {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                showMenu.toggle()
+            }
+        })
         case 1: GoalListView()
         case 2: ChatView()
         case 3: FriendsView()

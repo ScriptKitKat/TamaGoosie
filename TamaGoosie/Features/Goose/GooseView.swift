@@ -10,6 +10,8 @@ struct GooseView: View {
 
     @State private var viewModel = GooseViewModel()
 
+    var onMenuTap: (() -> Void)?
+
     private var gooseState: GooseState {
         gooseStates.first ?? GooseState()
     }
@@ -27,22 +29,36 @@ struct GooseView: View {
             GoosieTheme.mintBackground
                 .ignoresSafeArea()
 
-            VStack(spacing: 12) {
-                header
+            VStack(spacing: 0) {
+                topBar
                     .padding(.horizontal, GoosieTheme.padding)
+                    .padding(.top, 8)
 
-                GooseCharacterView(
-                    mood: viewModel.mood,
-                    showReaction: viewModel.currentReaction,
-                    healthiness: viewModel.healthinessPercent,
-                    happiness: viewModel.happinessPercent
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Spacer()
 
-                moodLabel
+                // Goose content group — mood, character, name
+                VStack(spacing: 0) {
+                    moodLabel
+                        .padding(.bottom, 12)
+
+                    GooseCharacterView(
+                        mood: viewModel.mood,
+                        showReaction: viewModel.currentReaction,
+                        healthiness: viewModel.healthinessPercent,
+                        happiness: viewModel.happinessPercent
+                    )
+                    .frame(maxWidth: 240, maxHeight: 240)
+                    .frame(maxWidth: .infinity)
+
+                    gooseNameLabel
+                        .padding(.top, 12)
+                }
+
+                Spacer()
+
                 statBars
                     .padding(.horizontal, GoosieTheme.padding)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 28)
             }
         }
         .onAppear {
@@ -67,44 +83,78 @@ struct GooseView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Top Bar
 
-    private var header: some View {
-        HStack {
-            Text(viewModel.gooseName)
-                .font(GoosieTheme.titleFont(28))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
-                .padding(.leading, 36)
+    private var topBar: some View {
+        HStack(spacing: 0) {
+            // Hamburger menu
+            Button {
+                onMenuTap?()
+            } label: {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
+                    .frame(width: 34, height: 34)
+            }
 
             Spacer()
 
+            // Goals progress ring
+            GoalProgressRing(
+                progress: viewModel.goalProgress,
+                completed: viewModel.completedGoalsCount,
+                total: viewModel.totalGoalsCount
+            )
+
+            Spacer()
+
+            // Streak flame
             StreakFlame(days: viewModel.streakDays)
+                .frame(minWidth: 40)
+
+            Spacer()
+
+            // Goose points
+            HStack(spacing: 4) {
+                Image(systemName: "circle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(GoosieTheme.sunYellow)
+                Text("100")
+                    .font(GoosieTheme.bodyFont(14))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                Button {
+                    // Points action placeholder
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                }
+            }
         }
-        .padding(.top, 8)
     }
 
     // MARK: - Mood Label
 
     private var moodLabel: some View {
         Text(viewModel.moodText)
-            .font(GoosieTheme.bodyFont(18))
-            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .background(
-                Capsule()
-                    .fill(GoosieTheme.creamWhite)
-            )
+            .font(GoosieTheme.titleFont(26))
+            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.8))
+    }
+
+    // MARK: - Goose Name
+
+    private var gooseNameLabel: some View {
+        Text(viewModel.gooseName)
+            .font(GoosieTheme.titleFont(22))
+            .foregroundStyle(GoosieTheme.charcoalOutline)
     }
 
     // MARK: - Stat Bars
 
     private var statBars: some View {
-        GoosieCard {
-            VStack(spacing: 12) {
-                StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthinessPercent, color: GoosieTheme.healthRed)
-                StatBar(label: "Happy", icon: "face.smiling.fill", value: viewModel.happinessPercent, color: GoosieTheme.happinessYellow)
-            }
+        VStack(spacing: 12) {
+            StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthinessPercent, color: GoosieTheme.healthRed)
+            StatBar(label: "Happiness", icon: "face.smiling.fill", value: viewModel.happinessPercent, color: GoosieTheme.happinessYellow)
         }
     }
 

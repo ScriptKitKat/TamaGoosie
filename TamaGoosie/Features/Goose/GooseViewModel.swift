@@ -41,6 +41,22 @@ final class GooseViewModel {
         gooseState?.streakDays ?? 0
     }
 
+    /// Goal completion progress 0.0–1.0
+    var goalProgress: Double {
+        let active = currentGoals.filter { $0.isActive }
+        guard !active.isEmpty else { return 0 }
+        let completed = active.filter { $0.isCompleted }.count
+        return Double(completed) / Double(active.count)
+    }
+
+    var completedGoalsCount: Int {
+        currentGoals.filter { $0.isActive && $0.isCompleted }.count
+    }
+
+    var totalGoalsCount: Int {
+        currentGoals.filter { $0.isActive }.count
+    }
+
     // MARK: - Lifecycle
 
     func updateState(_ state: GooseState) {
