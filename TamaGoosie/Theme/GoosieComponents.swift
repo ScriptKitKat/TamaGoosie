@@ -11,9 +11,9 @@ struct StatBar: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(color)
-                .frame(width: 20)
+                .frame(width: 22)
 
             Text(label)
                 .font(GoosieTheme.captionFont())
@@ -23,14 +23,21 @@ struct StatBar: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(color.opacity(0.2))
+                        .fill(color.opacity(0.18))
 
                     Capsule()
-                        .fill(color)
+                        .fill(
+                            LinearGradient(
+                                colors: [color, color.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .frame(width: max(0, geo.size.width * (value / 100)))
+                        .shadow(color: color.opacity(0.3), radius: 4, y: 2)
                 }
             }
-            .frame(height: 10)
+            .frame(height: 12)
 
             Text("\(Int(value))")
                 .font(GoosieTheme.captionFont(12))
@@ -57,10 +64,10 @@ struct PillButton: View {
                     .font(GoosieTheme.bodyFont(14))
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
             .background(color, in: Capsule())
-            .shadow(color: color.opacity(0.3), radius: 8, y: 4)
+            .shadow(color: color.opacity(0.35), radius: 10, y: 5)
         }
     }
 }
@@ -79,9 +86,9 @@ struct CircleActionButton: View {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 52, height: 52)
+                    .frame(width: 56, height: 56)
                     .background(color, in: Circle())
-                    .shadow(color: color.opacity(0.3), radius: 6, y: 3)
+                    .shadow(color: color.opacity(0.35), radius: 8, y: 4)
 
                 Text(label)
                     .font(GoosieTheme.captionFont(11))
@@ -103,8 +110,15 @@ struct GoosieCard<Content: View>: View {
     var body: some View {
         content()
             .padding(GoosieTheme.cardPadding)
-            .background(GoosieTheme.creamWhite, in: RoundedRectangle(cornerRadius: GoosieTheme.smallCornerRadius))
-            .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+            .background(
+                RoundedRectangle(cornerRadius: GoosieTheme.smallCornerRadius)
+                    .fill(GoosieTheme.creamWhite)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: GoosieTheme.smallCornerRadius)
+                            .strokeBorder(GoosieTheme.charcoalOutline.opacity(0.06), lineWidth: 1)
+                    )
+                    .shadow(color: GoosieTheme.warmOrange.opacity(0.08), radius: 12, y: 5)
+            )
     }
 }
 
