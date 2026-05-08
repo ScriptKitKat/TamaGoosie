@@ -5,6 +5,7 @@ import GoogleSignIn
 struct OnboardingSignInView: View {
     let obState: OnboardingState
     let onAdvance: () -> Void
+    let onChooseEmail: () -> Void
 
     @State private var showError = false
     @State private var errorMessage = ""
@@ -19,7 +20,7 @@ struct OnboardingSignInView: View {
 
                 // Duck + speech bubble
                 VStack(spacing: 0) {
-                    OBSpeechBubble(text: "Let's get you set up!")
+                    OBSpeechBubble(text: "Let's save your progress!")
                         .padding(.horizontal, 36)
 
                     Spacer().frame(height: 8)
@@ -30,16 +31,10 @@ struct OnboardingSignInView: View {
 
                 Spacer().frame(height: 28)
 
-                Text("Sign in to TamaGoosie")
+                Text("Create an account to\ntrack your goose")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(OBTheme.text)
-
-                Text("Link your account to save progress and add friends")
-                    .font(.system(size: 14, weight: .regular, design: .rounded))
-                    .foregroundStyle(OBTheme.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                    .padding(.top, 8)
 
                 Spacer()
 
@@ -84,7 +79,31 @@ struct OnboardingSignInView: View {
                                 Image("google-logo")
                                     .resizable()
                                     .frame(width: 20, height: 20)
-                                Text("Sign in with Google")
+                                Text("Continue with Google")
+                                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(
+                                RoundedRectangle(cornerRadius: 28)
+                                    .fill(OBTheme.card)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 28)
+                                            .stroke(OBTheme.border, lineWidth: 1.5)
+                                    )
+                            )
+                            .foregroundStyle(OBTheme.text)
+                        }
+
+                        // Email
+                        Button {
+                            onChooseEmail()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "envelope.fill")
+                                    .resizable()
+                                    .frame(width: 20, height: 16)
+                                Text("Continue with Email")
                                     .font(.system(size: 16, weight: .medium, design: .rounded))
                             }
                             .frame(maxWidth: .infinity)

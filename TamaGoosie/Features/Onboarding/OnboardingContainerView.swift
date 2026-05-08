@@ -59,7 +59,7 @@ struct OnboardingContainerView: View {
 
             ZStack {
                 if step == 0 {
-                    OnboardingSignInView(obState: obState, onAdvance: { advance() })
+                    OnboardingSignInView(obState: obState, onAdvance: { advance() }, onChooseEmail: { advance() })
                         .transition(forwardTransition)
                 }
                 if step == 1 {
