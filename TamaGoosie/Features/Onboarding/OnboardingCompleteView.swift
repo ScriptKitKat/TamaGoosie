@@ -38,6 +38,12 @@ struct OnboardingCompleteView: View {
                                 createEntities()
                             }
                         }
+                        // Path C returning: auto-dismiss after brief animation
+                        if obState.entryPath == .loggedOutReturn {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                onComplete()
+                            }
+                        }
                     }
 
                 Spacer().frame(height: 28)
