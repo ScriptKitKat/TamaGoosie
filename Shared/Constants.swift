@@ -58,6 +58,14 @@ public enum GoosieConstants {
     public static let screenTimeLastPenaltyMinutesKey = "lastPenaltyApproxMinutes"
     public static let screenTimeDefaultLimitMinutes: Int = 30
     public static let screenTimeThresholds: [Int] = [15, 30, 45, 60]
+    public static let screenTimeSetupCompleteKey = "screenTimeSetupComplete"
+    public static let screenTimePausedKey = "screenTimePaused"
+    public static let screenTimeIsAllDayKey = "screenTimeIsAllDay"
+    public static let screenTimeStartHourKey = "screenTimeStartHour"
+    public static let screenTimeStartMinuteKey = "screenTimeStartMinute"
+    public static let screenTimeEndHourKey = "screenTimeEndHour"
+    public static let screenTimeEndMinuteKey = "screenTimeEndMinute"
+    public static let screenTimeActiveDaysKey = "screenTimeActiveDays"
 
     // MARK: - Live Activity
     public static let liveActivityMaxHours: Double = 8
