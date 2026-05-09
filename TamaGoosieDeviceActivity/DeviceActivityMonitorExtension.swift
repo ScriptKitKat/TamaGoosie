@@ -44,13 +44,24 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         store.shield.applicationCategories = .specific(selection.categoryTokens)
     }
 
+    // MARK: - Goose Name
+
+    private var gooseName: String {
+        guard let data = defaults.data(forKey: "gooseStats"),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let name = json["name"] as? String else {
+            return "Your goose"
+        }
+        return name
+    }
+
     // MARK: - Notifications
 
     private func sendNotification(approxMinutes: Int) {
         let content = UNMutableNotificationContent()
-        content.title = "Harold is worried"
+        content.title = "\(gooseName) is worried"
         content.body = approxMinutes >= 60
-            ? "You've been on distracting apps for over an hour... I'm getting sad"
+            ? "You've been on distracting apps for over an hour... \(gooseName) is getting sad"
             : "You've hit \(approxMinutes) minutes on distracting apps today"
         content.sound = .default
 
