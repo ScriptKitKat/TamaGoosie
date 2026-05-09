@@ -36,16 +36,15 @@ targets:
       - target: TamaGoosieWidgets
       - target: TamaGoosieWatch
         embed: true
-      # Screen Time disabled — uncomment when re-enabling
-      # - target: TamaGoosieDeviceActivity
-      #   embed: true
-      # - target: TamaGoosieShield
-      #   embed: true
-      # - target: TamaGoosieReport
-      #   embed: true
-      # - sdk: FamilyControls.framework
-      # - sdk: DeviceActivity.framework
-      # - sdk: ManagedSettings.framework
+      - target: TamaGoosieDeviceActivity
+        embed: true
+      - target: TamaGoosieShield
+        embed: true
+      - target: TamaGoosieReport
+        embed: true
+      - sdk: FamilyControls.framework
+      - sdk: DeviceActivity.framework
+      - sdk: ManagedSettings.framework
       - sdk: FoundationModels.framework
     settings:
       base:
@@ -60,7 +59,7 @@ targets:
         com.apple.developer.healthkit: true
         com.apple.developer.applesignin:
           - Default
-        # com.apple.developer.family-controls: true  # Screen Time disabled
+        com.apple.developer.family-controls: true
 
   TamaGoosieWatch:
     type: application
@@ -96,66 +95,63 @@ targets:
         com.apple.security.application-groups:
           - group.com.tamagoosie
 
-  # Screen Time extension disabled — uncomment when re-enabling
-  # TamaGoosieDeviceActivity:
-  #   type: app-extension
-  #   platform: iOS
-  #   sources:
-  #     - TamaGoosieDeviceActivity
-  #   dependencies:
-  #     - sdk: DeviceActivity.framework
-  #     - sdk: ManagedSettings.framework
-  #     - sdk: UserNotifications.framework
-  #   settings:
-  #     base:
-  #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.deviceactivity
-  #       INFOPLIST_FILE: TamaGoosieDeviceActivity/Info.plist
-  #   entitlements:
-  #     path: TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements
-  #     properties:
-  #       com.apple.security.application-groups:
-  #         - group.com.tamagoosie
-  #       com.apple.developer.family-controls: true
+  TamaGoosieDeviceActivity:
+    type: app-extension
+    platform: iOS
+    sources:
+      - TamaGoosieDeviceActivity
+    dependencies:
+      - sdk: DeviceActivity.framework
+      - sdk: ManagedSettings.framework
+      - sdk: UserNotifications.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.deviceactivity
+        INFOPLIST_FILE: TamaGoosieDeviceActivity/Info.plist
+    entitlements:
+      path: TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+        com.apple.developer.family-controls: true
 
-  # TamaGoosieShield — disabled (requires Family Controls capability)
-  # TamaGoosieShield:
-  #   type: app-extension
-  #   platform: iOS
-  #   sources:
-  #     - Extensions/Shield
-  #   dependencies:
-  #     - sdk: ManagedSettings.framework
-  #     - sdk: ManagedSettingsUI.framework
-  #     - sdk: FamilyControls.framework
-  #   settings:
-  #     base:
-  #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.shield
-  #       INFOPLIST_FILE: Extensions/Shield/Info.plist
-  #   entitlements:
-  #     path: Extensions/Shield/TamaGoosieShield.entitlements
-  #     properties:
-  #       com.apple.security.application-groups:
-  #         - group.com.tamagoosie
-  #       com.apple.developer.family-controls: true
+  TamaGoosieShield:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Extensions/Shield
+    dependencies:
+      - sdk: ManagedSettings.framework
+      - sdk: ManagedSettingsUI.framework
+      - sdk: FamilyControls.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.shield
+        INFOPLIST_FILE: Extensions/Shield/Info.plist
+    entitlements:
+      path: Extensions/Shield/TamaGoosieShield.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+        com.apple.developer.family-controls: true
 
-  # TamaGoosieReport — disabled (requires Family Controls capability)
-  # TamaGoosieReport:
-  #   type: app-extension
-  #   platform: iOS
-  #   sources:
-  #     - Extensions/Report
-  #   dependencies:
-  #     - sdk: DeviceActivity.framework
-  #   settings:
-  #     base:
-  #       PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.report
-  #       INFOPLIST_FILE: Extensions/Report/Info.plist
-  #   entitlements:
-  #     path: Extensions/Report/TamaGoosieReport.entitlements
-  #     properties:
-  #       com.apple.security.application-groups:
-  #         - group.com.tamagoosie
-  #       com.apple.developer.family-controls: true
+  TamaGoosieReport:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Extensions/Report
+    dependencies:
+      - sdk: DeviceActivity.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.report
+        INFOPLIST_FILE: Extensions/Report/Info.plist
+    entitlements:
+      path: Extensions/Report/TamaGoosieReport.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+        com.apple.developer.family-controls: true
 
   TamaGoosieTests:
     type: bundle.unit-test
@@ -175,9 +171,9 @@ schemes:
       targets:
         TamaGoosie: all
         TamaGoosieWidgets: all
-        # TamaGoosieDeviceActivity: all  # Screen Time disabled
-        # TamaGoosieShield: all  # Family Controls disabled
-        # TamaGoosieReport: all  # Family Controls disabled
+        TamaGoosieDeviceActivity: all
+        TamaGoosieShield: all
+        TamaGoosieReport: all
         TamaGoosieTests: testing
     run:
       config: Debug
