@@ -121,7 +121,8 @@ struct ContentView: View {
             MenuItem(id: 2, title: "Chat", systemImage: "bubble.left.fill"),
             MenuItem(id: 3, title: "Friends", systemImage: "person.2.fill"),
             MenuItem(id: 4, title: "Stats", systemImage: "chart.line.uptrend.xyaxis"),
-            MenuItem(id: 5, title: "Settings", systemImage: "gearshape.fill"),
+            MenuItem(id: 5, title: "Screen Time", systemImage: "hourglass"),
+            MenuItem(id: 6, title: "Settings", systemImage: "gearshape.fill"),
         ]
     }
 
@@ -180,7 +181,8 @@ struct ContentView: View {
         case 2: return "Chat"
         case 3: return "Friends"
         case 4: return "Stats"
-        case 5: return "Settings"
+        case 5: return "Screen Time"
+        case 6: return "Settings"
         default: return ""
         }
     }
@@ -233,7 +235,8 @@ struct ContentView: View {
         case 2: ChatView()
         case 3: FriendsView()
         case 4: StatsView()
-        case 5: SettingsView()
+        case 5: ScreenTimePageView()
+        case 6: SettingsView()
         default: GooseView()
         }
     }
@@ -379,6 +382,13 @@ struct ContentView: View {
         }
 
         GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
+
+        // Sync distraction minutes from Screen Time extension
+        let stDefaults = UserDefaults(suiteName: GoosieConstants.appGroupID)
+        let approxDistraction = stDefaults?.integer(forKey: GoosieConstants.screenTimeApproxMinutesKey) ?? 0
+        if approxDistraction > log.distractionMinutes {
+            log.distractionMinutes = approxDistraction
+        }
 
         if let createdAt = gooseStates.first?.createdAt {
             Task {
