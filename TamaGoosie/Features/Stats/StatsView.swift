@@ -8,8 +8,14 @@ struct StatsView: View {
 
     private var profile: UserProfile? { profiles.first }
 
+    private var gooseName: String { gooseStates.first?.name ?? "Harold" }
+
     private var provider: DailyLogHistoryProvider {
         DailyLogHistoryProvider(modelContext: modelContext)
+    }
+
+    private var hasEnoughData: Bool {
+        provider.fetchPoints(range: .week).count >= 2
     }
 
     private var bestDayLog: DailyLog? {
@@ -29,21 +35,43 @@ struct StatsView: View {
         ZStack {
             GoosieTheme.mintBackground.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 16) {
-                    DuckHistoryCard()
+            if hasEnoughData {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        DuckHistoryCard()
 
-                    if let log = bestDayLog {
-                        bestDayCard(log: log)
-                    }
+                        if let log = bestDayLog {
+                            bestDayCard(log: log)
+                        }
 
-                    if let profile {
-                        baselinesCard(profile: profile)
+                        if let profile {
+                            baselinesCard(profile: profile)
+                        }
                     }
+                    .padding(GoosieTheme.padding)
                 }
-                .padding(GoosieTheme.padding)
+            } else {
+                emptyStateView
             }
         }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.system(size: 48))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.2))
+            Text("\(gooseName) needs a few more days to show you trends")
+                .font(GoosieTheme.bodyFont())
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Best Day Highlight
@@ -64,12 +92,6 @@ struct StatsView: View {
                             .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
                     }
                     Spacer()
-                    let mood = GooseMood.deriveMood(
-                        healthiness: log.endOfDayHealthiness,
-                        happiness: log.endOfDayHappiness
-                    )
-                    Text(mood.emoji)
-                        .font(.system(size: 28))
                 }
 
                 Divider()

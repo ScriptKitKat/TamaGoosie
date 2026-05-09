@@ -165,6 +165,11 @@ final class ConvexManager {
                 "userId": user.id,
             ])
 
+            // Fetch daily logs
+            let dailyLogs: [ConvexDailyLog] = try await queryOnce("dailyLogs:getDailyLogs", with: [
+                "userId": user.id,
+            ])
+
             // Persist identity to Keychain
             KeychainService.write(.userId, value: user.id)
             KeychainService.write(.username, value: user.username)
@@ -183,7 +188,8 @@ final class ConvexManager {
                 mood: goose?.mood ?? "content",
                 spriteID: goose?.spriteID ?? "default",
                 streakDays: goose?.streakDays ?? 0,
-                goals: goals
+                goals: goals,
+                dailyLogs: dailyLogs
             )
         } catch {
             return nil
@@ -223,6 +229,47 @@ final class ConvexManager {
                 ])
             } catch {
                 print("[ConvexManager] Goal sync failed: \(error)")
+            }
+        }
+    }
+
+    // MARK: - DailyLog Sync
+
+    /// Push local DailyLogs to Convex. Call after end-of-day snapshot or backfill.
+    func syncDailyLogs(logs: [DailyLog]) {
+        guard let userId = currentUserId else { return }
+
+        let logData: [ConvexEncodable?] = logs.compactMap { log -> ConvexEncodable? in
+            // Only sync logs that have been snapshotted
+            guard log.endOfDayHealthiness > 0 || log.endOfDayHappiness > 0 else { return nil }
+            let dict: [String: ConvexEncodable?] = [
+                "date": log.date.timeIntervalSince1970 * 1000, // epoch ms
+                "steps": Double(log.steps),
+                "exerciseMinutes": Double(log.exerciseMinutes),
+                "sleepHours": log.sleepHours,
+                "standHours": Double(log.standHours),
+                "sittingHours": log.sittingHours,
+                "outsideMinutes": Double(log.outsideMinutes),
+                "distractionOpens": Double(log.distractionOpens),
+                "distractionMinutes": Double(log.distractionMinutes),
+                "goalsCompleted": Double(log.goalsCompleted),
+                "goalsTotal": Double(log.goalsTotal),
+                "endOfDayHealthiness": log.endOfDayHealthiness,
+                "endOfDayHappiness": log.endOfDayHappiness,
+            ]
+            return dict
+        }
+
+        guard !logData.isEmpty else { return }
+
+        Task {
+            do {
+                let _: String? = try await client.mutation("dailyLogs:syncDailyLogs", with: [
+                    "userId": userId,
+                    "logs": logData,
+                ])
+            } catch {
+                print("[ConvexManager] DailyLog sync failed: \(error)")
             }
         }
     }
@@ -288,6 +335,22 @@ struct ConvexGoal: Decodable {
     let customDays: String?
 }
 
+struct ConvexDailyLog: Decodable {
+    let date: Double // epoch ms
+    let steps: Int
+    let exerciseMinutes: Int
+    let sleepHours: Double
+    let standHours: Int
+    let sittingHours: Double
+    let outsideMinutes: Int
+    let distractionOpens: Int
+    let distractionMinutes: Int
+    let goalsCompleted: Int
+    let goalsTotal: Int
+    let endOfDayHealthiness: Double
+    let endOfDayHappiness: Double
+}
+
 struct ReturningUserData {
     let convexUserId: String
     let username: String
@@ -298,4 +361,5 @@ struct ReturningUserData {
     let spriteID: String
     let streakDays: Int
     let goals: [ConvexGoal]
+    let dailyLogs: [ConvexDailyLog]
 }

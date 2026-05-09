@@ -36,7 +36,7 @@ struct GoalListView: View {
         gooseStates.first
     }
 
-    private var isWatchPaired: Bool { profiles.first?.watchPaired ?? false }
+    private var isWatchPaired: Bool { WatchSyncService.shared.isWatchPaired }
 
     private var hasUserGoals: Bool {
         goals.contains { $0.type != "builtin" }

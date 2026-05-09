@@ -144,6 +144,7 @@ struct OnboardingSignInView: View {
                     obState.restoredSpriteID = data.spriteID
                     obState.restoredStreakDays = data.streakDays
                     obState.restoredGoals = data.goals
+                    obState.restoredDailyLogs = data.dailyLogs
                     obState.restoredConvexUserId = data.convexUserId
                     obState.restoredUsername = data.username
                     isCheckingReturning = false

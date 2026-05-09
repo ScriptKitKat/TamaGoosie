@@ -36,6 +36,7 @@ final class OnboardingState {
     var restoredSpriteID: String = "default"
     var restoredStreakDays: Int = 0
     var restoredGoals: [ConvexGoal] = []
+    var restoredDailyLogs: [ConvexDailyLog] = []
     var restoredConvexUserId: String = ""
     var restoredUsername: String = ""
 }

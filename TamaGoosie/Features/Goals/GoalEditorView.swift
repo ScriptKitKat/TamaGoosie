@@ -112,43 +112,80 @@ struct GoalEditorView: View {
             }
 
             GoosieCard {
-                if existingGoal?.title.localizedCaseInsensitiveContains("steps") == true {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Daily step target")
-                            .font(GoosieTheme.captionFont())
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                        Stepper(value: $targetCount, in: 1000...50000, step: 500) {
-                            Text("\(targetCount.formatted()) steps")
-                                .font(GoosieTheme.bodyFont())
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
-                        }
-                    }
-                } else if existingGoal?.title.localizedCaseInsensitiveContains("sleep") == true {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Sleep target (hours)")
-                            .font(GoosieTheme.captionFont())
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                        Stepper(value: $targetCount, in: 4...12, step: 1) {
-                            Text("\(targetCount) hours")
-                                .font(GoosieTheme.bodyFont())
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
-                        }
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Screen time limit (minutes)")
-                            .font(GoosieTheme.captionFont())
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                        Stepper(value: $targetCount, in: 30...480, step: 15) {
-                            Text("\(targetCount) minutes")
-                                .font(GoosieTheme.bodyFont())
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
-                        }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(builtinEditorLabel)
+                        .font(GoosieTheme.captionFont())
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                    Stepper(value: $targetCount, in: builtinEditorRange, step: builtinEditorStep) {
+                        Text(builtinEditorValueLabel)
+                            .font(GoosieTheme.bodyFont())
+                            .foregroundStyle(GoosieTheme.charcoalOutline)
                     }
                 }
             }
         }
         .padding(GoosieTheme.padding)
+    }
+
+    // MARK: - Built-in editor helpers
+
+    private enum BuiltinGoalKind {
+        case steps, sleep, exercise, outside, screentime
+    }
+
+    private var builtinKind: BuiltinGoalKind {
+        let t = existingGoal?.title ?? ""
+        if t.localizedCaseInsensitiveContains("steps") || t.localizedCaseInsensitiveContains("walk") {
+            return .steps
+        } else if t.localizedCaseInsensitiveContains("sleep") {
+            return .sleep
+        } else if t.localizedCaseInsensitiveContains("exercise") {
+            return .exercise
+        } else if t.localizedCaseInsensitiveContains("outside") || t.localizedCaseInsensitiveContains("daylight") {
+            return .outside
+        } else {
+            return .screentime
+        }
+    }
+
+    private var builtinEditorLabel: String {
+        switch builtinKind {
+        case .steps: "Daily step target"
+        case .sleep: "Sleep target (hours)"
+        case .exercise: "Exercise target (minutes)"
+        case .outside: "Outside time target (minutes)"
+        case .screentime: "Screen time limit (minutes)"
+        }
+    }
+
+    private var builtinEditorRange: ClosedRange<Int> {
+        switch builtinKind {
+        case .steps: 1000...50000
+        case .sleep: 4...12
+        case .exercise: 10...120
+        case .outside: 10...180
+        case .screentime: 30...480
+        }
+    }
+
+    private var builtinEditorStep: Int {
+        switch builtinKind {
+        case .steps: 500
+        case .sleep: 1
+        case .exercise: 5
+        case .outside: 5
+        case .screentime: 15
+        }
+    }
+
+    private var builtinEditorValueLabel: String {
+        switch builtinKind {
+        case .steps: "\(targetCount.formatted()) steps"
+        case .sleep: "\(targetCount) hours"
+        case .exercise: "\(targetCount) minutes"
+        case .outside: "\(targetCount) minutes"
+        case .screentime: "\(targetCount) minutes"
+        }
     }
 
     // MARK: - Full editor

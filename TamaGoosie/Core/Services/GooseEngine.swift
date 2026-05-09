@@ -199,15 +199,23 @@ final class GooseEngine {
 
     // MARK: - History Backfill
 
-    /// Backfills DailyLog records for the past `daysBack` days using real HealthKit data.
+    /// Backfills DailyLog records from `createdAt` to yesterday using real HealthKit data.
+    /// Only fills days on or after the goose was created (no pre-install data).
     /// Skips any day that already has a non-zero endOfDayHealthiness snapshot.
-    func backfillHistory(daysBack: Int, modelContext: ModelContext, profile: UserProfile?, goals: [Goal]) async {
+    func backfillHistory(createdAt: Date, modelContext: ModelContext, profile: UserProfile?, goals: [Goal]) async {
         guard HealthKitManager.shared.isAuthorized else { return }
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
+        let earliest = calendar.startOfDay(for: createdAt)
 
-        for offset in 1...daysBack {
+        // Calculate how many days back we can go (capped at createdAt)
+        let maxDaysBack = calendar.dateComponents([.day], from: earliest, to: today).day ?? 0
+        guard maxDaysBack > 0 else { return }
+
+        for offset in 1...maxDaysBack {
             guard let date = calendar.date(byAdding: .day, value: -offset, to: today) else { continue }
+            // Never backfill before the app was installed
+            guard date >= earliest else { break }
 
             // Fetch or create the log for this date
             let descriptor = FetchDescriptor<DailyLog>(predicate: #Predicate { $0.date == date })

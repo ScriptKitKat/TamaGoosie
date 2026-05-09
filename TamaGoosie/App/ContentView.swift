@@ -63,6 +63,9 @@ struct ContentView: View {
                     Task { await syncHealthData() }
                 }
             }
+            .onChange(of: watchSync.isWatchPaired) { _, paired in
+                profiles.first?.watchPaired = paired
+            }
             .onChange(of: goals.count) { _, _ in
                 scheduleNotifications()
             }
@@ -377,13 +380,23 @@ struct ContentView: View {
 
         GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
 
-        Task {
-            await GooseEngine.shared.backfillHistory(
-                daysBack: 30,
-                modelContext: modelContext,
-                profile: profiles.first,
-                goals: goals
-            )
+        if let createdAt = gooseStates.first?.createdAt {
+            Task {
+                await GooseEngine.shared.backfillHistory(
+                    createdAt: createdAt,
+                    modelContext: modelContext,
+                    profile: profiles.first,
+                    goals: goals
+                )
+
+                // Sync snapshotted DailyLogs to Convex
+                let descriptor = FetchDescriptor<DailyLog>(
+                    sortBy: [SortDescriptor(\.date, order: .forward)]
+                )
+                if let logs = try? modelContext.fetch(descriptor) {
+                    ConvexManager.shared.syncDailyLogs(logs: logs)
+                }
+            }
         }
     }
 

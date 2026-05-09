@@ -57,4 +57,23 @@ export default defineSchema({
     customDays: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_userId", ["userId"]),
+
+  dailyLogs: defineTable({
+    userId: v.id("users"),
+    date: v.number(), // epoch ms for start-of-day
+    steps: v.number(),
+    exerciseMinutes: v.number(),
+    sleepHours: v.number(),
+    standHours: v.number(),
+    sittingHours: v.number(),
+    outsideMinutes: v.number(),
+    distractionOpens: v.number(),
+    distractionMinutes: v.number(),
+    goalsCompleted: v.number(),
+    goalsTotal: v.number(),
+    endOfDayHealthiness: v.number(),
+    endOfDayHappiness: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_date", ["userId", "date"]),
 });

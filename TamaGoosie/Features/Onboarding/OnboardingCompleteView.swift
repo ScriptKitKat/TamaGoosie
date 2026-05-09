@@ -168,6 +168,26 @@ struct OnboardingCompleteView: View {
             profile.goals.append(goal)
         }
 
+        // Restore DailyLogs from Convex data
+        for convexLog in obState.restoredDailyLogs {
+            let logDate = Date(timeIntervalSince1970: convexLog.date / 1000)
+            let log = DailyLog(date: logDate)
+            log.steps = convexLog.steps
+            log.exerciseMinutes = convexLog.exerciseMinutes
+            log.sleepHours = convexLog.sleepHours
+            log.standHours = convexLog.standHours
+            log.sittingHours = convexLog.sittingHours
+            log.outsideMinutes = convexLog.outsideMinutes
+            log.distractionOpens = convexLog.distractionOpens
+            log.distractionMinutes = convexLog.distractionMinutes
+            log.goalsCompleted = convexLog.goalsCompleted
+            log.goalsTotal = convexLog.goalsTotal
+            log.endOfDayHealthiness = convexLog.endOfDayHealthiness
+            log.endOfDayHappiness = convexLog.endOfDayHappiness
+            log.userProfile = profile
+            modelContext.insert(log)
+        }
+
         // Mark completion in UserDefaults
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
