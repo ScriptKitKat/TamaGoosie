@@ -12,10 +12,17 @@ struct ContentView: View {
     @StateObject private var watchSync = WatchSyncService.shared
     @State private var selectedTab = 0
     @State private var showOnboarding = false
-    @State private var showMenu = false
     /// Tracks whether we've applied one-time health rewards this session
     @State private var healthProcessedThisSession = false
     @State private var onboardingEntryPath: OnboardingEntryPath = .freshInstall
+    @State private var showMoreSheet = false
+    @State private var moreSubPage: MorePage? = nil
+
+    enum MorePage: String {
+        case friends = "Friends"
+        case stats = "Stats"
+        case settings = "Settings"
+    }
 
     private var hasCompletedOnboarding: Bool {
         profiles.first?.hasCompletedOnboarding == true
@@ -28,7 +35,6 @@ struct ContentView: View {
                     showOnboarding = true
                     onboardingEntryPath = .freshInstall
                 } else if !AuthService.shared.isSignedIn {
-                    // Path C: completed onboarding before but logged out
                     showOnboarding = true
                     onboardingEntryPath = .loggedOutReturn
                 } else {
@@ -91,103 +97,58 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Menu Items
-
-    private struct MenuItem: Identifiable {
-        let id: Int
-        let title: String
-        let icon: String
-        let isSystemImage: Bool
-
-        init(id: Int, title: String, systemImage: String) {
-            self.id = id
-            self.title = title
-            self.icon = systemImage
-            self.isSystemImage = true
-        }
-
-        init(id: Int, title: String, assetImage: String) {
-            self.id = id
-            self.title = title
-            self.icon = assetImage
-            self.isSystemImage = false
-        }
-    }
-
-    private var menuItems: [MenuItem] {
-        [
-            MenuItem(id: 0, title: "Goose", assetImage: "goose_icon"),
-            MenuItem(id: 1, title: "Goals", systemImage: "checklist"),
-            MenuItem(id: 2, title: "Chat", systemImage: "bubble.left.fill"),
-            MenuItem(id: 3, title: "Friends", systemImage: "person.2.fill"),
-            MenuItem(id: 4, title: "Stats", systemImage: "chart.line.uptrend.xyaxis"),
-            MenuItem(id: 5, title: "Screen Time", systemImage: "hourglass"),
-            MenuItem(id: 6, title: "Settings", systemImage: "gearshape.fill"),
-        ]
-    }
-
     // MARK: - Main Content
 
     private var mainContentView: some View {
-        ZStack(alignment: .leading) {
-            // Current page content with top bar overlay
-            VStack(spacing: 0) {
-                if selectedTab != 0 {
-                    subpageHeader
-                }
+        VStack(spacing: 0) {
+            if let title = pageTitle {
+                pageHeader(title: title)
+            }
+
+            ZStack(alignment: .bottom) {
                 currentPageView
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .offset(x: showMenu ? 260 : 0)
-            .disabled(showMenu)
 
-            // Dimming overlay when menu is open
-            if showMenu {
-                Color.black.opacity(0.3)
-                    .ignoresSafeArea()
-                    .offset(x: 260)
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            showMenu = false
+                // Dimmed backdrop over content only (not tab bar)
+                if showMoreSheet {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea(edges: .top)
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                                showMoreSheet = false
+                            }
                         }
-                    }
-            }
-
-            // Side menu
-            sideMenu
-                .frame(width: 260)
-                .offset(x: showMenu ? 0 : -260)
-        }
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    if value.translation.width > 80 && !showMenu {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            showMenu = true
-                        }
-                    } else if value.translation.width < -80 && showMenu {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            showMenu = false
-                        }
-                    }
                 }
-        )
-        .background(Self.subpageHeaderColor.ignoresSafeArea())
+
+                // More popup anchored at bottom of content area
+                if showMoreSheet {
+                    morePopup
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .padding(.bottom, 8)
+                }
+            }
+
+            tabBar
+        }
+        .background(GoosieTheme.mintBackground.ignoresSafeArea())
     }
 
-    private var currentPageTitle: String {
+    // MARK: - Page Header
+
+    private var pageTitle: String? {
+        if let morePage = moreSubPage {
+            return morePage.rawValue
+        }
         switch selectedTab {
         case 1: return "Goals"
-        case 2: return "Chat"
-        case 3: return "Friends"
-        case 4: return "Stats"
-        case 5: return "Screen Time"
-        case 6: return "Settings"
-        default: return ""
+        case 2: return "Screen Time"
+        case 3: return "Store"
+        case 4: return "Challenges"
+        default: return nil
         }
     }
 
-    private static let subpageHeaderColor = Color(
+    private static let headerColor = Color(
         UIColor(
             red: 1.0 * 0.96 + 0.04 * 0.91,
             green: 0.96 * 0.96 + 0.04 * 0.59,
@@ -196,127 +157,159 @@ struct ContentView: View {
         )
     )
 
-    private var subpageHeader: some View {
+    private func pageHeader(title: String) -> some View {
         ZStack {
-            Self.subpageHeaderColor
+            Self.headerColor
 
-            Text(currentPageTitle)
+            Text(title)
                 .font(GoosieTheme.titleFont(20))
                 .foregroundStyle(GoosieTheme.charcoalOutline)
-
-            HStack {
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                        selectedTab = 0
-                    }
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-                        .frame(width: 32, height: 32)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, GoosieTheme.padding)
         }
         .frame(height: 44)
-        .background(Self.subpageHeaderColor.ignoresSafeArea(edges: .top))
+        .background(Self.headerColor.ignoresSafeArea(edges: .top))
     }
+
+    // MARK: - Page Content
 
     @ViewBuilder
     private var currentPageView: some View {
-        switch selectedTab {
-        case 0: GooseView(onMenuTap: {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                showMenu.toggle()
+        if let morePage = moreSubPage {
+            switch morePage {
+            case .friends: FriendsView()
+            case .stats: StatsView()
+            case .settings: SettingsView()
             }
-        })
-        case 1: GoalListView()
-        case 2: ChatView()
-        case 3: FriendsView()
-        case 4: StatsView()
-        case 5: ScreenTimePageView()
-        case 6: SettingsView()
-        default: GooseView()
+        } else {
+            switch selectedTab {
+            case 0: GooseView()
+            case 1: GoalListView()
+            case 2: ScreenTimePageView()
+            case 3: StoreView()
+            case 4: ChallengesView()
+            default: GooseView()
+            }
         }
     }
 
-    private var sideMenu: some View {
-        ZStack {
-            GoosieTheme.mintBackground
-                .ignoresSafeArea()
+    // MARK: - Tab Bar
 
-            VStack(alignment: .leading, spacing: 0) {
-                // Header
-                VStack(alignment: .leading, spacing: 6) {
-                    Image("goose_icon")
-                        .resizable()
-                        .frame(width: 40, height: 40)
-                        .foregroundStyle(GoosieTheme.charcoalOutline)
+    private struct TabItem: Identifiable {
+        let id: Int
+        let icon: String
+    }
 
-                    Text(gooseStates.first?.name ?? "Harold")
-                        .font(GoosieTheme.titleFont(22))
-                        .foregroundStyle(GoosieTheme.charcoalOutline)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 28)
+    private let tabs: [TabItem] = [
+        TabItem(id: 0, icon: "house.fill"),
+        TabItem(id: 1, icon: "checklist"),
+        TabItem(id: 2, icon: "hourglass"),
+        TabItem(id: 3, icon: "bag.fill"),
+        TabItem(id: 4, icon: "trophy.fill"),
+        TabItem(id: 5, icon: "ellipsis"),
+    ]
 
-                // Menu items
-                ForEach(menuItems) { item in
-                    Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            selectedTab = item.id
-                            showMenu = false
+    private var tabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(tabs) { tab in
+                Button {
+                    if tab.id == 5 {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                            showMoreSheet.toggle()
                         }
-                    } label: {
-                        HStack(spacing: 16) {
-                            Group {
-                                if item.isSystemImage {
-                                    Image(systemName: item.icon)
-                                        .font(.system(size: 20))
-                                } else {
-                                    Image(item.icon)
-                                        .resizable()
-                                        .frame(width: 22, height: 22)
-                                }
-                            }
-                            .frame(width: 28)
-                            .foregroundStyle(
-                                selectedTab == item.id
-                                    ? GoosieTheme.charcoalOutline
-                                    : GoosieTheme.charcoalOutline.opacity(0.5)
-                            )
-
-                            Text(item.title)
-                                .font(GoosieTheme.bodyFont())
-                                .foregroundStyle(
-                                    selectedTab == item.id
-                                        ? GoosieTheme.charcoalOutline
-                                        : GoosieTheme.charcoalOutline.opacity(0.5)
-                                )
-
-                            Spacer()
+                    } else {
+                        withAnimation(.spring(response: 0.25)) {
+                            showMoreSheet = false
+                            moreSubPage = nil
+                            selectedTab = tab.id
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background(
-                            selectedTab == item.id
-                                ? GoosieTheme.creamWhite.opacity(0.4)
-                                : Color.clear
-                        )
                     }
+                } label: {
+                    Image(systemName: tab.icon)
+                        .font(.system(size: 22, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .foregroundStyle(
+                            isTabActive(tab.id)
+                                ? GoosieTheme.charcoalOutline
+                                : GoosieTheme.charcoalOutline.opacity(0.35)
+                        )
+                        .background(
+                            isTabActive(tab.id)
+                                ? RoundedRectangle(cornerRadius: 12)
+                                    .fill(GoosieTheme.charcoalOutline.opacity(0.08))
+                                    .frame(width: 48, height: 36)
+                                : nil
+                        )
                 }
+            }
+        }
+        .padding(.bottom, 2)
+        .background(
+            VStack(spacing: 0) {
+                Rectangle()
+                    .fill(GoosieTheme.charcoalOutline.opacity(0.1))
+                    .frame(height: 0.5)
+                GoosieTheme.creamWhite
+            }
+            .ignoresSafeArea(edges: .bottom)
+        )
+    }
+
+    private func isTabActive(_ id: Int) -> Bool {
+        if moreSubPage != nil || showMoreSheet { return id == 5 }
+        return selectedTab == id
+    }
+
+    // MARK: - More Popup
+
+    private var morePopup: some View {
+        VStack(spacing: 0) {
+            moreRow(icon: "person.2.fill", title: "Friends") {
+                moreSubPage = .friends
+            }
+
+            Divider()
+                .padding(.leading, 56)
+
+            moreRow(icon: "chart.line.uptrend.xyaxis", title: "Stats") {
+                moreSubPage = .stats
+            }
+
+            Divider()
+                .padding(.leading, 56)
+
+            moreRow(icon: "gearshape.fill", title: "Settings") {
+                moreSubPage = .settings
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(GoosieTheme.creamWhite)
+                .shadow(color: .black.opacity(0.12), radius: 12, y: -4)
+        )
+        .padding(.horizontal, 12)
+    }
+
+    private func moreRow(icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                showMoreSheet = false
+                action()
+            }
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
+                    .frame(width: 28)
+
+                Text(title)
+                    .font(GoosieTheme.bodyFont())
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
 
                 Spacer()
-
-                // Version footer
-                Text("TamaGoosie v1.0")
-                    .font(GoosieTheme.captionFont(11))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 20)
             }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 15)
         }
     }
 
@@ -327,8 +320,6 @@ struct ContentView: View {
             _ = await ConvexManager.shared.loadIdentity()
         }
 
-        // Push current local stats to Convex immediately after identity is available.
-        // This covers the case where HealthKit is unavailable or hasn't delivered data yet.
         if ConvexManager.shared.isAuthenticated, let state = gooseStates.first {
             GooseSyncService.shared.syncToConvex(
                 happiness: state.happiness,
@@ -399,7 +390,6 @@ struct ContentView: View {
                     goals: goals
                 )
 
-                // Sync snapshotted DailyLogs to Convex
                 let descriptor = FetchDescriptor<DailyLog>(
                     sortBy: [SortDescriptor(\.date, order: .forward)]
                 )
@@ -427,7 +417,6 @@ struct ContentView: View {
         GooseEngine.shared.completeGoal(goal, state: state, log: log, goals: goals)
         try? modelContext.save()
 
-        // Send updated payload back to Watch
         let payload = state.toSyncPayload()
         if let data = try? JSONEncoder().encode(payload) {
             replyHandler?(["goosePayload": data])

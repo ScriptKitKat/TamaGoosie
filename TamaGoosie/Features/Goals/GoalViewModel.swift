@@ -17,14 +17,6 @@ struct GoalDraft: Equatable {
     var preferredTime: Date = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? .now
 }
 
-// MARK: - Chat Message
-
-struct ChatMessage: Identifiable {
-    let id = UUID()
-    let isUser: Bool
-    let text: String
-}
-
 @Observable
 final class GoalViewModel {
     var showEditor = false

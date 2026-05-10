@@ -11,8 +11,6 @@ struct GooseView: View {
     @State private var viewModel = GooseViewModel()
     @State private var coinAnimationAmount: Int? = nil
 
-    var onMenuTap: (() -> Void)?
-
     private var gooseState: GooseState {
         gooseStates.first ?? GooseState()
     }
@@ -63,7 +61,6 @@ struct GooseView: View {
             }
         }
         .onAppear {
-            ensureGooseExists()
             snapshotYesterdayIfNeeded()
             let log = ensureTodayLogExists()
             viewModel.onAppear(state: gooseState, log: log, profile: profile, goals: activeGoals)
@@ -106,16 +103,6 @@ struct GooseView: View {
             }
 
             HStack(spacing: 0) {
-                // Hamburger menu
-                Button {
-                    onMenuTap?()
-                } label: {
-                    Image(systemName: "line.3.horizontal")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-                        .frame(width: 34, height: 34)
-                }
-
                 Spacer()
 
                 // Coins
@@ -175,13 +162,6 @@ struct GooseView: View {
     }
 
     // MARK: - Helpers
-
-    private func ensureGooseExists() {
-        if gooseStates.isEmpty {
-            let newGoose = GooseState()
-            modelContext.insert(newGoose)
-        }
-    }
 
     @discardableResult
     private func ensureTodayLogExists() -> DailyLog {
