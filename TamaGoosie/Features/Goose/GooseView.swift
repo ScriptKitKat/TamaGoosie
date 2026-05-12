@@ -10,6 +10,7 @@ struct GooseView: View {
 
     @State private var viewModel = GooseViewModel()
     @State private var coinAnimationAmount: Int? = nil
+    @State private var debugDisplayState: GooseDisplayState? = nil
 
     private var gooseState: GooseState {
         gooseStates.first ?? GooseState()
@@ -44,7 +45,8 @@ struct GooseView: View {
                         mood: viewModel.mood,
                         showReaction: viewModel.currentReaction,
                         healthiness: viewModel.healthinessPercent,
-                        happiness: viewModel.happinessPercent
+                        happiness: viewModel.happinessPercent,
+                        debugDisplayState: debugDisplayState
                     )
                     .frame(maxWidth: 240, maxHeight: 240)
                     .frame(maxWidth: .infinity)
@@ -59,6 +61,24 @@ struct GooseView: View {
                     .padding(.horizontal, GoosieTheme.padding)
                     .padding(.bottom, 28)
             }
+        }
+        // DEBUG: cycle through display states
+        .overlay(alignment: .bottomLeading) {
+            #if DEBUG
+            Button {
+                let allStates: [GooseDisplayState?] = [nil, .normal, .happy, .sad, .sick, .sleeping]
+                let currentIndex = allStates.firstIndex(where: { $0 == debugDisplayState }) ?? 0
+                debugDisplayState = allStates[(currentIndex + 1) % allStates.count]
+            } label: {
+                Text("State: \(debugDisplayState.map { "\($0)" } ?? "auto")")
+                    .font(.caption)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .padding(.leading, GoosieTheme.padding)
+            .padding(.bottom, 8)
+            #endif
         }
         .onAppear {
             snapshotYesterdayIfNeeded()

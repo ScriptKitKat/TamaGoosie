@@ -43,12 +43,13 @@ struct GooseWidgetSmall: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text(entry.payload.moodEnum.emoji)
-                .font(.system(size: 36))
-
             Text(entry.payload.name)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .font(.system(size: 14, weight: .bold, design: .rounded))
                 .lineLimit(1)
+
+            Text(entry.payload.moodEnum.displayName)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
 
             Text("\(entry.payload.healthinessPercent)%")
                 .font(.system(size: 12, weight: .medium, design: .rounded))
@@ -70,9 +71,6 @@ struct GooseWidgetMedium: View {
         HStack(spacing: 16) {
             // Left: Goose mood
             VStack(spacing: 4) {
-                Text(entry.payload.moodEnum.emoji)
-                    .font(.system(size: 40))
-
                 Text(entry.payload.name)
                     .font(.system(size: 14, weight: .bold, design: .rounded))
                     .lineLimit(1)

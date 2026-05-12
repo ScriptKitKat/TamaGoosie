@@ -39,12 +39,11 @@ final class SyncPayloadTests: XCTestCase {
     }
 
     func test_gooseMood_deriveMood_returnsCorrectMood() {
-        XCTAssertEqual(GooseMood.deriveMood(healthiness: 1.0, happiness: 1.0), .ecstatic)
+        XCTAssertEqual(GooseMood.deriveMood(healthiness: 1.0, happiness: 1.0), .happy)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.7, happiness: 0.7), .happy)
         XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.5, happiness: 0.5), .content)
-        XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.3, happiness: 0.3), .bored)
-        XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.15, happiness: 0.15), .sad)
-        XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.05, happiness: 0.05), .sick)
+        XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.25, happiness: 0.25), .sad)
+        XCTAssertEqual(GooseMood.deriveMood(healthiness: 0.1, happiness: 0.1), .sick)
     }
 
     func test_gooseState_toSyncPayload_includesTopGoals() {

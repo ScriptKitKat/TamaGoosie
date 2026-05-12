@@ -148,14 +148,7 @@ struct ContentView: View {
         }
     }
 
-    private static let headerColor = Color(
-        UIColor(
-            red: 1.0 * 0.96 + 0.04 * 0.91,
-            green: 0.96 * 0.96 + 0.04 * 0.59,
-            blue: 0.90 * 0.96 + 0.04 * 0.23,
-            alpha: 1
-        )
-    )
+    private static let headerColor = GoosieTheme.mintBackground
 
     private func pageHeader(title: String) -> some View {
         ZStack {

@@ -1,19 +1,22 @@
 import SwiftUI
+import SceneKit
 
 // MARK: - Goose Display State
 
 enum GooseDisplayState {
     case sleeping
     case happy
-    case tired
     case normal
+    case sad
+    case sick
 
-    var imageName: String {
+    var modelName: String {
         switch self {
         case .sleeping: return "goose_sleep"
         case .happy:    return "goose_happy"
-        case .tired:    return "goose_tired"
         case .normal:   return "goose_normal"
+        case .sad:      return "goose_sad"
+        case .sick:     return "goose_sick"
         }
     }
 
@@ -27,7 +30,8 @@ enum GooseDisplayState {
         switch self {
         case .sleeping: return (.zzz, .indigo.opacity(0.8))
         case .happy:    return (.stars, .yellow)
-        case .tired:    return (.drops, Color(red: 0.7, green: 0.4, blue: 1.0).opacity(0.85))
+        case .sad:      return (.drops, .blue.opacity(0.6))
+        case .sick:     return (.drops, .green.opacity(0.6))
         case .normal:   return nil
         }
     }
@@ -40,6 +44,7 @@ struct GooseCharacterView: View {
     var showReaction: GooseReaction = .none
     var healthiness: Double = 50
     var happiness: Double = 50
+    var debugDisplayState: GooseDisplayState? = nil
 
     @State private var isSleeping: Bool = false
     @State private var bobOffset: CGFloat = 0
@@ -47,22 +52,22 @@ struct GooseCharacterView: View {
     @State private var wobbleAngle: Double = 0
 
     private var displayState: GooseDisplayState {
+        if let override = debugDisplayState { return override }
         if isSleeping { return .sleeping }
-        if happiness >= 70 && healthiness >= 70 { return .happy }
-        if happiness < 40 || healthiness < 40 { return .tired }
-        return .normal
+        switch mood {
+        case .happy:            return .happy
+        case .content:          return .normal
+        case .sad:              return .sad
+        case .sick:             return .sick
+        }
     }
 
     var body: some View {
         ZStack {
             auraLayer
 
-            Image(displayState.imageName)
-                .resizable()
-                .scaledToFit()
+            Goose3DView(modelName: displayState.modelName)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .offset(y: bobOffset)
-                .rotationEffect(.degrees(wobbleAngle))
                 .scaleEffect(reactionScale)
         }
         .onAppear {
@@ -98,8 +103,8 @@ struct GooseCharacterView: View {
     // MARK: - Animations
 
     private func startIdleAnimation() {
-        let duration: Double = displayState == .tired ? 3.0 : displayState == .sleeping ? 4.0 : 2.0
-        let bobAmount: CGFloat = displayState == .sleeping ? -3 : displayState == .tired ? -4 : -8
+        let duration: Double = displayState == .sleeping ? 4.0 : displayState == .sad ? 3.0 : 2.0
+        let bobAmount: CGFloat = displayState == .sleeping ? -3 : displayState == .sad ? -4 : -8
 
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
             bobOffset = bobAmount

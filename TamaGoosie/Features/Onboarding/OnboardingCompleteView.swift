@@ -24,7 +24,7 @@ struct OnboardingCompleteView: View {
                 Spacer()
 
                 // Dancing goose
-                GooseCharacterView(mood: .ecstatic)
+                GooseCharacterView(mood: .happy)
                     .frame(height: 200)
                     .offset(y: danceOffset)
                     .rotationEffect(.degrees(danceRotation))
@@ -104,7 +104,7 @@ struct OnboardingCompleteView: View {
             name: gooseName,
             healthiness: 1.0,
             happiness: 1.0,
-            mood: GooseMood.ecstatic.rawValue
+            mood: GooseMood.happy.rawValue
         )
         goose.userProfile = profile
         modelContext.insert(goose)

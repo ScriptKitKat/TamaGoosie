@@ -7,13 +7,12 @@ struct GooseGlanceView: View {
 
     // Map mood to the same goose image used on iOS
     private var gooseImageName: String {
-        let mood = payload.moodEnum
-        let h = payload.happiness
-        let hp = payload.healthiness
-        // Mirror GooseDisplayState logic from iOS GooseAnimations
-        if h >= 0.70 && hp >= 0.70 { return "goose_happy" }
-        if h < 0.40 || hp < 0.40 { return "goose_tired" }
-        return "goose_normal"
+        switch payload.moodEnum {
+        case .happy:            return "goose_happy"
+        case .content:          return "goose_normal"
+        case .sad:              return "goose_sad"
+        case .sick:             return "goose_sick"
+        }
     }
 
     var body: some View {

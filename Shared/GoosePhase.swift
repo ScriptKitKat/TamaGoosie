@@ -1,54 +1,26 @@
 import Foundation
 
 public enum GooseMood: String, Codable, CaseIterable, Sendable {
-    case ecstatic
     case happy
     case content
-    case bored
     case sad
     case sick
 
     public var displayName: String {
         switch self {
-        case .ecstatic: "Ecstatic"
-        case .happy: "Happy"
+        case .happy:   "Happy"
         case .content: "Content"
-        case .bored: "Bored"
-        case .sad: "Sad"
-        case .sick: "Sick"
-        }
-    }
-
-    public var emoji: String {
-        switch self {
-        case .ecstatic: "🤩"
-        case .happy: "😊"
-        case .content: "😌"
-        case .bored: "😐"
-        case .sad: "😢"
-        case .sick: "🤢"
-        }
-    }
-
-    public var color: String {
-        switch self {
-        case .ecstatic: "FFD93D"
-        case .happy: "7ED6A5"
-        case .content: "A8D8EA"
-        case .bored: "C8C8C8"
-        case .sad: "6BC5F0"
-        case .sick: "B8E8D0"
+        case .sad:     "Sad"
+        case .sick:    "Sick"
         }
     }
 
     public static func deriveMood(healthiness: Double, happiness: Double) -> GooseMood {
         let avg = (healthiness + happiness) / 2.0
         switch avg {
-        case 0.80...: return .ecstatic
-        case 0.60..<0.80: return .happy
-        case 0.40..<0.60: return .content
-        case 0.25..<0.40: return .bored
-        case 0.10..<0.25: return .sad
+        case 0.60...: return .happy
+        case 0.30..<0.60: return .content
+        case 0.15..<0.30: return .sad
         default: return .sick
         }
     }

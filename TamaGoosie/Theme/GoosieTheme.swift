@@ -4,8 +4,8 @@ import SwiftUI
 
 enum GoosieTheme {
     // MARK: Colors
-    static let mintBackground = Color(hex: 0xFFF5E6)      // warm cream (was mint)
-    static let creamWhite = Color(hex: 0xFFFDF8)           // warmer card white
+    static let mintBackground = Color(hex: 0xF5F5F5)      // light gray background
+    static let creamWhite = Color.white                    // clean white
     static let coralAccent = Color(hex: 0xE8963A)          // warm amber (was coral)
     static let sunYellow = Color(hex: 0xD4A853)            // golden yellow
     static let warmOrange = Color(hex: 0xD4782A)           // deeper amber

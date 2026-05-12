@@ -43,6 +43,7 @@
 		4D1AF7EDF505BBF57F0FBFA5 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */; };
 		4D31E6B1F1B96627FD1BEAF3 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		50B36BCF8F7A21E2EA1BF6F6 /* DistractionConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */; };
+		52464770254C773EE9362E4D /* Goose3DView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3791CCB5D6BAD1BB640D0BC7 /* Goose3DView.swift */; };
 		52F4FC49B90EEB650F9239AA /* WatchTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */; };
 		535278C8DE40469DC8AF65E9 /* DistractionReportScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE58A1E0C6C3B1107F0946 /* DistractionReportScene.swift */; };
 		539A65BB18109DDC5FB9F92D /* TamaGoosieReport.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -62,6 +63,7 @@
 		6AC042C8F1D9EFFFA2BF0EBA /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
 		6C420832D884DEB8E7135990 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1CD1FB33CE72E4D48E8EA0 /* NotificationManager.swift */; };
 		6D484F3FC4E2407B8BED7252 /* AccountCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B2993B0CEA1A8E2DD97864 /* AccountCreationView.swift */; };
+		6ECFC2CFE9AA440E40A834F6 /* Models.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 44622786FF505622AE9483DA /* Models.scnassets */; };
 		73F5C4177F088E9FCF42BE18 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
 		75DBFF4769BD7A6028D47972 /* WatchSyncReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E3270DF17E2F22F9077425 /* WatchSyncReceiver.swift */; };
 		75DD0AC472950585037683BF /* DailyLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8954547141902CE3FC703601 /* DailyLog.swift */; };
@@ -231,10 +233,12 @@
 		2F4E8216FE4F12721B999D82 /* SyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayload.swift; sourceTree = "<group>"; };
 		2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		347903A27040413E68451AD9 /* GoalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewModel.swift; sourceTree = "<group>"; };
+		3791CCB5D6BAD1BB640D0BC7 /* Goose3DView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goose3DView.swift; sourceTree = "<group>"; };
 		3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3DDC68452E992AE126D3FFFF /* GooseComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseComplication.swift; sourceTree = "<group>"; };
 		3E8ADFDBE86EFD3435417994 /* GoalCompletionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalCompletionEvent.swift; sourceTree = "<group>"; };
 		42B2993B0CEA1A8E2DD97864 /* AccountCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCreationView.swift; sourceTree = "<group>"; };
+		44622786FF505622AE9483DA /* Models.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Models.scnassets; sourceTree = "<group>"; };
 		45E891BC9D028499BD9C7AF7 /* HealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSnapshot.swift; sourceTree = "<group>"; };
 		47220455B4791AD4855D1EC8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		484BBB124DE9BDCACB850932 /* EscalationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationTracker.swift; sourceTree = "<group>"; };
@@ -433,6 +437,7 @@
 			isa = PBXGroup;
 			children = (
 				DF93B1A9A785F410FC571D04 /* CoinAnimationView.swift */,
+				3791CCB5D6BAD1BB640D0BC7 /* Goose3DView.swift */,
 				86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */,
 				A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */,
 				B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */,
@@ -740,6 +745,7 @@
 			isa = PBXGroup;
 			children = (
 				0D59F30ADA27A66E78D15370 /* Assets.xcassets */,
+				44622786FF505622AE9483DA /* Models.scnassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -967,6 +973,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6518F54CF53495BE62C6735E /* Assets.xcassets in Resources */,
+				6ECFC2CFE9AA440E40A834F6 /* Models.scnassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1045,6 +1052,7 @@
 				045511F37A331C29DAD6B7F5 /* GoalListView.swift in Sources */,
 				B6078E1137C1C8D10610DF42 /* GoalProgress.swift in Sources */,
 				797E5DDDA429D96A2F55FFA8 /* GoalViewModel.swift in Sources */,
+				52464770254C773EE9362E4D /* Goose3DView.swift in Sources */,
 				02EEA7EC9EBFB369FF402410 /* GooseAnimations.swift in Sources */,
 				E7FF5F4CB6202B053210D30F /* GooseEngine.swift in Sources */,
 				9C4A5FC197A58EF9EC6D0790 /* GooseLiveActivity.swift in Sources */,

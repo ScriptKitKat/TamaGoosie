@@ -150,8 +150,8 @@ struct GooseLiveActivityWidget: Widget {
     @ViewBuilder
     private func lockScreenBanner(context: ActivityViewContext<GoosePetActivity>) -> some View {
         HStack(spacing: 12) {
-            moodEmoji(context.state.mood)
-                .font(.system(size: 36))
+            moodLabel(context.state.mood)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -193,9 +193,9 @@ struct GooseLiveActivityWidget: Widget {
 
     // MARK: - Helpers
 
-    private func moodEmoji(_ moodRaw: String) -> Text {
+    private func moodLabel(_ moodRaw: String) -> Text {
         let mood = GooseMood(rawValue: moodRaw)
-        return Text(mood?.emoji ?? "😌")
+        return Text(mood?.displayName ?? "Content")
     }
 
     private func miniStatBar(value: Double, color: Color) -> some View {

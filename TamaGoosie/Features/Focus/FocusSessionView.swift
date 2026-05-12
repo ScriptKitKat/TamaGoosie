@@ -14,7 +14,7 @@ struct FocusSessionView: View {
     }
 
     private var gooseMood: GooseMood {
-        if timer.isCompleted { return .ecstatic }
+        if timer.isCompleted { return .happy }
         if timer.isRunning {
             return timer.progress > 0.5 ? .happy : .content
         }

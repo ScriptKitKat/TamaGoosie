@@ -70,7 +70,7 @@ struct ScreenTimeOnboardingView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Spacer().frame(height: 32)
-            GooseCharacterView(mood: .bored)
+            GooseCharacterView(mood: .content)
                 .frame(height: 200)
             Spacer()
             stepButton(title: "probably... too long?") { step = 1 }
@@ -102,7 +102,7 @@ struct ScreenTimeOnboardingView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Spacer().frame(height: 32)
-            GooseCharacterView(mood: .ecstatic)
+            GooseCharacterView(mood: .happy)
                 .frame(height: 200)
             Spacer()
             stepButton(title: "Let's set it up!") { step = 3 }

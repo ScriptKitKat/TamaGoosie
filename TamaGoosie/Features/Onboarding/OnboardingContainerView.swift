@@ -185,7 +185,7 @@ struct OnboardingContainerView: View {
 
         case 5:
             OnboardingTutorialView(
-                mood: .ecstatic,
+                mood: .happy,
                 title: "Every action adds up \u{2014} watch your goose grow",
                 buttonTitle: "Let's grow!",
                 checkmarks: nil,
@@ -195,7 +195,7 @@ struct OnboardingContainerView: View {
 
         case 6:
             OnboardingTutorialView(
-                mood: .ecstatic,
+                mood: .happy,
                 title: "Every goal is tracked.\nBuild habits, see progress.",
                 buttonTitle: "Let's go!",
                 checkmarks: ["Track your health", "Build daily habits", "Watch your goose thrive"],

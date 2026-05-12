@@ -9,13 +9,12 @@ struct FriendCardView: View {
             HStack(spacing: 14) {
                 // Mini goose
                 GooseCharacterView(mood: friend.derivedMood)
-                    .scaleEffect(0.3)
-                    .frame(width: 60, height: 60)
+                    .frame(width: 56, height: 56)
                     .clipShape(Circle())
                     .background(
                         Circle()
                             .fill(GoosieTheme.creamWhite)
-                            .frame(width: 64, height: 64)
+                            .frame(width: 60, height: 60)
                     )
 
                 VStack(alignment: .leading, spacing: 4) {

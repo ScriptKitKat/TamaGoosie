@@ -27,7 +27,7 @@ struct OnboardingHealthView: View {
 
                     Spacer().frame(height: 8)
 
-                    GooseCharacterView(mood: .ecstatic)
+                    GooseCharacterView(mood: .happy)
                         .frame(height: 160)
                 }
 

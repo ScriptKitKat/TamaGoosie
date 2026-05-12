@@ -155,8 +155,8 @@ final class GooseLiveActivityManager {
 
     private func spriteKey(for mood: GooseMood) -> String {
         switch mood {
-        case .ecstatic, .happy:   return "happy"
-        case .content, .bored:    return "neutral"
+        case .happy:              return "happy"
+        case .content:            return "neutral"
         case .sad:                return "sad"
         case .sick:               return "sick"
         }
