@@ -281,6 +281,7 @@ struct FriendsView: View {
                     .padding(.top, 24)
                     .padding(.bottom, 20)
             }
+            .trackScrollOffset()
         }
         .alert("Remove Friend?", isPresented: $viewModel.showRemoveConfirmation) {
             Button("Cancel", role: .cancel) {}

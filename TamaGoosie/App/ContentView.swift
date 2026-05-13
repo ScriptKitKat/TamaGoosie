@@ -1,6 +1,29 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Scroll Offset Preference
+
+private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+extension View {
+    /// Attach to a ScrollView's content to report scroll offset to ContentView's header.
+    func trackScrollOffset(coordinateSpace: String = "pageScroll") -> some View {
+        background(
+            GeometryReader { geo in
+                Color.clear.preference(
+                    key: ScrollOffsetKey.self,
+                    value: geo.frame(in: .named(coordinateSpace)).minY
+                )
+            }
+        )
+    }
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -17,6 +40,7 @@ struct ContentView: View {
     @State private var onboardingEntryPath: OnboardingEntryPath = .freshInstall
     @State private var showMoreSheet = false
     @State private var moreSubPage: MorePage? = nil
+    @State private var pageScrolledDown = false
 
     enum MorePage: String {
         case friends = "Friends"
@@ -105,6 +129,13 @@ struct ContentView: View {
                 ZStack(alignment: .bottom) {
                     currentPageView
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .coordinateSpace(name: "pageScroll")
+                        .onPreferenceChange(ScrollOffsetKey.self) { offset in
+                            let scrolled = offset < -10
+                            if scrolled != pageScrolledDown {
+                                pageScrolledDown = scrolled
+                            }
+                        }
 
                     // Dimmed backdrop over content only (not tab bar)
                     if showMoreSheet {
@@ -155,15 +186,29 @@ struct ContentView: View {
     }
 
     private func pageHeader(title: String) -> some View {
-        ZStack {
-            Color.clear
+        VStack(spacing: 0) {
+            if pageScrolledDown {
+                (usesLightBackground
+                    ? Color(hex: 0xFFF8F0).opacity(0.92)
+                    : Color.black.opacity(0.35))
+                .ignoresSafeArea(edges: .top)
+            }
 
-            Text(title)
-                .font(GoosieTheme.titleFont(20))
-                .foregroundStyle(usesLightBackground ? GoosieTheme.charcoalOutline : .white)
-                .shadow(color: usesLightBackground ? .clear : .black.opacity(0.15), radius: 2, y: 1)
+            ZStack {
+                if pageScrolledDown {
+                    (usesLightBackground
+                        ? Color(hex: 0xFFF8F0).opacity(0.92)
+                        : Color.black.opacity(0.35))
+                }
+
+                Text(title)
+                    .font(GoosieTheme.titleFont(20))
+                    .foregroundStyle(usesLightBackground ? GoosieTheme.charcoalOutline : .white)
+                    .shadow(color: usesLightBackground ? .clear : .black.opacity(0.15), radius: 2, y: 1)
+            }
+            .frame(height: 44)
         }
-        .frame(height: 44)
+        .animation(.easeInOut(duration: 0.2), value: pageScrolledDown)
     }
 
     // MARK: - Page Content
@@ -217,6 +262,7 @@ struct ContentView: View {
                             showMoreSheet = false
                             moreSubPage = nil
                             selectedTab = tab.id
+                            pageScrolledDown = false
                         }
                     }
                 } label: {
@@ -261,6 +307,7 @@ struct ContentView: View {
     private var morePopup: some View {
         VStack(spacing: 0) {
             moreRow(icon: "person.2.fill", title: "Friends") {
+                pageScrolledDown = false
                 moreSubPage = .friends
             }
 
@@ -268,6 +315,7 @@ struct ContentView: View {
                 .padding(.leading, 56)
 
             moreRow(icon: "chart.line.uptrend.xyaxis", title: "Stats") {
+                pageScrolledDown = false
                 moreSubPage = .stats
             }
 
@@ -275,6 +323,7 @@ struct ContentView: View {
                 .padding(.leading, 56)
 
             moreRow(icon: "gearshape.fill", title: "Settings") {
+                pageScrolledDown = false
                 moreSubPage = .settings
             }
         }

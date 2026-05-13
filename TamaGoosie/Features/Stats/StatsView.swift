@@ -52,6 +52,7 @@ struct StatsView: View {
                     }
                     .padding(.top, 52)
                     .padding(.bottom, 20)
+                    .trackScrollOffset()
                 }
             } else {
                 emptyStateView

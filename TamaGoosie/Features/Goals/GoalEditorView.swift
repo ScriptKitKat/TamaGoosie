@@ -92,6 +92,7 @@ struct GoalEditorView: View {
             .onAppear {
                 if existingGoal != nil { loadExistingGoal() }
             }
+            .preferredColorScheme(.light)
         }
     }
 

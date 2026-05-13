@@ -72,6 +72,21 @@ final class Goal {
         GoalCategory(rawValue: category) ?? .custom
     }
 
+    var icon: String {
+        let t = title.lowercased()
+        if t.contains("sleep") { return "moon.fill" }
+        if t.contains("outside") || t.contains("daylight") { return "sun.max.fill" }
+        return goalCategory.icon
+    }
+
+    var colorHex: String {
+        let t = title.lowercased()
+        if t.contains("sleep") { return "7E57C2" }        // purple
+        if t.contains("exercise") { return "42A5F5" }     // blue
+        if t.contains("outside") || t.contains("daylight") { return "FFA726" } // orange-yellow
+        return goalCategory.color
+    }
+
     var goalFrequency: GoalFrequency {
         GoalFrequency(rawValue: frequency) ?? .daily
     }

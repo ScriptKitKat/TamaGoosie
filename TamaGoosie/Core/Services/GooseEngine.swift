@@ -96,6 +96,15 @@ final class GooseEngine {
     func uncompleteGoal(_ goal: Goal, state: GooseState, log: DailyLog?, goals: [Goal]) {
         guard goal.isCompleted, goal.type != "deadline" else { return }
 
+        // Deduct coins that were awarded for completing this goal
+        var coinsToDeduct = GoosieConstants.coinsPerGoalCompletion
+        // If all goals were done, also deduct the bonus
+        let activeGoals = goals.filter { $0.isActive }
+        if activeGoals.allSatisfy({ $0.isCompleted }) {
+            coinsToDeduct += GoosieConstants.coinsPerAllGoalsDone
+        }
+        state.coins = max(0, state.coins - coinsToDeduct)
+
         goal.currentCount = 0
         goal.isCompleted = false
         goal.completedAt = nil

@@ -37,6 +37,7 @@ struct ScreenTimeDashboardView: View {
             }
             .padding(.horizontal, GoosieTheme.padding)
             .padding(.top, 8)
+            .trackScrollOffset()
         }
         .sheet(isPresented: $showEditSheet) {
             editPlanSheet

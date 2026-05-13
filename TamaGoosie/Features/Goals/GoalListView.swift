@@ -29,6 +29,8 @@ struct GoalListView: View {
 
     @State private var showInitialGoalPicker = false
     @State private var confettiBursts: [ConfettiBurst] = []
+    @State private var healthGoalsExpanded = true
+    @State private var myGoalsExpanded = true
 
     @State private var viewModel = GoalViewModel()
 
@@ -85,18 +87,23 @@ struct GoalListView: View {
                         if !builtInGoals.isEmpty {
                             goalSectionHeader(
                                 title: "Daily Health Goals",
+                                subtitle: "Auto-tracked through Health app",
                                 count: builtInGoals.filter(\.isCompleted).count,
-                                total: builtInGoals.count
+                                total: builtInGoals.count,
+                                isExpanded: $healthGoalsExpanded
                             )
 
-                            VStack(spacing: 10) {
-                                ForEach(builtInGoals, id: \.id) { goal in
-                                    goalCard(for: goal)
+                            if healthGoalsExpanded {
+                                VStack(spacing: 10) {
+                                    ForEach(builtInGoals, id: \.id) { goal in
+                                        goalCard(for: goal)
+                                    }
                                 }
+                                .padding(.horizontal, GoosieTheme.padding)
+                                .padding(.top, 16)
+                                .padding(.bottom, 16)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
                             }
-                            .padding(.horizontal, GoosieTheme.padding)
-                            .padding(.top, 16)
-                            .padding(.bottom, 16)
                         }
 
                         // User goals section
@@ -104,17 +111,24 @@ struct GoalListView: View {
                             goalSectionHeader(
                                 title: "My Goals",
                                 count: userGoals.filter(\.isCompleted).count,
-                                total: userGoals.count
+                                total: userGoals.count,
+                                isExpanded: $myGoalsExpanded
                             )
 
-                            VStack(spacing: 10) {
-                                ForEach(userGoals, id: \.id) { goal in
-                                    goalCard(for: goal)
+                            if myGoalsExpanded {
+                                VStack(spacing: 10) {
+                                    ForEach(userGoals, id: \.id) { goal in
+                                        goalCard(for: goal)
+                                    }
                                 }
+                                .padding(.horizontal, GoosieTheme.padding)
+                                .padding(.top, 16)
+                                .padding(.bottom, 16)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            } else {
+                                Spacer()
+                                    .frame(height: 10)
                             }
-                            .padding(.horizontal, GoosieTheme.padding)
-                            .padding(.top, 16)
-                            .padding(.bottom, 16)
                         }
 
                         // Add goal row
@@ -141,6 +155,7 @@ struct GoalListView: View {
                     }
                 }
                 .padding(.top, 52)
+                .trackScrollOffset()
             }
 
             // Full-screen confetti bursts — multiple can stack simultaneously
@@ -278,29 +293,50 @@ struct GoalListView: View {
         }
     }
 
-    private func goalSectionHeader(title: String, count: Int, total: Int) -> some View {
-        HStack(spacing: 8) {
-            // Green accent bar
-            RoundedRectangle(cornerRadius: 2)
-                .fill(Color(hex: 0x43A047))
-                .frame(width: 4, height: 18)
+    private func goalSectionHeader(title: String, subtitle: String? = nil, count: Int, total: Int, isExpanded: Binding<Bool>) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.25)) {
+                isExpanded.wrappedValue.toggle()
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    // Chevron
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.4))
+                        .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
 
-            Text(title)
-                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                .foregroundStyle(.black.opacity(0.7))
-
-            // Count badge
-            Text("\(count)/\(total)")
-                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 3)
-                .background(
-                    Capsule()
+                    // Green accent bar
+                    RoundedRectangle(cornerRadius: 2)
                         .fill(Color(hex: 0x43A047))
-                )
+                        .frame(width: 4, height: 18)
 
-            Spacer()
+                    Text(title)
+                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.7))
+
+                    // Count badge
+                    Text("\(count)/\(total)")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(Color(hex: 0x43A047))
+                        )
+
+                    Spacer()
+                }
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.4))
+                        .padding(.leading, 24)
+                }
+            }
         }
         .padding(.horizontal, GoosieTheme.padding)
         .padding(.vertical, 10)
@@ -375,14 +411,14 @@ struct GoalCardView: View {
     var onDelete: () -> Void
 
     private var categoryColor: Color {
-        Color(hex: UInt(goal.goalCategory.color, radix: 16) ?? 0xFFD93D)
+        Color(hex: UInt(goal.colorHex, radix: 16) ?? 0xFFD93D)
     }
 
     var body: some View {
         HStack(spacing: 12) {
             // Category tag
             VStack {
-                Image(systemName: goal.goalCategory.icon)
+                Image(systemName: goal.icon)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 32, height: 32)
@@ -437,7 +473,7 @@ struct GoalCardView: View {
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(.black.opacity(0.3))
+                    .foregroundStyle(.primary.opacity(0.3))
                     .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
             }
@@ -512,7 +548,7 @@ struct DeadlineGoalCardView: View {
     @State private var cardCenter: CGPoint = .zero
 
     private var categoryColor: Color {
-        Color(hex: UInt(goal.goalCategory.color, radix: 16) ?? 0xFFD93D)
+        Color(hex: UInt(goal.colorHex, radix: 16) ?? 0xFFD93D)
     }
 
     private var percentInt: Int { Int(goal.percentageProgress * 100) }
@@ -522,7 +558,7 @@ struct DeadlineGoalCardView: View {
             VStack(spacing: 0) {
                 HStack(spacing: 12) {
                     // Category tag
-                    Image(systemName: goal.goalCategory.icon)
+                    Image(systemName: goal.icon)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 32, height: 32)
@@ -582,7 +618,7 @@ struct DeadlineGoalCardView: View {
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.black.opacity(0.3))
+                            .foregroundStyle(.primary.opacity(0.3))
                             .frame(width: 24, height: 24)
                             .contentShape(Rectangle())
                     }
@@ -708,14 +744,14 @@ struct HealthKitGoalCardView: View {
     var onDelete: () -> Void
 
     private var categoryColor: Color {
-        Color(hex: UInt(goal.goalCategory.color, radix: 16) ?? 0xFFD93D)
+        Color(hex: UInt(goal.colorHex, radix: 16) ?? 0xFFD93D)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 // Category tag
-                Image(systemName: goal.goalCategory.icon)
+                Image(systemName: goal.icon)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 32, height: 32)
@@ -751,21 +787,6 @@ struct HealthKitGoalCardView: View {
 
                 Spacer()
 
-                // Auto-tracked badge
-                HStack(spacing: 3) {
-                    Image(systemName: "heart.text.square.fill")
-                        .font(.system(size: 12, weight: .bold))
-                    Text("Auto")
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                }
-                .foregroundStyle(categoryColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    Capsule()
-                        .fill(categoryColor.opacity(0.12))
-                )
-
                 // Kebab menu
                 Menu {
                     Button { onEdit() } label: {
@@ -774,7 +795,7 @@ struct HealthKitGoalCardView: View {
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.black.opacity(0.3))
+                        .foregroundStyle(.primary.opacity(0.3))
                         .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
