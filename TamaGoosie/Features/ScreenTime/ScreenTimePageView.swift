@@ -11,16 +11,18 @@ struct ScreenTimePageView: View {
 
     var body: some View {
         ZStack {
-            GoosieTheme.mintBackground
-                .ignoresSafeArea()
+            GrassyBackgroundView()
 
-            if manager.isSetupComplete {
-                ScreenTimeDashboardView()
-            } else {
-                ScreenTimeOnboardingView(gooseName: gooseName) {
-                    // onComplete — setup is done, manager.isSetupComplete is now true
+            VStack(spacing: 0) {
+                if manager.isSetupComplete {
+                    ScreenTimeDashboardView()
+                } else {
+                    ScreenTimeOnboardingView(gooseName: gooseName) {
+                        // onComplete — setup is done, manager.isSetupComplete is now true
+                    }
                 }
             }
+            .padding(.top, 52)
         }
     }
 }

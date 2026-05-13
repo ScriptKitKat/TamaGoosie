@@ -13,8 +13,8 @@ struct DuckHistoryCard: View {
     @State private var tooltipX: CGFloat = 0
     @State private var chartWidth: CGFloat = 300
 
-    private let happinessColor: Color = GoosieTheme.sunYellow
-    private let healthColor: Color    = GoosieTheme.skyBlue
+    private let happinessColor: Color = Color(hex: 0xFFD54F)
+    private let healthColor: Color    = Color(hex: 0x42A5F5)
     private let tooltipWidth: CGFloat = 136
 
     private var gooseName: String { gooseStates.first?.name ?? "Harold" }
@@ -38,7 +38,6 @@ struct DuckHistoryCard: View {
     private var filtered: [DayPoint] {
         var points = provider.fetchPoints(range: selectedRange)
         if let today = todayPoint {
-            // Replace any existing entry for today, then re-sort
             points.removeAll { Calendar.current.isDateInToday($0.date) }
             points.append(today)
             points.sort { $0.date < $1.date }
@@ -53,31 +52,57 @@ struct DuckHistoryCard: View {
     // MARK: - Body
 
     var body: some View {
-        GoosieCard {
-            VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Blue chart area
+            VStack(alignment: .leading, spacing: 12) {
                 headerRow
                 if filtered.count >= 2 {
                     chartSection
-                    summaryRow
-                    legendRow
                 } else {
                     emptyState
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: 0x42A5F5), Color(hex: 0x1E88E5)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            )
+
+            // Summary below chart
+            if filtered.count >= 2 {
+                summaryRow
+                    .padding(.horizontal, 4)
+                    .padding(.top, 14)
+
+                legendRow
+                    .padding(.horizontal, 4)
+                    .padding(.top, 10)
+            }
         }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+        )
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
         VStack(spacing: 12) {
-            Image(systemName: "chart.line.uptrend.xyaxis")
+            Image(systemName: "chart.bar.fill")
                 .font(.system(size: 36))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.25))
+                .foregroundStyle(.white.opacity(0.4))
             Text("\(gooseName) needs a few more days to show you trends")
-                .font(GoosieTheme.captionFont(13))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -89,12 +114,12 @@ struct DuckHistoryCard: View {
     private var headerRow: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Duck History")
-                    .font(GoosieTheme.bodyFont())
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                Text("Goose History")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
                 Text("Last \(selectedRange.days) Days")
-                    .font(GoosieTheme.captionFont(11))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
             }
             Spacer()
             rangeToggle
@@ -111,25 +136,22 @@ struct DuckHistoryCard: View {
                     }
                 } label: {
                     Text(range.rawValue)
-                        .font(GoosieTheme.captionFont(12))
-                        .fontWeight(selectedRange == range ? .semibold : .regular)
+                        .font(.system(size: 11, weight: selectedRange == range ? .bold : .medium, design: .rounded))
                         .foregroundStyle(
-                            selectedRange == range
-                                ? GoosieTheme.creamWhite
-                                : GoosieTheme.charcoalOutline.opacity(0.5)
+                            selectedRange == range ? Color(hex: 0x1E88E5) : .white.opacity(0.7)
                         )
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(
                             Capsule()
-                                .fill(selectedRange == range ? GoosieTheme.charcoalOutline : Color.clear)
+                                .fill(selectedRange == range ? .white : Color.clear)
                         )
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(3)
-        .background(Capsule().fill(GoosieTheme.charcoalOutline.opacity(0.08)))
+        .background(Capsule().fill(.white.opacity(0.15)))
     }
 
     // MARK: - Chart Section
@@ -160,48 +182,28 @@ struct DuckHistoryCard: View {
 
     private var chartBody: some View {
         Chart {
-            // Dashed reference lines
+            // Reference lines
             RuleMark(y: .value("Ref50", 50.0))
-                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.13))
+                .lineStyle(StrokeStyle(lineWidth: 0.5))
+                .foregroundStyle(.white.opacity(0.2))
 
-            RuleMark(y: .value("Ref75", 75.0))
-                .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.13))
-
-            // Happiness gradient fill
+            // Bar marks for health (blue bars)
             ForEach(filtered) { pt in
-                AreaMark(
-                    x: .value("Date", pt.date),
-                    yStart: .value("Base", 0.0),
-                    yEnd: .value("Happiness", pt.joy)
+                BarMark(
+                    x: .value("Date", pt.date, unit: .day),
+                    y: .value("Health", pt.health)
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [happinessColor.opacity(0.20), happinessColor.opacity(0)],
-                        startPoint: .top, endPoint: .bottom
+                        colors: [Color(hex: 0x90CAF9), Color(hex: 0x64B5F6)],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
                 )
-                .interpolationMethod(.catmullRom)
+                .cornerRadius(4)
             }
 
-            // Health gradient fill
-            ForEach(filtered) { pt in
-                AreaMark(
-                    x: .value("Date", pt.date),
-                    yStart: .value("Base", 0.0),
-                    yEnd: .value("Health", pt.health)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [healthColor.opacity(0.16), healthColor.opacity(0)],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                )
-                .interpolationMethod(.catmullRom)
-            }
-
-            // Happiness line
+            // Happiness line overlay
             ForEach(filtered) { pt in
                 LineMark(
                     x: .value("Date", pt.date),
@@ -213,22 +215,20 @@ struct DuckHistoryCard: View {
                 .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
             }
 
-            // Health line
+            // Happiness dots
             ForEach(filtered) { pt in
-                LineMark(
+                PointMark(
                     x: .value("Date", pt.date),
-                    y: .value("Health", pt.health),
-                    series: .value("Series", "Health")
+                    y: .value("Happiness", pt.joy)
                 )
-                .foregroundStyle(healthColor)
-                .interpolationMethod(.catmullRom)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                .foregroundStyle(happinessColor)
+                .symbolSize(20)
             }
 
             // Scrubber overlay
             if let sel = selectedPoint {
                 RuleMark(x: .value("Selected", sel.date))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.28))
+                    .foregroundStyle(.white.opacity(0.4))
                     .lineStyle(StrokeStyle(lineWidth: 1.5))
 
                 PointMark(
@@ -236,14 +236,14 @@ struct DuckHistoryCard: View {
                     y: .value("Happiness", sel.joy)
                 )
                 .foregroundStyle(happinessColor)
-                .symbolSize(44)
+                .symbolSize(50)
 
                 PointMark(
                     x: .value("Date", sel.date),
                     y: .value("Health", sel.health)
                 )
-                .foregroundStyle(healthColor)
-                .symbolSize(44)
+                .foregroundStyle(.white)
+                .symbolSize(50)
             }
         }
         .chartYScale(domain: 0.0...100.0)
@@ -252,21 +252,25 @@ struct DuckHistoryCard: View {
                 AxisGridLine().foregroundStyle(Color.clear)
                 if let date = value.as(Date.self) {
                     AxisValueLabel {
-                        Text(xAxisLabel(for: date))
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                        VStack(spacing: 1) {
+                            Text(dayName(for: date))
+                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                            Text(dayNumber(for: date))
+                                .font(.system(size: 9, weight: .regular, design: .rounded))
+                        }
+                        .foregroundStyle(.white.opacity(0.6))
                     }
                 }
             }
         }
         .chartYAxis {
             AxisMarks(values: [0.0, 50.0, 100.0]) { value in
-                AxisGridLine().foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.07))
+                AxisGridLine().foregroundStyle(.white.opacity(0.1))
                 if let v = value.as(Double.self) {
                     AxisValueLabel {
                         Text("\(Int(v))")
                             .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
+                            .foregroundStyle(.white.opacity(0.5))
                     }
                 }
             }
@@ -288,7 +292,6 @@ struct DuckHistoryCard: View {
                                 withAnimation(.spring(response: 0.15, dampingFraction: 0.8)) {
                                     selectedPoint = nearest
                                 }
-                                // Snap tooltip to exact data point position if available
                                 if let sel = nearest,
                                    let snappedX = proxy.position(forX: sel.date) {
                                     tooltipX = snappedX
@@ -314,13 +317,19 @@ struct DuckHistoryCard: View {
         }
     }
 
-    private func xAxisLabel(for date: Date) -> String {
+    private func dayName(for date: Date) -> String {
         let f = DateFormatter()
         switch selectedRange {
         case .week:    f.dateFormat = "EEE"
         case .month:   f.dateFormat = "MMM d"
         case .quarter: f.dateFormat = "MMM"
         }
+        return f.string(from: date)
+    }
+
+    private func dayNumber(for date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "d"
         return f.string(from: date)
     }
 
@@ -357,8 +366,8 @@ struct DuckHistoryCard: View {
         .padding(9)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(GoosieTheme.creamWhite)
-                .shadow(color: .black.opacity(0.12), radius: 6, y: 2)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.15), radius: 6, y: 2)
         )
     }
 
@@ -387,7 +396,7 @@ struct DuckHistoryCard: View {
     private func statChip(label: String, value: String, trend: Double?, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label)
-                .font(GoosieTheme.captionFont(10))
+                .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(value)
@@ -398,8 +407,8 @@ struct DuckHistoryCard: View {
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(
                             trend >= 0
-                                ? Color(hue: 0.38, saturation: 0.55, brightness: 0.55)
-                                : GoosieTheme.coralAccent
+                                ? Color(hex: 0x43A047)
+                                : Color(hex: 0xEF5350)
                         )
                 }
             }
@@ -412,7 +421,7 @@ struct DuckHistoryCard: View {
     private func bestDayChip(date: Date) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text("Best Day")
-                .font(GoosieTheme.captionFont(10))
+                .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
             Text(date, format: .dateTime.month(.abbreviated).day())
                 .font(.system(size: 19, weight: .bold, design: .rounded))
@@ -426,20 +435,26 @@ struct DuckHistoryCard: View {
     // MARK: - Legend
 
     private var legendRow: some View {
-        HStack(spacing: 14) {
-            legendItem(color: happinessColor, label: "Happiness")
-            legendItem(color: healthColor,    label: "Health")
-        }
-    }
-
-    private func legendItem(color: Color, label: String) -> some View {
-        HStack(spacing: 5) {
-            RoundedRectangle(cornerRadius: 2)
-                .fill(color)
-                .frame(width: 14, height: 3)
-            Text(label)
-                .font(GoosieTheme.captionFont(11))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.55))
+        HStack(spacing: 16) {
+            HStack(spacing: 5) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(healthColor)
+                    .frame(width: 14, height: 8)
+                Text("Health")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.55))
+            }
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(happinessColor)
+                    .frame(width: 8, height: 8)
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(happinessColor)
+                    .frame(width: 10, height: 2)
+                Text("Happiness")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.55))
+            }
         }
     }
 }

@@ -24,10 +24,17 @@ struct GooseView: View {
 
     private var profile: UserProfile? { profiles.first }
 
+    private var equippedAccessories: [GooseAccessory] {
+        var result: [GooseAccessory] = []
+        if let hatID = gooseState.hatID, let acc = AccessoryCatalog.find(hatID) {
+            result.append(acc)
+        }
+        return result
+    }
+
     var body: some View {
         ZStack {
-            GoosieTheme.mintBackground
-                .ignoresSafeArea()
+            GrassyBackgroundView()
 
             VStack(spacing: 0) {
                 topBar
@@ -36,9 +43,9 @@ struct GooseView: View {
 
                 Spacer()
 
-                // Goose content group — mood, character, name
+                // Goose content group — name, character, mood
                 VStack(spacing: 0) {
-                    moodLabel
+                    gooseNameLabel
                         .padding(.bottom, 12)
 
                     GooseCharacterView(
@@ -46,20 +53,21 @@ struct GooseView: View {
                         showReaction: viewModel.currentReaction,
                         healthiness: viewModel.healthinessPercent,
                         happiness: viewModel.happinessPercent,
-                        debugDisplayState: debugDisplayState
+                        debugDisplayState: debugDisplayState,
+                        equippedAccessories: equippedAccessories
                     )
                     .frame(maxWidth: 240, maxHeight: 240)
                     .frame(maxWidth: .infinity)
 
-                    gooseNameLabel
-                        .padding(.top, 12)
+                    moodLabel
+                        .padding(.top, 8)
                 }
 
                 Spacer()
 
                 statBars
                     .padding(.horizontal, GoosieTheme.padding)
-                    .padding(.bottom, 28)
+                    .padding(.bottom, 40)
             }
         }
         // DEBUG: cycle through display states
@@ -109,48 +117,49 @@ struct GooseView: View {
     // MARK: - Top Bar
 
     private var topBar: some View {
-        ZStack {
-            // Goals + Streak centered together
-            HStack(spacing: 16) {
-                GoalProgressRing(
-                    progress: viewModel.goalProgress,
-                    completed: viewModel.completedGoalsCount,
-                    total: viewModel.totalGoalsCount
+        HStack {
+            // Goals + Streak combined badge
+            GoalStreakBadge(
+                progress: viewModel.goalProgress,
+                completed: viewModel.completedGoalsCount,
+                total: viewModel.totalGoalsCount,
+                streakDays: viewModel.streakDays
+            )
+
+            Spacer()
+
+            // Coins in parallelogram
+            ZStack(alignment: .top) {
+                HStack(spacing: 5) {
+                    Image(systemName: "dollarsign.circle.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xF5A623))
+                    Text("\(viewModel.coins)")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.7))
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.3), value: viewModel.coins)
+                    Button {
+                        // Points action placeholder
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.black.opacity(0.3))
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedParallelogram(skew: 8)
+                        .fill(.white)
+                        .shadow(color: .black.opacity(0.10), radius: 2, y: 1)
                 )
 
-                StreakFlame(days: viewModel.streakDays)
-                    .frame(minWidth: 40)
-            }
-
-            HStack(spacing: 0) {
-                Spacer()
-
-                // Coins
-                ZStack(alignment: .top) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "circle.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(GoosieTheme.sunYellow)
-                        Text("\(viewModel.coins)")
-                            .font(GoosieTheme.bodyFont(14))
-                            .foregroundStyle(GoosieTheme.charcoalOutline)
-                            .contentTransition(.numericText())
-                            .animation(.spring(response: 0.3), value: viewModel.coins)
-                        Button {
-                            // Points action placeholder
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 16))
-                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                        }
+                if let amount = coinAnimationAmount {
+                    CoinAnimationView(amount: amount) {
+                        coinAnimationAmount = nil
                     }
-
-                    if let amount = coinAnimationAmount {
-                        CoinAnimationView(amount: amount) {
-                            coinAnimationAmount = nil
-                        }
-                        .offset(y: -8)
-                    }
+                    .offset(y: -8)
                 }
             }
         }
@@ -160,25 +169,56 @@ struct GooseView: View {
 
     private var moodLabel: some View {
         Text(viewModel.moodText)
-            .font(GoosieTheme.titleFont(26))
-            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.8))
+            .font(.system(size: 15, weight: .medium))
+            .foregroundStyle(.white.opacity(0.7))
     }
 
     // MARK: - Goose Name
 
     private var gooseNameLabel: some View {
         Text(viewModel.gooseName)
-            .font(GoosieTheme.titleFont(22))
-            .foregroundStyle(GoosieTheme.charcoalOutline)
+            .font(GoosieTheme.titleFont(28))
+            .foregroundStyle(.white)
+            .shadow(color: .black.opacity(0.15), radius: 2, y: 1)
     }
 
     // MARK: - Stat Bars
 
     private var statBars: some View {
-        VStack(spacing: 10) {
-            StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthinessPercent, color: GoosieTheme.healthRed)
-            StatBar(label: "Happiness", icon: "face.smiling.fill", value: viewModel.happinessPercent, color: GoosieTheme.happinessYellow)
+        VStack(alignment: .leading, spacing: 10) {
+            // Health
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(GoosieTheme.healthRed)
+                    Text("Health")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.6))
+                }
+                StatBar(label: "Health", icon: "heart.fill", value: viewModel.healthinessPercent, color: GoosieTheme.healthRed)
+            }
+
+            // Happiness
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Image(systemName: "face.smiling.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(GoosieTheme.happinessYellow)
+                    Text("Happiness")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.6))
+                }
+                StatBar(label: "Happiness", icon: "face.smiling.fill", value: viewModel.happinessPercent, color: GoosieTheme.happinessYellow)
+            }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.10), radius: 3, y: 1)
+        )
     }
 
     // MARK: - Helpers

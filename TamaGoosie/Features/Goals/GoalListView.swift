@@ -73,55 +73,74 @@ struct GoalListView: View {
 
     var body: some View {
         ZStack {
-            GoosieTheme.mintBackground
-                .ignoresSafeArea()
+            GrassyBackgroundView()
 
             ScrollView {
-                VStack(spacing: 16) {
-                    // Add goal button
-                    HStack {
-                        Spacer()
-                        Button {
-                            viewModel.startCreating()
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(GoosieTheme.coralAccent)
-                        }
-                    }
-                    .padding(.horizontal, GoosieTheme.padding)
-
+                VStack(spacing: 0) {
                     // Goal cards
                     if goals.isEmpty {
                         emptyState
                     } else {
-                        ForEach(builtInGoals, id: \.id) { goal in
-                            goalCard(for: goal)
-                        }
+                        // Built-in goals section
+                        if !builtInGoals.isEmpty {
+                            goalSectionHeader(
+                                title: "Daily Health Goals",
+                                count: builtInGoals.filter(\.isCompleted).count,
+                                total: builtInGoals.count
+                            )
 
-                        if !builtInGoals.isEmpty && !userGoals.isEmpty {
-                            subtleSeparator
-                        }
-
-                        ForEach(userGoals, id: \.id) { goal in
-                            goalCard(for: goal)
-                        }
-
-                        if !hasUserGoals {
-                            VStack(spacing: 8) {
-                                Text("Ready to set your own goals?")
-                                    .font(GoosieTheme.bodyFont(15))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                                PillButton(title: "Add Your First Goal", icon: "plus", color: GoosieTheme.coralAccent) {
-                                    viewModel.startCreating()
+                            VStack(spacing: 10) {
+                                ForEach(builtInGoals, id: \.id) { goal in
+                                    goalCard(for: goal)
                                 }
                             }
                             .padding(.horizontal, GoosieTheme.padding)
-                            .padding(.top, 8)
+                            .padding(.top, 16)
+                            .padding(.bottom, 16)
                         }
+
+                        // User goals section
+                        if !userGoals.isEmpty {
+                            goalSectionHeader(
+                                title: "My Goals",
+                                count: userGoals.filter(\.isCompleted).count,
+                                total: userGoals.count
+                            )
+
+                            VStack(spacing: 10) {
+                                ForEach(userGoals, id: \.id) { goal in
+                                    goalCard(for: goal)
+                                }
+                            }
+                            .padding(.horizontal, GoosieTheme.padding)
+                            .padding(.top, 16)
+                            .padding(.bottom, 16)
+                        }
+
+                        // Add goal row
+                        Button {
+                            viewModel.startCreating()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 16, weight: .bold))
+                                Text("Add Goal")
+                                    .font(.system(size: 14, weight: .heavy, design: .rounded))
+                            }
+                            .foregroundStyle(Color(hex: 0x43A047))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(.white)
+                                    .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
+                            )
+                        }
+                        .padding(.horizontal, GoosieTheme.padding)
+                        .padding(.bottom, 16)
                     }
                 }
-                .padding(.vertical)
+                .padding(.top, 52)
             }
 
             // Full-screen confetti bursts — multiple can stack simultaneously
@@ -259,12 +278,36 @@ struct GoalListView: View {
         }
     }
 
-    private var subtleSeparator: some View {
-        Rectangle()
-            .fill(GoosieTheme.charcoalOutline.opacity(0.12))
-            .frame(height: 1)
-            .padding(.horizontal, GoosieTheme.padding + 16)
-            .padding(.vertical, 4)
+    private func goalSectionHeader(title: String, count: Int, total: Int) -> some View {
+        HStack(spacing: 8) {
+            // Green accent bar
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color(hex: 0x43A047))
+                .frame(width: 4, height: 18)
+
+            Text(title)
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                .foregroundStyle(.black.opacity(0.7))
+
+            // Count badge
+            Text("\(count)/\(total)")
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule()
+                        .fill(Color(hex: 0x43A047))
+                )
+
+            Spacer()
+        }
+        .padding(.horizontal, GoosieTheme.padding)
+        .padding(.vertical, 10)
+        .background(
+            Rectangle()
+                .fill(.white.opacity(0.85))
+        )
     }
 
     @discardableResult
@@ -292,14 +335,29 @@ struct GoalListView: View {
         VStack(spacing: 16) {
             Image(systemName: "checklist")
                 .font(.system(size: 48))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
+                .foregroundStyle(.white.opacity(0.5))
 
             Text("No goals yet!")
-                .font(GoosieTheme.bodyFont(18))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                .font(.system(size: 18, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(0.8))
 
-            PillButton(title: "Add Goal", icon: "plus", color: GoosieTheme.coralAccent) {
+            Button {
                 viewModel.startCreating()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .heavy))
+                    Text("Add Goal")
+                        .font(.system(size: 15, weight: .heavy, design: .rounded))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .background(
+                    Capsule()
+                        .fill(Color(hex: 0x43A047))
+                        .shadow(color: Color(hex: 0x2E7D32).opacity(0.3), radius: 2, y: 1)
+                )
             }
         }
         .padding(.top, 60)
@@ -321,63 +379,76 @@ struct GoalCardView: View {
     }
 
     var body: some View {
-        GoosieCard {
-            HStack(spacing: 12) {
-                // Category accent
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(categoryColor)
-                    .frame(width: 4)
+        HStack(spacing: 12) {
+            // Category tag
+            VStack {
+                Image(systemName: goal.goalCategory.icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(categoryColor)
+                    )
+            }
 
-                // Content
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Image(systemName: goal.goalCategory.icon)
-                            .font(.system(size: 12))
-                            .foregroundStyle(categoryColor)
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                Text(goal.title)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.75))
+                    .strikethrough(goal.isCompleted)
 
-                        Text(goal.title)
-                            .font(GoosieTheme.bodyFont(16))
-                            .foregroundStyle(GoosieTheme.charcoalOutline)
-                            .strikethrough(goal.isCompleted)
-                    }
+                HStack(spacing: 6) {
+                    Text(goal.goalFrequency.displayName)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.4))
 
-                    HStack {
-                        Text(goal.goalFrequency.displayName)
-                            .font(GoosieTheme.captionFont(11))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-
-                        if goal.currentStreak > 0 {
-                            StreakFlame(days: goal.currentStreak)
+                    if goal.currentStreak > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "flame.fill")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color(hex: 0xFF6D00))
+                            Text("\(goal.currentStreak)")
+                                .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.black.opacity(0.5))
                         }
                     }
                 }
+            }
 
-                Spacer()
+            Spacer()
 
-                // Progress ring / check button
-                if goal.targetCount > 1 {
-                    progressRing
-                } else {
-                    checkButton
+            // Progress ring / check button
+            if goal.targetCount > 1 {
+                progressRing
+            } else {
+                checkButton
+            }
+
+            // Kebab menu
+            Menu {
+                Button { onEdit() } label: {
+                    Label("Edit", systemImage: "pencil")
                 }
-
-                // Kebab menu
-                Menu {
-                    Button { onEdit() } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                    Button(role: .destructive) { onDelete() } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
+                Button(role: .destructive) { onDelete() } label: {
+                    Label("Delete", systemImage: "trash")
                 }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.black.opacity(0.3))
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
             }
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.10), radius: 2, y: 1)
+        )
         .opacity(goal.isCompleted ? 0.7 : 1)
     }
 
@@ -386,27 +457,38 @@ struct GoalCardView: View {
             ZStack {
                 Circle()
                     .stroke(categoryColor.opacity(0.2), lineWidth: 3)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 38, height: 38)
 
                 Circle()
                     .trim(from: 0, to: goal.progress)
                     .stroke(goal.isCompleted ? categoryColor.opacity(0.5) : categoryColor,
                             style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .frame(width: 40, height: 40)
+                    .frame(width: 38, height: 38)
                     .rotationEffect(.degrees(-90))
 
                 Text("\(goal.currentCount)/\(goal.targetCount)")
-                    .font(GoosieTheme.captionFont(10))
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.black.opacity(0.6))
             }
         }
     }
 
     private var checkButton: some View {
         Button(action: goal.isCompleted ? onUncomplete : onComplete) {
-            Image(systemName: goal.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 28))
-                .foregroundStyle(goal.isCompleted ? categoryColor.opacity(0.6) : GoosieTheme.charcoalOutline.opacity(0.3))
+            ZStack {
+                Circle()
+                    .fill(goal.isCompleted ? categoryColor : .clear)
+                    .frame(width: 30, height: 30)
+                    .overlay(
+                        Circle()
+                            .stroke(goal.isCompleted ? categoryColor : .black.opacity(0.2), lineWidth: 2.5)
+                    )
+                if goal.isCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
         }
     }
 }
@@ -437,127 +519,128 @@ struct DeadlineGoalCardView: View {
 
     var body: some View {
         ZStack {
-            GoosieCard {
-                VStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        // Category accent
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(categoryColor)
-                            .frame(width: 4)
-
-                        // Content
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Image(systemName: goal.goalCategory.icon)
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(categoryColor)
-
-                                Text(goal.title)
-                                    .font(GoosieTheme.bodyFont(16))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
-                                    .strikethrough(goal.isCompleted)
-                            }
-
-                            HStack(spacing: 6) {
-                                Text("Deadline")
-                                    .font(GoosieTheme.captionFont(11))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-
-                                if let due = goal.dueDate {
-                                    Text("· due \(due.formatted(date: .abbreviated, time: .omitted))")
-                                        .font(GoosieTheme.captionFont(11))
-                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
-                                }
-                            }
-                        }
-
-                        Spacer()
-
-                        // Percentage ring
-                        ZStack {
-                            Circle()
-                                .stroke(categoryColor.opacity(0.2), lineWidth: 4)
-                                .frame(width: 48, height: 48)
-
-                            Circle()
-                                .trim(from: 0, to: goal.percentageProgress)
-                                .stroke(categoryColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                .frame(width: 48, height: 48)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
-
-                            Text("\(percentInt)%")
-                                .font(GoosieTheme.captionFont(10))
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
-                        }
-
-                        // Kebab menu
-                        Menu {
-                            Button { onEdit() } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
-                            Button(role: .destructive) { onDelete() } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
-                                .frame(width: 28, height: 28)
-                                .contentShape(Rectangle())
-                        }
-                    }
-
-                    // Progress bar
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(categoryColor.opacity(0.15))
-                                .frame(height: 4)
-
-                            RoundedRectangle(cornerRadius: 2)
+            VStack(spacing: 0) {
+                HStack(spacing: 12) {
+                    // Category tag
+                    Image(systemName: goal.goalCategory.icon)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
                                 .fill(categoryColor)
-                                .frame(width: geo.size.width * goal.percentageProgress, height: 4)
-                                .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
-                        }
-                    }
-                    .frame(height: 4)
-                    .padding(.top, 10)
-                    .padding(.leading, 12)
+                        )
 
-                    // Inline slider (long press)
-                    if showSlider {
-                        VStack(spacing: 4) {
-                            Slider(value: $sliderValue, in: 0...1, step: 0.01)
-                                .tint(categoryColor)
-                                .padding(.top, 10)
+                    // Content
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(goal.title)
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(.black.opacity(0.75))
+                            .strikethrough(goal.isCompleted)
 
-                            HStack {
-                                Text("Set progress: \(Int(sliderValue * 100))%")
-                                    .font(GoosieTheme.captionFont(12))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                                Spacer()
-                                Button("Done") {
-                                    onSetPercentage(sliderValue)
-                                    showSlider = false
-                                }
-                                .font(GoosieTheme.captionFont(12))
-                                .foregroundStyle(GoosieTheme.coralAccent)
+                        HStack(spacing: 6) {
+                            Text("Deadline")
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundStyle(.black.opacity(0.4))
+
+                            if let due = goal.dueDate {
+                                Text("due \(due.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.black.opacity(0.35))
                             }
                         }
-                        .padding(.top, 4)
-                        .padding(.leading, 12)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
+
+                    Spacer()
+
+                    // Percentage ring
+                    ZStack {
+                        Circle()
+                            .stroke(categoryColor.opacity(0.2), lineWidth: 3.5)
+                            .frame(width: 42, height: 42)
+
+                        Circle()
+                            .trim(from: 0, to: goal.percentageProgress)
+                            .stroke(categoryColor, style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                            .frame(width: 42, height: 42)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
+
+                        Text("\(percentInt)%")
+                            .font(.system(size: 10, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.black.opacity(0.6))
+                    }
+
+                    // Kebab menu
+                    Menu {
+                        Button { onEdit() } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) { onDelete() } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.black.opacity(0.3))
+                            .frame(width: 24, height: 24)
+                            .contentShape(Rectangle())
                     }
                 }
+
+                // Progress bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(categoryColor.opacity(0.15))
+                            .frame(height: 6)
+
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(categoryColor)
+                            .frame(width: geo.size.width * goal.percentageProgress, height: 6)
+                            .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
+                    }
+                }
+                .frame(height: 6)
+                .padding(.top, 10)
+
+                // Inline slider (long press)
+                if showSlider {
+                    VStack(spacing: 4) {
+                        Slider(value: $sliderValue, in: 0...1, step: 0.01)
+                            .tint(categoryColor)
+                            .padding(.top, 10)
+
+                        HStack {
+                            Text("Set progress: \(Int(sliderValue * 100))%")
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .foregroundStyle(.black.opacity(0.5))
+                            Spacer()
+                            Button("Done") {
+                                onSetPercentage(sliderValue)
+                                showSlider = false
+                            }
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(categoryColor)
+                        }
+                    }
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.10), radius: 2, y: 1)
+            )
             .scaleEffect(bounceScale)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)
                     .stroke(categoryColor, lineWidth: cardGlow ? 2 : 0)
                     .animation(.easeOut(duration: 0.4), value: cardGlow)
             )
-
         }
         .opacity(goal.isCompleted ? 0.8 : 1)
         .contentShape(Rectangle())
@@ -629,82 +712,101 @@ struct HealthKitGoalCardView: View {
     }
 
     var body: some View {
-        GoosieCard {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 12) {
-                    // Left accent bar
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(categoryColor)
-                        .frame(width: 4)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                // Category tag
+                Image(systemName: goal.goalCategory.icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(categoryColor)
+                    )
 
-                    // Title row
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Image(systemName: goal.goalCategory.icon)
-                                .font(.system(size: 12))
-                                .foregroundStyle(categoryColor)
+                // Title row
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(goal.title)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.75))
+                        .strikethrough(goal.isCompleted)
 
-                            Text(goal.title)
-                                .font(GoosieTheme.bodyFont(16))
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
-                                .strikethrough(goal.isCompleted)
-                        }
+                    HStack(spacing: 6) {
+                        Text(goal.goalFrequency.displayName)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(.black.opacity(0.4))
 
-                        HStack {
-                            Text(goal.goalFrequency.displayName)
-                                .font(GoosieTheme.captionFont(11))
-                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-
-                            if goal.currentStreak > 0 {
-                                StreakFlame(days: goal.currentStreak)
+                        if goal.currentStreak > 0 {
+                            HStack(spacing: 2) {
+                                Image(systemName: "flame.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color(hex: 0xFF6D00))
+                                Text("\(goal.currentStreak)")
+                                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(.black.opacity(0.5))
                             }
                         }
                     }
+                }
 
-                    Spacer()
+                Spacer()
 
-                    // Auto-tracked badge
+                // Auto-tracked badge
+                HStack(spacing: 3) {
                     Image(systemName: "heart.text.square.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(categoryColor.opacity(0.7))
-
-                    // Kebab menu
-                    Menu {
-                        Button { onEdit() } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
-                            .frame(width: 28, height: 28)
-                            .contentShape(Rectangle())
-                    }
+                        .font(.system(size: 12, weight: .bold))
+                    Text("Auto")
+                        .font(.system(size: 10, weight: .heavy, design: .rounded))
                 }
+                .foregroundStyle(categoryColor)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule()
+                        .fill(categoryColor.opacity(0.12))
+                )
 
-                // Value label
-                Text(valueLabel)
-                    .font(GoosieTheme.captionFont(12))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                    .padding(.leading, 12)
-
-                // Progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(categoryColor.opacity(0.15))
-                            .frame(height: 6)
-
-                        Capsule()
-                            .fill(progress >= 1.0 ? categoryColor : categoryColor.opacity(0.8))
-                            .frame(width: geo.size.width * progress, height: 6)
-                            .animation(.easeOut(duration: 0.3), value: progress)
+                // Kebab menu
+                Menu {
+                    Button { onEdit() } label: {
+                        Label("Edit", systemImage: "pencil")
                     }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.black.opacity(0.3))
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
-                .frame(height: 6)
-                .padding(.leading, 12)
             }
+
+            // Value label
+            Text(valueLabel)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(.black.opacity(0.45))
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(categoryColor.opacity(0.15))
+                        .frame(height: 6)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(progress >= 1.0 ? categoryColor : categoryColor.opacity(0.8))
+                        .frame(width: geo.size.width * min(progress, 1.0), height: 6)
+                        .animation(.easeOut(duration: 0.3), value: progress)
+                }
+            }
+            .frame(height: 6)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.10), radius: 2, y: 1)
+        )
         .opacity(goal.isCompleted ? 0.7 : 1.0)
     }
 }

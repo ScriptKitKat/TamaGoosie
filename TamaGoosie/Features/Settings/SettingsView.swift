@@ -25,7 +25,7 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            GoosieTheme.mintBackground.ignoresSafeArea()
+            GrassyBackgroundView()
 
             ScrollView {
                 VStack(spacing: 16) {
@@ -192,6 +192,7 @@ struct SettingsView: View {
                     }
                 }
                 .padding(GoosieTheme.padding)
+                .padding(.top, 52)
             }
         }
         .onAppear {

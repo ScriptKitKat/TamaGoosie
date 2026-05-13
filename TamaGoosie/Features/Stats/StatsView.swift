@@ -6,6 +6,8 @@ struct StatsView: View {
     @Query private var profiles: [UserProfile]
     @Query private var gooseStates: [GooseState]
 
+    @State private var selectedDetail: StatDetailType? = nil
+
     private var profile: UserProfile? { profiles.first }
 
     private var gooseName: String { gooseStates.first?.name ?? "Harold" }
@@ -18,42 +20,194 @@ struct StatsView: View {
         provider.fetchPoints(range: .week).count >= 2
     }
 
-    private var bestDayLog: DailyLog? {
-        let points = provider.fetchPoints(range: .quarter)
-        guard let bestPoint = points.max(by: {
-            ($0.healthiness + $0.happiness) < ($1.healthiness + $1.happiness)
-        }) else { return nil }
-
-        let bestDate = bestPoint.date
-        let descriptor = FetchDescriptor<DailyLog>(
-            predicate: #Predicate { $0.date == bestDate }
-        )
-        return try? modelContext.fetch(descriptor).first
-    }
+    private var gooseState: GooseState? { gooseStates.first }
 
     var body: some View {
         ZStack {
-            GoosieTheme.mintBackground.ignoresSafeArea()
+            Color(hex: 0xF5F5F0)
+                .ignoresSafeArea()
 
             if hasEnoughData {
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 0) {
+                        // Goose summary header
+                        gooseHeader
+                            .padding(.horizontal, GoosieTheme.padding)
+
+                        // Chart card
                         DuckHistoryCard()
+                            .padding(.horizontal, GoosieTheme.padding)
+                            .padding(.top, 16)
 
-                        if let log = bestDayLog {
-                            bestDayCard(log: log)
+                        // Average stats row
+                        if let state = gooseState {
+                            averageStatsRow(state: state)
+                                .padding(.horizontal, GoosieTheme.padding)
+                                .padding(.top, 12)
                         }
 
-                        if let profile {
-                            baselinesCard(profile: profile)
-                        }
+                        // Details section
+                        detailsSection
+                            .padding(.top, 24)
                     }
-                    .padding(GoosieTheme.padding)
+                    .padding(.top, 52)
+                    .padding(.bottom, 20)
                 }
             } else {
                 emptyStateView
             }
         }
+        .sheet(item: $selectedDetail) { detail in
+            StatDetailSheet(detailType: detail)
+        }
+    }
+
+    // MARK: - Goose Header
+
+    private var gooseHeader: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: 0xC5E1A5).opacity(0.4))
+                    .frame(width: 56, height: 56)
+
+                GooseCharacterView(mood: gooseState.map { GooseMood.deriveMood(healthiness: $0.healthiness, happiness: $0.happiness) } ?? .content)
+                    .frame(width: 44, height: 44)
+                    .clipShape(Circle())
+
+                if let state = gooseState {
+                    Text("\(Int((state.healthiness + state.happiness) / 2.0 * 100))")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(Circle().fill(Color(hex: 0x42A5F5)))
+                        .offset(x: -16, y: 16)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(gooseName)'s Stats")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                Text("Overview")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+            }
+
+            Spacer()
+        }
+        .padding(.top, 8)
+    }
+
+    // MARK: - Average Stats Row
+
+    private func averageStatsRow(state: GooseState) -> some View {
+        HStack(spacing: 12) {
+            HStack {
+                Text("Avg Health")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                Spacer()
+                Text("\(Int(state.healthiness * 100))")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+            )
+
+            HStack {
+                Text("Avg Happiness")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                Spacer()
+                Text("\(Int(state.happiness * 100))")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+            )
+        }
+    }
+
+    // MARK: - Details Section
+
+    private var detailsSection: some View {
+        VStack(spacing: 0) {
+            // Section header with green accent bar
+            HStack(spacing: 0) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(hex: 0x43A047))
+                    .frame(width: 4, height: 20)
+                    .padding(.trailing, 10)
+
+                Text("Details")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Spacer()
+            }
+            .padding(.horizontal, GoosieTheme.padding)
+            .padding(.vertical, 10)
+            .background(
+                LinearGradient(
+                    colors: [Color(hex: 0x66BB6A), Color(hex: 0x43A047)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+
+            // Feature grid
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                detailTile(type: .healthTrends)
+                detailTile(type: .happinessTrends)
+                detailTile(type: .activityLog)
+                detailTile(type: .sleepData)
+                detailTile(type: .bestDays)
+                detailTile(type: .baselines)
+            }
+            .padding(.horizontal, GoosieTheme.padding)
+            .padding(.top, 16)
+        }
+    }
+
+    private func detailTile(type: StatDetailType) -> some View {
+        Button {
+            selectedDetail = type
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: type.icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(type.accentColor)
+                    .frame(width: 32)
+
+                Text(type.rawValue)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.8))
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .strokeBorder(type.accentColor.opacity(0.25), lineWidth: 1.5)
+                    )
+                    .shadow(color: .black.opacity(0.03), radius: 2, y: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Empty State
@@ -65,133 +219,13 @@ struct StatsView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.2))
             Text("\(gooseName) needs a few more days to show you trends")
-                .font(GoosieTheme.bodyFont())
+                .font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    // MARK: - Best Day Highlight
-
-    private func bestDayCard(log: DailyLog) -> some View {
-        GoosieCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    Image(systemName: "trophy.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(GoosieTheme.warmOrange)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Best Day")
-                            .font(GoosieTheme.bodyFont())
-                            .foregroundStyle(GoosieTheme.charcoalOutline)
-                        Text(log.date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
-                            .font(GoosieTheme.captionFont(12))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                    }
-                    Spacer()
-                }
-
-                Divider()
-
-                HStack(spacing: 12) {
-                    scorePill(
-                        label: "Health",
-                        value: Int(log.endOfDayHealthiness * 100),
-                        color: GoosieTheme.skyBlue
-                    )
-                    scorePill(
-                        label: "Joy",
-                        value: Int(log.endOfDayHappiness * 100),
-                        color: GoosieTheme.sunYellow
-                    )
-                }
-
-                let details: [(String, String, String)] = [
-                    ("figure.walk", "\(log.steps)", "steps"),
-                    ("heart.fill", "\(log.exerciseMinutes)min", "exercise"),
-                    ("moon.fill", "\(String(format: "%.1f", log.sleepHours))h", "sleep"),
-                    ("checklist", "\(log.goalsCompleted)/\(log.goalsTotal)", "goals"),
-                ]
-
-                HStack(spacing: 0) {
-                    ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
-                        VStack(spacing: 4) {
-                            Image(systemName: detail.0)
-                                .font(.system(size: 11))
-                                .foregroundStyle(GoosieTheme.coralAccent)
-                            Text(detail.1)
-                                .font(GoosieTheme.captionFont(12))
-                                .fontWeight(.semibold)
-                                .foregroundStyle(GoosieTheme.charcoalOutline)
-                            Text(detail.2)
-                                .font(GoosieTheme.captionFont(10))
-                                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-            }
-        }
-    }
-
-    private func scorePill(label: String, value: Int, color: Color) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(label)
-                .font(GoosieTheme.captionFont(12))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-            Spacer()
-            Text("\(value)")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.1)))
-    }
-
-    // MARK: - Baselines Card
-
-    private func baselinesCard(profile: UserProfile) -> some View {
-        GoosieCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Your Baselines")
-                    .font(GoosieTheme.bodyFont())
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
-
-                Text("Used to normalize your health scores. Auto-updates after 7 days of data.")
-                    .font(GoosieTheme.captionFont(11))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-
-                Divider()
-
-                baselineRow("Sleep", value: "\(String(format: "%.1f", profile.avgSleepHours))h", icon: "moon.fill")
-                baselineRow("Steps", value: "\(profile.avgSteps)", icon: "figure.walk")
-                baselineRow("Exercise", value: "\(profile.avgExerciseMinutes)min", icon: "heart.fill")
-                baselineRow("Sitting", value: "\(String(format: "%.1f", profile.avgSittingHours))h", icon: "chair.lounge.fill")
-            }
-        }
-    }
-
-    private func baselineRow(_ label: String, value: String, icon: String) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .font(.system(size: 12))
-                .foregroundStyle(GoosieTheme.coralAccent)
-                .frame(width: 16)
-            Text(label)
-                .font(GoosieTheme.captionFont())
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.7))
-            Spacer()
-            Text(value)
-                .font(GoosieTheme.captionFont())
-                .fontWeight(.semibold)
-                .foregroundStyle(GoosieTheme.charcoalOutline)
-        }
+        .padding(.top, 52)
     }
 }

@@ -101,36 +101,38 @@ struct ContentView: View {
 
     private var mainContentView: some View {
         VStack(spacing: 0) {
-            if let title = pageTitle {
-                pageHeader(title: title)
-            }
+            ZStack(alignment: .top) {
+                ZStack(alignment: .bottom) {
+                    currentPageView
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            ZStack(alignment: .bottom) {
-                currentPageView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                // Dimmed backdrop over content only (not tab bar)
-                if showMoreSheet {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea(edges: .top)
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                                showMoreSheet = false
+                    // Dimmed backdrop over content only (not tab bar)
+                    if showMoreSheet {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea(edges: .top)
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                                    showMoreSheet = false
+                                }
                             }
-                        }
+                    }
+
+                    // More popup anchored at bottom of content area
+                    if showMoreSheet {
+                        morePopup
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .padding(.bottom, 8)
+                    }
                 }
 
-                // More popup anchored at bottom of content area
-                if showMoreSheet {
-                    morePopup
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .padding(.bottom, 8)
+                // Floating page header over the content
+                if let title = pageTitle {
+                    pageHeader(title: title)
                 }
             }
 
             tabBar
         }
-        .background(GoosieTheme.mintBackground.ignoresSafeArea())
     }
 
     // MARK: - Page Header
@@ -148,18 +150,20 @@ struct ContentView: View {
         }
     }
 
-    private static let headerColor = GoosieTheme.mintBackground
+    private var usesLightBackground: Bool {
+        moreSubPage != nil // Friends, Stats, Settings all use cream backgrounds
+    }
 
     private func pageHeader(title: String) -> some View {
         ZStack {
-            Self.headerColor
+            Color.clear
 
             Text(title)
                 .font(GoosieTheme.titleFont(20))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
+                .foregroundStyle(usesLightBackground ? GoosieTheme.charcoalOutline : .white)
+                .shadow(color: usesLightBackground ? .clear : .black.opacity(0.15), radius: 2, y: 1)
         }
         .frame(height: 44)
-        .background(Self.headerColor.ignoresSafeArea(edges: .top))
     }
 
     // MARK: - Page Content
@@ -195,7 +199,7 @@ struct ContentView: View {
         TabItem(id: 0, icon: "house.fill"),
         TabItem(id: 1, icon: "checklist"),
         TabItem(id: 2, icon: "hourglass"),
-        TabItem(id: 3, icon: "bag.fill"),
+        TabItem(id: 3, icon: "storefront.fill"),
         TabItem(id: 4, icon: "trophy.fill"),
         TabItem(id: 5, icon: "ellipsis"),
     ]

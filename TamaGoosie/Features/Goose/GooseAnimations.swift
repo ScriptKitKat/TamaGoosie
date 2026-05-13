@@ -3,7 +3,7 @@ import SceneKit
 
 // MARK: - Goose Display State
 
-enum GooseDisplayState {
+enum GooseDisplayState: Hashable {
     case sleeping
     case happy
     case normal
@@ -45,6 +45,7 @@ struct GooseCharacterView: View {
     var healthiness: Double = 50
     var happiness: Double = 50
     var debugDisplayState: GooseDisplayState? = nil
+    var equippedAccessories: [GooseAccessory] = []
 
     @State private var isSleeping: Bool = false
     @State private var bobOffset: CGFloat = 0
@@ -66,12 +67,16 @@ struct GooseCharacterView: View {
         ZStack {
             auraLayer
 
-            Goose3DView(modelName: displayState.modelName)
+            Goose3DView(
+                modelName: displayState.modelName,
+                accessories: equippedAccessories,
+                displayState: displayState
+            )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .scaleEffect(reactionScale)
         }
         .onAppear {
-            isSleeping = Int.random(in: 0..<5) == 0
+            isSleeping = Self.rollSleep()
             startIdleAnimation()
         }
         .onChange(of: showReaction) { _, reaction in
@@ -110,6 +115,14 @@ struct GooseCharacterView: View {
             bobOffset = bobAmount
         }
 
+    }
+
+    /// Higher sleep chance at night (10pm–7am ≈ 60%) vs daytime (≈ 10%).
+    private static func rollSleep() -> Bool {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let isNighttime = hour >= 22 || hour < 7
+        let chance = isNighttime ? 3 : 10  // 1-in-3 vs 1-in-10
+        return Int.random(in: 0..<chance) == 0
     }
 
     private func playReaction(_ reaction: GooseReaction) {

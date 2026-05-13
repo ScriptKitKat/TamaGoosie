@@ -4,6 +4,8 @@ import SceneKit
 struct Goose3DView: UIViewRepresentable {
     var modelName: String = "goose_normal"
     var idleBob: Bool = true
+    var accessories: [GooseAccessory] = []
+    var displayState: GooseDisplayState = .normal
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -21,7 +23,10 @@ struct Goose3DView: UIViewRepresentable {
 
     func updateUIView(_ uiView: SCNView, context: Context) {
         let currentModel = context.coordinator.currentModelName
-        if currentModel != modelName {
+        let currentAccessoryIDs = context.coordinator.currentAccessoryIDs
+        let newAccessoryIDs = Set(accessories.map(\.id))
+
+        if currentModel != modelName || currentAccessoryIDs != newAccessoryIDs {
             loadModel(into: uiView, context: context)
         }
     }
@@ -118,6 +123,12 @@ struct Goose3DView: UIViewRepresentable {
             scaleNode.runAction(.repeatForever(bobSequence))
         }
 
+        // Load accessories
+        for accessory in accessories {
+            loadAccessory(accessory, into: scaleNode, relativeTo: containerNode)
+        }
+        context.coordinator.currentAccessoryIDs = Set(accessories.map(\.id))
+
         // DEBUG: double-tap to print camera values
         #if DEBUG
         context.coordinator.scnView = scnView
@@ -129,8 +140,32 @@ struct Goose3DView: UIViewRepresentable {
         #endif
     }
 
+    private func loadAccessory(_ accessory: GooseAccessory, into parent: SCNNode, relativeTo container: SCNNode) {
+        guard let url = Bundle.main.url(forResource: accessory.modelName, withExtension: "usdz", subdirectory: "Models.scnassets"),
+              let accScene = try? SCNScene(url: url, options: [.convertToYUp: true]) else {
+            return
+        }
+
+        let accNode = SCNNode()
+        accNode.name = "accessory_\(accessory.id)"
+        for child in accScene.rootNode.childNodes {
+            accNode.addChildNode(child.clone())
+        }
+
+        accNode.position = accessory.position(for: displayState)
+        accNode.scale = accessory.scnScale
+        accNode.eulerAngles = accessory.scnRotation
+
+        accNode.enumerateChildNodes { node, _ in
+            node.castsShadow = true
+        }
+
+        container.addChildNode(accNode)
+    }
+
     class Coordinator: NSObject {
         var currentModelName: String = ""
+        var currentAccessoryIDs: Set<String> = []
         weak var scnView: SCNView?
 
         @objc func handleDoubleTap() {

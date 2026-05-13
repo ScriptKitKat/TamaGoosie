@@ -3,18 +3,18 @@ import SwiftUI
 struct StoreView: View {
     var body: some View {
         ZStack {
-            GoosieTheme.mintBackground
-                .ignoresSafeArea()
+            GrassyBackgroundView()
 
             VStack(spacing: 16) {
-                Image(systemName: "bag.fill")
+                Image(systemName: "storefront.fill")
                     .font(.system(size: 48))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
+                    .foregroundStyle(.white.opacity(0.5))
 
                 Text("Coming Soon")
                     .font(GoosieTheme.titleFont(20))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                    .foregroundStyle(.white.opacity(0.7))
             }
+            .padding(.top, 52)
         }
     }
 }
