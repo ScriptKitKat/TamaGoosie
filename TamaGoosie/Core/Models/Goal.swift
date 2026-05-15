@@ -15,23 +15,24 @@ final class Goal {
 
     // Recurring goals
     var preferredTime: Date?
-    var targetCount: Int
-    var currentCount: Int
+    var targetCount: Int = 1
+    var currentCount: Int = 0
 
     // Custom frequency: comma-separated Calendar weekday numbers (1=Sun … 7=Sat)
     var customDays: String = ""           // default required for SwiftData migration
 
     // Tracking
-    var isCompleted: Bool
+    var isCompleted: Bool = false
     var completedAt: Date?
-    var currentStreak: Int
+    var currentStreak: Int = 0
     var lastCompletedDate: Date?
-    var isActive: Bool
-    var sortOrder: Int
-    var createdAt: Date
+    var isActive: Bool = true
+    var sortOrder: Int = 0
+    var createdAt: Date = Date()
+    var completionDates: [Date] = []
 
     // Goose impact
-    var happinessWeight: Double
+    var happinessWeight: Double = 1.0
 
     // Back-reference to owning UserProfile
     var userProfile: UserProfile?
@@ -135,6 +136,7 @@ final class Goal {
         isCompleted = true
         completedAt = .now
         lastCompletedDate = .now
+        recordCompletion()
     }
 
     func incrementProgress() {
@@ -172,5 +174,23 @@ final class Goal {
         currentCount = 0
         isCompleted = false
         completedAt = nil
+    }
+
+    /// Record today as a completion date (idempotent for the same calendar day).
+    func recordCompletion() {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        if !completionDates.contains(where: { cal.isDate($0, inSameDayAs: today) }) {
+            completionDates.append(today)
+        }
+        // Prune to last 90 days
+        let cutoff = cal.date(byAdding: .day, value: -90, to: today) ?? today
+        completionDates.removeAll { $0 < cutoff }
+    }
+
+    /// Remove today from completion dates (for uncomplete).
+    func removeCompletionForToday() {
+        let cal = Calendar.current
+        completionDates.removeAll { cal.isDate($0, inSameDayAs: .now) }
     }
 }

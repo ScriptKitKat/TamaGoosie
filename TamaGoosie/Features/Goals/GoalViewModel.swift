@@ -132,6 +132,7 @@ final class GoalViewModel {
     }
 
     func uncompleteGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        goal.removeCompletionForToday()
         GooseEngine.shared.uncompleteGoal(goal, state: gooseState, log: log, goals: goals)
     }
 
