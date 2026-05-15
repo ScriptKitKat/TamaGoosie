@@ -15,22 +15,21 @@ struct GoalListView: View {
         return active.sorted { $0.sortOrder < $1.sortOrder }
     }
 
-    private var userGoals: [Goal] {
-        goals.filter { $0.type != "builtin" }
+    private var habits: [Goal] {
+        goals.filter { $0.type == "recurring" || $0.type == "builtin" }
     }
 
-    private var builtInGoals: [Goal] {
-        goals.filter { $0.type == "builtin" }
+    private var quests: [Goal] {
+        goals.filter { $0.type == "deadline" }
     }
 
     private var todayLog: DailyLog? {
         allDailyLogs.first { Calendar.current.isDateInToday($0.date) }
     }
 
+    @State private var selectedGoalTab: GoalTab = .today
     @State private var showInitialGoalPicker = false
     @State private var confettiBursts: [ConfettiBurst] = []
-    @State private var healthGoalsExpanded = true
-    @State private var myGoalsExpanded = true
 
     @State private var viewModel = GoalViewModel()
 
@@ -40,125 +39,47 @@ struct GoalListView: View {
 
     private var isWatchPaired: Bool { WatchSyncService.shared.isWatchPaired }
 
-    private var hasUserGoals: Bool {
-        goals.contains { $0.type != "builtin" }
-    }
-
-    private func hkProgress(for goal: Goal) -> Double {
-        if goal.title.localizedCaseInsensitiveContains("steps") || goal.title.localizedCaseInsensitiveContains("walk") {
-            return min(Double(GooseEngine.shared.cachedSteps) / Double(goal.targetCount), 1.0)
-        } else if goal.title.localizedCaseInsensitiveContains("screen time") {
-            return min(Double(GooseEngine.shared.cachedDistractMinutes) / Double(goal.targetCount), 1.0)
-        } else if goal.title.localizedCaseInsensitiveContains("exercise") {
-            return min(Double(GooseEngine.shared.cachedExerciseMinutes) / Double(goal.targetCount), 1.0)
-        } else if goal.title.localizedCaseInsensitiveContains("outside") || goal.title.localizedCaseInsensitiveContains("daylight") {
-            return min(Double(GooseEngine.shared.cachedOutsideMinutes) / Double(goal.targetCount), 1.0)
-        } else {
-            return min(GooseEngine.shared.cachedSleepHours / Double(goal.targetCount), 1.0)
-        }
-    }
-
-    private func hkLabel(for goal: Goal) -> String {
-        if goal.title.localizedCaseInsensitiveContains("steps") || goal.title.localizedCaseInsensitiveContains("walk") {
-            return "\(GooseEngine.shared.cachedSteps.formatted()) / \(goal.targetCount.formatted()) steps"
-        } else if goal.title.localizedCaseInsensitiveContains("screen time") {
-            return "\(GooseEngine.shared.cachedDistractMinutes) / \(goal.targetCount) mins used"
-        } else if goal.title.localizedCaseInsensitiveContains("exercise") {
-            return "\(GooseEngine.shared.cachedExerciseMinutes) / \(goal.targetCount) mins"
-        } else if goal.title.localizedCaseInsensitiveContains("outside") || goal.title.localizedCaseInsensitiveContains("daylight") {
-            return "\(GooseEngine.shared.cachedOutsideMinutes) / \(goal.targetCount) mins"
-        } else {
-            let h = GooseEngine.shared.cachedSleepHours
-            return String(format: "%.1f / %d hrs", h, goal.targetCount)
-        }
-    }
-
     var body: some View {
         ZStack {
             GrassyBackgroundView()
 
             ScrollView {
-                VStack(spacing: 0) {
-                    // Goal cards
-                    if goals.isEmpty {
-                        emptyState
-                    } else {
-                        // Built-in goals section
-                        if !builtInGoals.isEmpty {
-                            goalSectionHeader(
-                                title: "Daily Health Goals",
-                                subtitle: "Auto-tracked through Health app",
-                                count: builtInGoals.filter(\.isCompleted).count,
-                                total: builtInGoals.count,
-                                isExpanded: $healthGoalsExpanded
-                            )
+                VStack(spacing: 16) {
+                    GoalTabPicker(selected: $selectedGoalTab)
 
-                            if healthGoalsExpanded {
-                                VStack(spacing: 10) {
-                                    ForEach(builtInGoals, id: \.id) { goal in
-                                        goalCard(for: goal)
-                                    }
-                                }
-                                .padding(.horizontal, GoosieTheme.padding)
-                                .padding(.top, 16)
-                                .padding(.bottom, 16)
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                            }
-                        }
-
-                        // User goals section
-                        if !userGoals.isEmpty {
-                            goalSectionHeader(
-                                title: "My Goals",
-                                count: userGoals.filter(\.isCompleted).count,
-                                total: userGoals.count,
-                                isExpanded: $myGoalsExpanded
-                            )
-
-                            if myGoalsExpanded {
-                                VStack(spacing: 10) {
-                                    ForEach(userGoals, id: \.id) { goal in
-                                        goalCard(for: goal)
-                                    }
-                                }
-                                .padding(.horizontal, GoosieTheme.padding)
-                                .padding(.top, 16)
-                                .padding(.bottom, 16)
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                            } else {
-                                Spacer()
-                                    .frame(height: 10)
-                            }
-                        }
-
-                        // Add goal row
-                        Button {
-                            viewModel.startCreating()
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 16, weight: .bold))
-                                Text("Add Goal")
-                                    .font(.system(size: 14, weight: .heavy, design: .rounded))
-                            }
-                            .foregroundStyle(Color(hex: 0x43A047))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(.white)
-                                    .shadow(color: .black.opacity(0.08), radius: 2, y: 1)
-                            )
-                        }
-                        .padding(.horizontal, GoosieTheme.padding)
-                        .padding(.bottom, 16)
+                    switch selectedGoalTab {
+                    case .today:
+                        TodayGoalsTab(
+                            goals: goals,
+                            gooseState: gooseState,
+                            todayLog: todayLog,
+                            viewModel: viewModel,
+                            modelContext: modelContext,
+                            onEnsureTodayLog: { ensureTodayLogExists() },
+                            onConfetti: { origin in spawnConfetti(at: origin) }
+                        )
+                    case .habits:
+                        HabitsGoalsTab(
+                            habits: habits,
+                            viewModel: viewModel,
+                            modelContext: modelContext
+                        )
+                    case .quests:
+                        QuestsGoalsTab(
+                            quests: quests,
+                            gooseState: gooseState,
+                            viewModel: viewModel,
+                            modelContext: modelContext,
+                            onEnsureTodayLog: { ensureTodayLogExists() },
+                            onConfetti: { origin in spawnConfetti(at: origin) }
+                        )
                     }
                 }
                 .padding(.top, 52)
+                .padding(.bottom, 20)
                 .trackScrollOffset()
             }
 
-            // Full-screen confetti bursts — multiple can stack simultaneously
             ForEach(confettiBursts) { burst in
                 ConfettiView(origin: burst.origin)
                     .ignoresSafeArea()
@@ -170,7 +91,6 @@ struct GoalListView: View {
         }
         .onAppear {
             viewModel.seedBuiltinGoalsIfNeeded(in: modelContext, isWatchPaired: isWatchPaired)
-            // Snapshot yesterday's stats before resetting goals for the new day
             snapshotYesterdayIfNeeded()
             viewModel.resetDailyGoals(goals)
             ensureTodayLogExists()
@@ -225,125 +145,20 @@ struct GoalListView: View {
                 )
             }
         }
-        .onChange(of: GooseEngine.shared.cachedDistractMinutes) { _, _ in
-            // Screen time goal is display-only — progress refreshes automatically via @Observable
-        }
+        .onChange(of: GooseEngine.shared.cachedDistractMinutes) { _, _ in }
     }
 
-    @ViewBuilder
-    private func goalCard(for goal: Goal) -> some View {
-        if goal.type == "deadline" {
-            DeadlineGoalCardView(
-                goal: goal,
-                onIncrement: {
-                    if let state = gooseState {
-                        viewModel.incrementDeadlinePercentage(goal, gooseState: state, log: ensureTodayLogExists(), goals: goals)
-                    }
-                },
-                onSetPercentage: { value in
-                    if let state = gooseState {
-                        viewModel.setDeadlinePercentage(goal, gooseState: state, log: ensureTodayLogExists(), goals: goals, to: value)
-                    }
-                },
-                onCelebration: { origin in
-                    let burst = ConfettiBurst(origin: origin)
-                    confettiBursts.append(burst)
-                    Task {
-                        try? await Task.sleep(for: .seconds(2.5))
-                        await MainActor.run {
-                            confettiBursts.removeAll { $0.id == burst.id }
-                        }
-                    }
-                },
-                onEdit: { viewModel.startEditing(goal) },
-                onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
-            )
-            .padding(.horizontal, GoosieTheme.padding)
-        } else if goal.isHealthKitTracked {
-            HealthKitGoalCardView(
-                goal: goal,
-                progress: hkProgress(for: goal),
-                valueLabel: hkLabel(for: goal),
-                onEdit: { viewModel.startEditing(goal) },
-                onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
-            )
-            .padding(.horizontal, GoosieTheme.padding)
-        } else {
-            GoalCardView(
-                goal: goal,
-                onComplete: {
-                    if let state = gooseState {
-                        viewModel.completeGoal(goal, gooseState: state, log: ensureTodayLogExists(), goals: goals)
-                    }
-                },
-                onUncomplete: {
-                    if let state = gooseState {
-                        viewModel.uncompleteGoal(goal, gooseState: state, log: todayLog, goals: goals)
-                    }
-                },
-                onIncrement: {
-                    if let state = gooseState {
-                        viewModel.incrementGoal(goal, gooseState: state, log: todayLog, goals: goals)
-                    }
-                },
-                onEdit: { viewModel.startEditing(goal) },
-                onDelete: { viewModel.deleteGoal(goal, in: modelContext) }
-            )
-            .padding(.horizontal, GoosieTheme.padding)
-        }
-    }
+    // MARK: - Helpers
 
-    private func goalSectionHeader(title: String, subtitle: String? = nil, count: Int, total: Int, isExpanded: Binding<Bool>) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                isExpanded.wrappedValue.toggle()
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    // Chevron
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.black.opacity(0.4))
-                        .rotationEffect(.degrees(isExpanded.wrappedValue ? 90 : 0))
-
-                    // Green accent bar
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color(hex: 0x43A047))
-                        .frame(width: 4, height: 18)
-
-                    Text(title)
-                        .font(.system(size: 16, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.7))
-
-                    // Count badge
-                    Text("\(count)/\(total)")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(Color(hex: 0x43A047))
-                        )
-
-                    Spacer()
-                }
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.black.opacity(0.4))
-                        .padding(.leading, 24)
-                }
+    private func spawnConfetti(at origin: CGPoint) {
+        let burst = ConfettiBurst(origin: origin)
+        confettiBursts.append(burst)
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            await MainActor.run {
+                confettiBursts.removeAll { $0.id == burst.id }
             }
         }
-        .padding(.horizontal, GoosieTheme.padding)
-        .padding(.vertical, 10)
-        .background(
-            Rectangle()
-                .fill(.white.opacity(0.85))
-        )
     }
 
     @discardableResult
@@ -365,38 +180,6 @@ struct GoalListView: View {
         if let yesterdayLog {
             GooseEngine.shared.snapshotEndOfDay(state: state, yesterdayLog: yesterdayLog)
         }
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "checklist")
-                .font(.system(size: 48))
-                .foregroundStyle(.white.opacity(0.5))
-
-            Text("No goals yet!")
-                .font(.system(size: 18, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.8))
-
-            Button {
-                viewModel.startCreating()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .heavy))
-                    Text("Add Goal")
-                        .font(.system(size: 15, weight: .heavy, design: .rounded))
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(
-                    Capsule()
-                        .fill(Color(hex: 0x43A047))
-                        .shadow(color: Color(hex: 0x2E7D32).opacity(0.3), radius: 2, y: 1)
-                )
-            }
-        }
-        .padding(.top, 60)
     }
 }
 
@@ -834,7 +617,7 @@ struct HealthKitGoalCardView: View {
 
 // MARK: - Confetti Models
 
-private struct ConfettiBurst: Identifiable {
+struct ConfettiBurst: Identifiable {
     let id = UUID()
     let origin: CGPoint
 }
