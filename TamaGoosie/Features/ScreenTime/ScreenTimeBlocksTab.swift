@@ -74,7 +74,7 @@ struct ScreenTimeBlocksTab: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("New Block")
                 .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
 
             HStack(spacing: 12) {
                 newBlockButton(icon: "timer", label: "Block Now", color: GoosieTheme.coralAccent) {
@@ -102,13 +102,13 @@ struct ScreenTimeBlocksTab: View {
             VStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(color)
                     .frame(width: 48, height: 48)
-                    .background(color.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
 
                 Text(label)
                     .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -132,10 +132,10 @@ struct ScreenTimeBlocksTab: View {
                         .font(.system(size: 13, weight: .heavy, design: .rounded))
                     Text("\(pastBlocks.count)")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
                     Spacer()
                 }
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
                 .padding(.vertical, 8)
             }
 
@@ -156,15 +156,15 @@ struct ScreenTimeBlocksTab: View {
         VStack(spacing: 12) {
             Image(systemName: "shield.checkered")
                 .font(.system(size: 40))
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.2))
 
             Text("No blocks set up")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(GoosieTheme.charcoalOutline)
 
             Text("Here are some ideas to get you started")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
 
             Button {
                 editingBlock = nil
@@ -176,15 +176,11 @@ struct ScreenTimeBlocksTab: View {
                     Text("Block Now")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                 }
-                .foregroundStyle(.black)
+                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(
-                    LinearGradient(
-                        colors: [GoosieTheme.coralAccent.opacity(0.8), GoosieTheme.coralAccent],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ),
+                    GoosieTheme.coralAccent,
                     in: RoundedRectangle(cornerRadius: 14)
                 )
             }

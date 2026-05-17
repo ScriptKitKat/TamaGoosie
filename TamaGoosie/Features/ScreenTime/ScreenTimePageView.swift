@@ -14,8 +14,7 @@ struct ScreenTimePageView: View {
 
     var body: some View {
         ZStack {
-            if manager.isSetupComplete && selectedTab == .stats {
-                // Light cream background for stats (Pokemon Sleep style)
+            if manager.isSetupComplete {
                 Color(hex: 0xF5F0E8).ignoresSafeArea()
             } else {
                 GrassyBackgroundView()

@@ -3,23 +3,23 @@ import SwiftData
 
 @Model
 final class UserProfile {
-    var id: UUID
+    var id: UUID = UUID()
     var displayName: String?
-    var joinDate: Date
+    var joinDate: Date = Date()
 
     // Baselines (auto-calculated after first 7 days of data)
-    var avgSleepHours: Double
-    var avgSteps: Int
-    var avgExerciseMinutes: Int
-    var avgSittingHours: Double
+    var avgSleepHours: Double = 8.0
+    var avgSteps: Int = 6000
+    var avgExerciseMinutes: Int = 30
+    var avgSittingHours: Double = 8.0
 
     // Settings
-    var notificationsEnabled: Bool
-    var vacationMode: Bool
-    var watchPaired: Bool
-    var hasCompletedOnboarding: Bool
-    var liveActivityEnabled: Bool
-    var hasPickedInitialGoals: Bool
+    var notificationsEnabled: Bool = true
+    var vacationMode: Bool = false
+    var watchPaired: Bool = false
+    var hasCompletedOnboarding: Bool = false
+    var liveActivityEnabled: Bool = false
+    var hasPickedInitialGoals: Bool = false
 
     // MARK: - Relationships (1:1 and 1:many owned by UserProfile)
 

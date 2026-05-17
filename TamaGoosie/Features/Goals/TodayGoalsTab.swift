@@ -91,9 +91,14 @@ struct TodayGoalsTab: View {
         if goal.type == "deadline" {
             DeadlineGoalCardView(
                 goal: goal,
-                onIncrement: {
+                onComplete: {
                     if let state = gooseState {
-                        viewModel.incrementDeadlinePercentage(goal, gooseState: state, log: onEnsureTodayLog(), goals: goals)
+                        viewModel.completeDeadlineGoal(goal, gooseState: state, log: onEnsureTodayLog(), goals: goals)
+                    }
+                },
+                onUncomplete: {
+                    if let state = gooseState {
+                        viewModel.uncompleteDeadlineGoal(goal, gooseState: state, log: onEnsureTodayLog(), goals: goals)
                     }
                 },
                 onSetPercentage: { value in

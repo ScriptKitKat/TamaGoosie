@@ -3,46 +3,152 @@ import SwiftData
 
 struct QuestsGoalsTab: View {
     let quests: [Goal]
+    let completedQuests: [Goal]
     let gooseState: GooseState?
     let viewModel: GoalViewModel
     let modelContext: ModelContext
     let onEnsureTodayLog: () -> DailyLog
     let onConfetti: (CGPoint) -> Void
 
+    @State private var showHistory = false
+
     private let pokGreen = Color(hex: 0x43A047)
 
     var body: some View {
         VStack(spacing: 0) {
-            if quests.isEmpty {
+            if quests.isEmpty && completedQuests.isEmpty {
                 emptyState
             } else {
-                VStack(spacing: 10) {
-                    ForEach(quests, id: \.id) { quest in
-                        DeadlineGoalCardView(
-                            goal: quest,
-                            onIncrement: {
-                                if let state = gooseState {
-                                    viewModel.incrementDeadlinePercentage(quest, gooseState: state, log: onEnsureTodayLog(), goals: quests)
-                                }
-                            },
-                            onSetPercentage: { value in
-                                if let state = gooseState {
-                                    viewModel.setDeadlinePercentage(quest, gooseState: state, log: onEnsureTodayLog(), goals: quests, to: value)
-                                }
-                            },
-                            onCelebration: onConfetti,
-                            onEdit: { viewModel.startEditing(quest) },
-                            onDelete: { viewModel.deleteGoal(quest, in: modelContext) }
-                        )
+                // Active quests
+                if !quests.isEmpty {
+                    VStack(spacing: 10) {
+                        ForEach(quests, id: \.id) { quest in
+                            DeadlineGoalCardView(
+                                goal: quest,
+                                onComplete: {
+                                    if let state = gooseState {
+                                        viewModel.completeDeadlineGoal(quest, gooseState: state, log: onEnsureTodayLog(), goals: quests)
+                                    }
+                                },
+                                onUncomplete: {
+                                    if let state = gooseState {
+                                        viewModel.uncompleteDeadlineGoal(quest, gooseState: state, log: onEnsureTodayLog(), goals: quests)
+                                    }
+                                },
+                                onSetPercentage: { value in
+                                    if let state = gooseState {
+                                        viewModel.setDeadlinePercentage(quest, gooseState: state, log: onEnsureTodayLog(), goals: quests, to: value)
+                                    }
+                                },
+                                onCelebration: onConfetti,
+                                onEdit: { viewModel.startEditing(quest) },
+                                onDelete: { viewModel.deleteGoal(quest, in: modelContext) }
+                            )
+                        }
                     }
+                    .padding(.horizontal, GoosieTheme.padding)
+                } else {
+                    emptyActiveState
                 }
-                .padding(.horizontal, GoosieTheme.padding)
+
+                // History section for completed quests
+                if !completedQuests.isEmpty {
+                    historySection
+                        .padding(.horizontal, GoosieTheme.padding)
+                        .padding(.top, 16)
+                }
             }
 
             newQuestButton
                 .padding(.horizontal, GoosieTheme.padding)
                 .padding(.top, 12)
         }
+    }
+
+    // MARK: - History
+
+    private var historySection: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showHistory.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: showHistory ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                    Text("History")
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    Text("\(completedQuests.count)")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                    Spacer()
+                }
+                .foregroundStyle(.white.opacity(0.7))
+                .padding(.vertical, 8)
+            }
+
+            if showHistory {
+                VStack(spacing: 8) {
+                    ForEach(completedQuests, id: \.id) { quest in
+                        completedQuestRow(quest)
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private func completedQuestRow(_ quest: Goal) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(Color(hex: UInt(quest.colorHex, radix: 16) ?? 0xFFD93D).opacity(0.6))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(quest.title)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .strikethrough()
+
+                if let completed = quest.completedAt {
+                    Text("Completed \(completed.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.35))
+                }
+            }
+
+            Spacer()
+
+            Menu {
+                Button(role: .destructive) {
+                    viewModel.deleteGoal(quest, in: modelContext)
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.3))
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.white.opacity(0.08))
+        )
+    }
+
+    private var emptyActiveState: some View {
+        VStack(spacing: 8) {
+            Text("All quests completed!")
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(0.6))
+        }
+        .padding(.top, 24)
     }
 
     private var newQuestButton: some View {

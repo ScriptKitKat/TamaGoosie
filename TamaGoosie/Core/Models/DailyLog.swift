@@ -3,24 +3,24 @@ import SwiftData
 
 @Model
 final class DailyLog {
-    var id: UUID
-    var date: Date
+    var id: UUID = UUID()
+    var date: Date = Date()
 
     // HealthKit data
-    var steps: Int
-    var exerciseMinutes: Int
-    var sleepHours: Double
-    var standHours: Int
-    var sittingHours: Double
-    var outsideMinutes: Int
+    var steps: Int = 0
+    var exerciseMinutes: Int = 0
+    var sleepHours: Double = 0
+    var standHours: Int = 0
+    var sittingHours: Double = 0
+    var outsideMinutes: Int = 0
 
     // Distraction tracking
-    var distractionOpens: Int
-    var distractionMinutes: Int
+    var distractionOpens: Int = 0
+    var distractionMinutes: Int = 0
 
     // Goal snapshot
-    var goalsCompleted: Int
-    var goalsTotal: Int
+    var goalsCompleted: Int = 0
+    var goalsTotal: Int = 0
 
     // End-of-day goose stats (snapshotted once when the next day begins)
     var endOfDayHealthiness: Double = 0

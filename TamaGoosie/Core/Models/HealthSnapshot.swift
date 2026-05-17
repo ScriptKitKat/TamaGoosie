@@ -3,17 +3,17 @@ import SwiftData
 
 @Model
 final class HealthSnapshot {
-    var id: UUID
-    var date: Date
-    var steps: Int
-    var activeCalories: Double
-    var exerciseMinutes: Double
-    var sleepHours: Double
-    var standHours: Int
-    var outsideMinutes: Double
+    var id: UUID = UUID()
+    var date: Date = Date()
+    var steps: Int = 0
+    var activeCalories: Double = 0
+    var exerciseMinutes: Double = 0
+    var sleepHours: Double = 0
+    var standHours: Int = 0
+    var outsideMinutes: Double = 0
     var restingHeartRate: Double?
-    var workoutCount: Int
-    var wasProcessed: Bool
+    var workoutCount: Int = 0
+    var wasProcessed: Bool = false
 
     // Back-reference to owning DailyLog
     var dailyLog: DailyLog?

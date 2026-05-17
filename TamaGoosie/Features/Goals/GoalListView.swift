@@ -20,7 +20,12 @@ struct GoalListView: View {
     }
 
     private var quests: [Goal] {
-        goals.filter { $0.type == "deadline" }
+        goals.filter { $0.type == "deadline" && !$0.isCompleted }
+    }
+
+    private var completedQuests: [Goal] {
+        allGoals.filter { $0.type == "deadline" && $0.isCompleted }
+            .sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
     }
 
     private var todayLog: DailyLog? {
@@ -67,6 +72,7 @@ struct GoalListView: View {
                     case .quests:
                         QuestsGoalsTab(
                             quests: quests,
+                            completedQuests: completedQuests,
                             gooseState: gooseState,
                             viewModel: viewModel,
                             modelContext: modelContext,
@@ -316,17 +322,16 @@ struct GoalCardView: View {
 
 struct DeadlineGoalCardView: View {
     let goal: Goal
-    var onIncrement: () -> Void
+    var onComplete: () -> Void
+    var onUncomplete: () -> Void
     var onSetPercentage: (Double) -> Void
-    var onCelebration: (CGPoint) -> Void   // passes card center in screen coords
+    var onCelebration: (CGPoint) -> Void
     var onEdit: () -> Void
     var onDelete: () -> Void
 
     @State private var showSlider = false
     @State private var sliderValue: Double = 0
     @State private var bounceScale: CGFloat = 1.0
-    @State private var tapCount = 0
-    @State private var tapResetTask: Task<Void, Never>? = nil
     @State private var cardGlow = false
     @State private var cardCenter: CGPoint = .zero
 
@@ -337,132 +342,129 @@ struct DeadlineGoalCardView: View {
     private var percentInt: Int { Int(goal.percentageProgress * 100) }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                HStack(spacing: 12) {
-                    // Category tag
-                    Image(systemName: goal.icon)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 32, height: 32)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(categoryColor)
-                        )
-
-                    // Content
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(goal.title)
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
-                            .foregroundStyle(.black.opacity(0.75))
-                            .strikethrough(goal.isCompleted)
-
-                        HStack(spacing: 6) {
-                            Text("Deadline")
-                                .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .foregroundStyle(.black.opacity(0.4))
-
-                            if let due = goal.dueDate {
-                                Text("due \(due.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.black.opacity(0.35))
-                            }
-                        }
-                    }
-
-                    Spacer()
-
-                    // Percentage ring
-                    ZStack {
-                        Circle()
-                            .stroke(categoryColor.opacity(0.2), lineWidth: 3.5)
-                            .frame(width: 42, height: 42)
-
-                        Circle()
-                            .trim(from: 0, to: goal.percentageProgress)
-                            .stroke(categoryColor, style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
-                            .frame(width: 42, height: 42)
-                            .rotationEffect(.degrees(-90))
-                            .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
-
-                        Text("\(percentInt)%")
-                            .font(.system(size: 10, weight: .heavy, design: .rounded))
-                            .foregroundStyle(.black.opacity(0.6))
-                    }
-
-                    // Kebab menu
-                    Menu {
-                        Button { onEdit() } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        Button(role: .destructive) { onDelete() } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.primary.opacity(0.3))
-                            .frame(width: 24, height: 24)
-                            .contentShape(Rectangle())
-                    }
-                }
-
-                // Progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(categoryColor.opacity(0.15))
-                            .frame(height: 6)
-
-                        RoundedRectangle(cornerRadius: 3)
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                // Category tag
+                Image(systemName: goal.icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
                             .fill(categoryColor)
-                            .frame(width: geo.size.width * goal.percentageProgress, height: 6)
-                            .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
-                    }
-                }
-                .frame(height: 6)
-                .padding(.top, 10)
+                    )
 
-                // Inline slider (long press)
-                if showSlider {
-                    VStack(spacing: 4) {
-                        Slider(value: $sliderValue, in: 0...1, step: 0.01)
-                            .tint(categoryColor)
-                            .padding(.top, 10)
+                // Content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(goal.title)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(.black.opacity(0.75))
+                        .strikethrough(goal.isCompleted)
 
-                        HStack {
-                            Text("Set progress: \(Int(sliderValue * 100))%")
-                                .font(.system(size: 12, weight: .medium, design: .rounded))
-                                .foregroundStyle(.black.opacity(0.5))
-                            Spacer()
-                            Button("Done") {
-                                onSetPercentage(sliderValue)
-                                showSlider = false
-                            }
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
-                            .foregroundStyle(categoryColor)
+                    HStack(spacing: 6) {
+                        if let due = goal.dueDate {
+                            Text("due \(due.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundStyle(.black.opacity(0.35))
                         }
                     }
-                    .padding(.top, 4)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
+
+                Spacer()
+
+                // Checkmark button
+                checkButton
+
+                // Slider toggle
+                Button {
+                    sliderValue = goal.percentageProgress
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showSlider.toggle()
+                    }
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(showSlider ? categoryColor : .black.opacity(0.3))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+
+                // Kebab menu
+                Menu {
+                    Button { onEdit() } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    Button(role: .destructive) { onDelete() } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.primary.opacity(0.3))
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(.white)
-                    .shadow(color: .black.opacity(0.10), radius: 2, y: 1)
-            )
-            .scaleEffect(bounceScale)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(categoryColor, lineWidth: cardGlow ? 2 : 0)
-                    .animation(.easeOut(duration: 0.4), value: cardGlow)
-            )
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(categoryColor.opacity(0.15))
+                        .frame(height: 6)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(categoryColor)
+                        .frame(width: geo.size.width * goal.percentageProgress, height: 6)
+                        .animation(.easeOut(duration: 0.2), value: goal.percentageProgress)
+                }
+            }
+            .frame(height: 6)
+            .padding(.top, 10)
+
+            // Inline slider
+            if showSlider {
+                VStack(spacing: 4) {
+                    Slider(value: $sliderValue, in: 0...1, step: 0.01)
+                        .tint(categoryColor)
+                        .padding(.top, 10)
+
+                    HStack {
+                        Text("Set progress: \(Int(sliderValue * 100))%")
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.black.opacity(0.5))
+                        Spacer()
+                        Button("Done") {
+                            onSetPercentage(sliderValue)
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showSlider = false
+                            }
+                            if sliderValue >= 1.0 {
+                                triggerCelebration()
+                            }
+                        }
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(categoryColor)
+                    }
+                }
+                .padding(.top, 4)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
         }
-        .opacity(goal.isCompleted ? 0.8 : 1)
-        .contentShape(Rectangle())
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(.white)
+                .shadow(color: .black.opacity(0.10), radius: 2, y: 1)
+        )
+        .scaleEffect(bounceScale)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(categoryColor, lineWidth: cardGlow ? 2 : 0)
+                .animation(.easeOut(duration: 0.4), value: cardGlow)
+        )
+        .opacity(goal.isCompleted ? 0.7 : 1)
         // Track card position for confetti burst origin
         .onGeometryChange(for: CGPoint.self) { geo in
             let f = geo.frame(in: .global)
@@ -470,42 +472,36 @@ struct DeadlineGoalCardView: View {
         } action: { center in
             cardCenter = center
         }
-        .onTapGesture {
-            guard !goal.isCompleted else { return }
-            handleTap()
-        }
-        .onLongPressGesture(minimumDuration: 0.5) {
-            sliderValue = goal.percentageProgress
-            withAnimation(.easeInOut(duration: 0.2)) {
-                showSlider.toggle()
-            }
-        }
     }
 
-    private func handleTap() {
-        onIncrement()
-        tapCount += 1
-
-        // Fire celebration immediately on the 5th tap — no delay
-        if tapCount >= 5 {
-            triggerCelebration()
-            tapCount = 0
-            tapResetTask?.cancel()
-        } else {
-            // Reset counter if user stops tapping for 1.5 s
-            tapResetTask?.cancel()
-            tapResetTask = Task {
-                try? await Task.sleep(for: .seconds(1.5))
-                guard !Task.isCancelled else { return }
-                await MainActor.run { tapCount = 0 }
+    private var checkButton: some View {
+        Button(action: {
+            if goal.isCompleted {
+                onUncomplete()
+            } else {
+                onComplete()
+                triggerCelebration()
+            }
+        }) {
+            ZStack {
+                Circle()
+                    .fill(goal.isCompleted ? categoryColor : .clear)
+                    .frame(width: 30, height: 30)
+                    .overlay(
+                        Circle()
+                            .stroke(goal.isCompleted ? categoryColor : .black.opacity(0.2), lineWidth: 2.5)
+                    )
+                if goal.isCompleted {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                }
             }
         }
-        // No per-tap bounce — the ring percentage is the right visual feedback.
-        // Only the celebration (5th tap) triggers the big bounce below.
     }
 
     private func triggerCelebration() {
-        onCelebration(cardCenter)  // full-screen confetti bursts from the card center
+        onCelebration(cardCenter)
         withAnimation(.spring(response: 0.15, dampingFraction: 0.4)) { bounceScale = 1.12 }
         withAnimation(.spring(response: 0.15, dampingFraction: 0.4).delay(0.15)) { bounceScale = 0.96 }
         withAnimation(.spring(response: 0.15, dampingFraction: 0.4).delay(0.25)) { bounceScale = 1.0 }

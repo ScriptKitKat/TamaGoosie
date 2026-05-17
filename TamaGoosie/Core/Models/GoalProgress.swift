@@ -4,11 +4,11 @@ import SwiftData
 /// Records one day's progress toward a Goal (one row per goal per calendar day).
 @Model
 final class GoalProgress {
-    var id: UUID
-    var date: Date
-    var completedCount: Int
-    var targetCount: Int
-    var isCompleted: Bool
+    var id: UUID = UUID()
+    var date: Date = Date()
+    var completedCount: Int = 0
+    var targetCount: Int = 1
+    var isCompleted: Bool = false
     var completedAt: Date?
 
     // Back-reference to owning Goal

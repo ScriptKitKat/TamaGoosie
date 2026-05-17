@@ -105,6 +105,16 @@ final class GoalViewModel {
         }
     }
 
+    func completeDeadlineGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        goal.setPercentage(1.0)
+        GooseEngine.shared.completeGoal(goal, state: gooseState, log: log, goals: goals)
+    }
+
+    func uncompleteDeadlineGoal(_ goal: Goal, gooseState: GooseState, log: DailyLog?, goals: [Goal]) {
+        goal.setPercentage(0.0)
+        GooseEngine.shared.uncompleteGoal(goal, state: gooseState, log: log, goals: goals)
+    }
+
     /// Call when fresh HealthKit values arrive. Completes walk/sleep goals if threshold met.
     func autoCompleteHealthKitGoals(goals: [Goal], steps: Int, sleepHours: Double, state: GooseState, log: DailyLog? = nil) {
         let engine = GooseEngine.shared

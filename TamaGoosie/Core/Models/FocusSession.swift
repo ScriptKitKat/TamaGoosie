@@ -3,12 +3,12 @@ import SwiftData
 
 @Model
 final class FocusSession {
-    var id: UUID
-    var startedAt: Date
+    var id: UUID = UUID()
+    var startedAt: Date = Date()
     var endedAt: Date?
-    var targetMinutes: Int
-    var actualMinutes: Int
-    var wasCompleted: Bool
+    var targetMinutes: Int = 25
+    var actualMinutes: Int = 0
+    var wasCompleted: Bool = false
 
     init(targetMinutes: Int = GoosieConstants.focusDefaultMinutes) {
         self.id = UUID()

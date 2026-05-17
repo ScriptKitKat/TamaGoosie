@@ -185,20 +185,20 @@ struct ContentView: View {
         moreSubPage != nil // Friends, Stats, Settings all use cream backgrounds
     }
 
+    private var headerBackgroundColor: Color {
+        usesLightBackground ? Color(hex: 0xF5F5F0) : Color(hex: 0x8BC34A)
+    }
+
     private func pageHeader(title: String) -> some View {
         VStack(spacing: 0) {
             if pageScrolledDown {
-                (usesLightBackground
-                    ? Color(hex: 0xFFF8F0).opacity(0.92)
-                    : Color.black.opacity(0.35))
-                .ignoresSafeArea(edges: .top)
+                headerBackgroundColor
+                    .ignoresSafeArea(edges: .top)
             }
 
             ZStack {
                 if pageScrolledDown {
-                    (usesLightBackground
-                        ? Color(hex: 0xFFF8F0).opacity(0.92)
-                        : Color.black.opacity(0.35))
+                    headerBackgroundColor
                 }
 
                 Text(title)

@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 final class DistractionApp {
-    var id: UUID
-    var bundleID: String
-    var displayName: String
+    var id: UUID = UUID()
+    var bundleID: String = ""
+    var displayName: String = ""
     var iconName: String?
-    var dailyLimitMinutes: Int
+    var dailyLimitMinutes: Int = 30
 
     // Back-reference to owning UserProfile
     var userProfile: UserProfile?

@@ -30,7 +30,7 @@ struct BlockCardView: View {
         if label.contains("Active") { return .green }
         if label.contains("Disabled") || label.contains("Off") { return .gray }
         if label.contains("Starting") { return GoosieTheme.skyBlue }
-        return .white.opacity(0.5)
+        return GoosieTheme.charcoalOutline.opacity(0.4)
     }
 
     var body: some View {
@@ -40,16 +40,16 @@ struct BlockCardView: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 36, height: 36)
-                    .background(typeColor.opacity(0.85), in: RoundedRectangle(cornerRadius: 10))
+                    .background(typeColor, in: RoundedRectangle(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(block.name)
                         .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
 
                     Text(block.scheduleSummary)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
 
                     Text(block.statusLabel)
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
@@ -63,12 +63,13 @@ struct BlockCardView: View {
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.3))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
             }
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(.white.opacity(0.08))
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
             )
         }
         .contextMenu {
@@ -100,19 +101,19 @@ struct PastBlockRow: View {
         HStack(spacing: 12) {
             Image(systemName: typeIcon)
                 .font(.system(size: 14))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
                 .frame(width: 28, height: 28)
-                .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
+                .background(GoosieTheme.charcoalOutline.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(block.name)
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
 
                 if let completed = block.completedAt ?? block.endedAt {
                     Text(completed.formatted(date: .abbreviated, time: .shortened))
                         .font(.system(size: 11, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.35))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
                 }
             }
 
@@ -121,14 +122,15 @@ struct PastBlockRow: View {
             if block.type == "blockNow" {
                 Text("\(block.durationMinutes)m")
                     .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(.white.opacity(0.05))
+                .fill(.white)
+                .shadow(color: .black.opacity(0.03), radius: 3, y: 1)
         )
     }
 }
