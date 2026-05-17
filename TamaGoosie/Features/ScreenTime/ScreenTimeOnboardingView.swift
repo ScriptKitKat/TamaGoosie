@@ -8,7 +8,7 @@ struct ScreenTimeOnboardingView: View {
     @State private var step = 0
     @State private var manager = ScreenTimeManager.shared
     @State private var showPicker = false
-    @State private var draftSelection = FamilyActivitySelection()
+    @State private var draftSelection = FamilyActivitySelection(includeEntireCategory: true)
 
     private let totalSteps = 6
 
@@ -167,13 +167,13 @@ struct ScreenTimeOnboardingView: View {
     private var appSelectionStep: some View {
         VStack(spacing: 0) {
             Spacer()
-            Text("Choose apps to limit")
+            Text("Select apps to monitor")
                 .font(GoosieTheme.titleFont(24))
                 .foregroundStyle(GoosieTheme.charcoalOutline)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             Spacer().frame(height: 16)
-            Text("Pick the apps that distract you most.\n\(gooseName) will keep an eye on them.")
+            Text("Select all the apps and categories you want\n\(gooseName) to track. You can pick individual apps\nor entire categories.")
                 .font(GoosieTheme.captionFont(14))
                 .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
                 .multilineTextAlignment(.center)

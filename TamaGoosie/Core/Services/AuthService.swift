@@ -58,6 +58,21 @@ final class AuthService {
         }
     }
 
+    // MARK: - Email Sign Up
+
+    func handleEmailSignUp(email: String) {
+        // Use a stable identifier derived from the email address
+        let uid = "email_\(email.lowercased())"
+
+        persistAuth(
+            userID: uid,
+            provider: "email",
+            displayName: nil,
+            email: email,
+            avatarURL: nil
+        )
+    }
+
     // MARK: - Google Sign In
 
     func handleGoogleSignIn(presenting viewController: UIViewController) async -> Bool {

@@ -6,6 +6,7 @@ export const createUser = mutation({
     authProvider: v.string(),
     appleUserID: v.optional(v.string()),
     googleUserID: v.optional(v.string()),
+    emailUserID: v.optional(v.string()),
     username: v.string(),
     displayName: v.optional(v.string()),
     email: v.optional(v.string()),
@@ -53,12 +54,21 @@ export const createUser = mutation({
       if (existing) {
         throw new Error("This Google account already has an account");
       }
+    } else if (args.authProvider === "email" && args.emailUserID) {
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_email_id", (q) => q.eq("emailUserID", args.emailUserID))
+        .first();
+      if (existing) {
+        throw new Error("This email already has an account");
+      }
     }
 
     const userId = await ctx.db.insert("users", {
       authProvider: args.authProvider,
       appleUserID: args.appleUserID,
       googleUserID: args.googleUserID,
+      emailUserID: args.emailUserID,
       username: normalized,
       displayName: args.displayName,
       email: args.email,
@@ -99,6 +109,13 @@ export const getUserByAuthID = query({
         .query("users")
         .withIndex("by_google_id", (q) =>
           q.eq("googleUserID", args.authUserID)
+        )
+        .first();
+    } else if (args.authProvider === "email") {
+      return await ctx.db
+        .query("users")
+        .withIndex("by_email_id", (q) =>
+          q.eq("emailUserID", args.authUserID)
         )
         .first();
     }

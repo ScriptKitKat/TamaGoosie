@@ -3,10 +3,11 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    // Auth — supports Apple and Google sign-in
-    authProvider: v.string(), // "apple" | "google"
+    // Auth — supports Apple, Google, and email sign-in
+    authProvider: v.string(), // "apple" | "google" | "email"
     appleUserID: v.optional(v.string()),
     googleUserID: v.optional(v.string()),
+    emailUserID: v.optional(v.string()),
     username: v.string(),
     // Profile (from auth provider, optional)
     displayName: v.optional(v.string()),
@@ -17,6 +18,7 @@ export default defineSchema({
     .index("by_username", ["username"])
     .index("by_apple_id", ["appleUserID"])
     .index("by_google_id", ["googleUserID"])
+    .index("by_email_id", ["emailUserID"])
     .searchIndex("search_username", { searchField: "username" }),
 
   friendRequests: defineTable({

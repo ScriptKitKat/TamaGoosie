@@ -102,6 +102,8 @@ final class ConvexManager {
             args["appleUserID"] = authUserID
         } else if provider == "google" {
             args["googleUserID"] = authUserID
+        } else if provider == "email" {
+            args["emailUserID"] = authUserID
         }
 
         if let name = authService.displayName {

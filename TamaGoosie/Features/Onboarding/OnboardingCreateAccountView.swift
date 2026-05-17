@@ -114,6 +114,7 @@ struct OnboardingCreateAccountView: View {
                 Spacer()
 
                 OBButton(title: "Continue", isEnabled: canContinue) {
+                    AuthService.shared.handleEmailSignUp(email: obState.emailAddress)
                     obState.choseEmailSignUp = true
                     onAdvance()
                 }
