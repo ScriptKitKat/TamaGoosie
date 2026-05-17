@@ -14,12 +14,17 @@ struct ScreenTimePageView: View {
 
     var body: some View {
         ZStack {
-            GrassyBackgroundView()
+            if manager.isSetupComplete && selectedTab == .stats {
+                // Light cream background for stats (Pokemon Sleep style)
+                Color(hex: 0xF5F0E8).ignoresSafeArea()
+            } else {
+                GrassyBackgroundView()
+            }
 
             VStack(spacing: 0) {
                 if manager.isSetupComplete {
                     ScrollView {
-                        VStack(spacing: 16) {
+                        VStack(spacing: 14) {
                             ScreenTimeTabPicker(selected: $selectedTab)
 
                             switch selectedTab {
@@ -41,6 +46,7 @@ struct ScreenTimePageView: View {
                 }
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: selectedTab)
         .onAppear {
             let activeBlocks = allBlocks.filter { !$0.isPast }
             ScreenTimeManager.shared.refreshAllBlocks(activeBlocks)
