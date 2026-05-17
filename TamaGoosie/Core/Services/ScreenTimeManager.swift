@@ -202,4 +202,81 @@ final class ScreenTimeManager {
     func stopMonitoring() {
         activityCenter.stopMonitoring()
     }
+
+    // MARK: - Per-Block Monitoring
+
+    func registerBlock(_ block: ScreenBlock) {
+        guard isAuthorized else { return }
+        guard let selection = block.selection else { return }
+
+        let blockID = block.id.uuidString
+        let activityName = DeviceActivityName("block-\(blockID)")
+
+        // Stop any existing monitor for this block
+        activityCenter.stopMonitoring([activityName])
+
+        let startComps: DateComponents
+        let endComps: DateComponents
+
+        switch block.type {
+        case "blockNow":
+            // Block Now: monitor from now until duration expires
+            // The timer handles completion; we just need the shield active
+            startComps = DateComponents(hour: 0, minute: 0)
+            endComps = DateComponents(hour: 23, minute: 59)
+
+        case "schedule":
+            guard !block.isVacationMode else { return }
+            startComps = DateComponents(hour: block.scheduleStartHour, minute: block.scheduleStartMinute)
+            endComps = DateComponents(hour: block.scheduleEndHour, minute: block.scheduleEndMinute)
+
+        case "appLimit":
+            // App Limit: monitor all day, with threshold event at the limit
+            startComps = DateComponents(hour: 0, minute: 0)
+            endComps = DateComponents(hour: 23, minute: 59)
+
+        case "lock":
+            // Lock: monitor all day
+            startComps = DateComponents(hour: 0, minute: 0)
+            endComps = DateComponents(hour: 23, minute: 59)
+
+        default:
+            return
+        }
+
+        let schedule = DeviceActivitySchedule(
+            intervalStart: startComps,
+            intervalEnd: endComps,
+            repeats: block.type != "blockNow"
+        )
+
+        var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
+
+        if block.type == "appLimit" {
+            let eventName = DeviceActivityEvent.Name("limit-\(blockID)")
+            events[eventName] = DeviceActivityEvent(
+                applications: selection.applicationTokens,
+                categories: selection.categoryTokens,
+                webDomains: selection.webDomainTokens,
+                threshold: DateComponents(minute: block.timeLimitMinutes)
+            )
+        }
+
+        do {
+            try activityCenter.startMonitoring(activityName, during: schedule, events: events)
+        } catch {
+            print("[ScreenTimeManager] registerBlock failed for \(block.name): \(error)")
+        }
+    }
+
+    func unregisterBlock(_ block: ScreenBlock) {
+        let activityName = DeviceActivityName("block-\(block.id.uuidString)")
+        activityCenter.stopMonitoring([activityName])
+    }
+
+    func refreshAllBlocks(_ blocks: [ScreenBlock]) {
+        for block in blocks where !block.isPast {
+            registerBlock(block)
+        }
+    }
 }
