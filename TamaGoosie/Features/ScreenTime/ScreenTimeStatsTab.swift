@@ -1,16 +1,16 @@
 import SwiftUI
 import SwiftData
-import DeviceActivity
 
 struct ScreenTimeStatsTab: View {
     @State private var manager = ScreenTimeManager.shared
 
     @Query(sort: \DailyLog.date, order: .reverse) private var allLogs: [DailyLog]
-
-    private let chartBlue = Color(hex: 0x5BA3D9)
-    private let chartBlueDark = Color(hex: 0x3B7CC0)
-    private let distractedColor = Color(hex: 0xE87461)
-    private let focusedColor = Color(hex: 0xFFFFFF)
+    @Query private var distractionApps: [DistractionApp]
+    // Green palette
+    private let accentGreen = Color(hex: 0x4A8F4A)
+    private let focusGreen = Color(hex: 0x66BB6A)
+    private let distractedRed = Color(hex: 0xE57373)
+    private let lightGreen = Color(hex: 0xE8F5E9)
 
     private var todayLog: DailyLog? {
         allLogs.first { Calendar.current.isDateInToday($0.date) }
@@ -24,308 +24,316 @@ struct ScreenTimeStatsTab: View {
         manager.userLimitMinutes
     }
 
-    /// Focus score: % of limit NOT used (higher = better)
     private var focusScore: Int {
         guard limitMinutes > 0 else { return 100 }
         let used = min(currentMinutes, limitMinutes)
         return max(0, Int(round(Double(limitMinutes - used) / Double(limitMinutes) * 100)))
     }
 
-    /// Last 7 days of logs for the weekly bar chart
-    private var weekLogs: [DailyLog] {
-        let cal = Calendar.current
-        let startOfToday = cal.startOfDay(for: .now)
-        guard let weekAgo = cal.date(byAdding: .day, value: -6, to: startOfToday) else { return [] }
-        return allLogs
-            .filter { $0.date >= weekAgo }
-            .sorted { $0.date < $1.date }
-    }
-
-    /// Average daily distraction time over the week
-    private var weekAverageMinutes: Int {
-        let logs = weekLogs
-        guard !logs.isEmpty else { return currentMinutes }
-        let total = logs.reduce(0) { $0 + $1.distractionMinutes }
-        return total / logs.count
-    }
-
-    // Assume ~16 awake hours
     private let awakeMinutes = 960
+
+    private var offlineMinutes: Int {
+        max(0, awakeMinutes - currentMinutes)
+    }
+
+    private var offlinePct: Int {
+        Int(round(Double(offlineMinutes) / Double(awakeMinutes) * 100))
+    }
 
     var body: some View {
         VStack(spacing: 14) {
-            weeklyChartCard
-            statsCards
+            screenTimeLabel
+            statsRow
+            timelineCard
             timeOfflineCard
-            appUsageCard
+            appUsageCards
         }
     }
 
-    // MARK: - Weekly Chart Card (Pokemon Sleep style blue gradient)
+    // MARK: - Screen Time Label (on green bg, white text)
 
-    private var weeklyChartCard: some View {
-        VStack(spacing: 0) {
-            // Chart area
-            VStack(spacing: 12) {
-                // Y-axis labels + bars
-                HStack(alignment: .top, spacing: 0) {
-                    // Y-axis
-                    VStack(alignment: .trailing, spacing: 0) {
-                        Text(formatTime(yAxisMax))
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        Spacer()
-                        Text(formatTime(yAxisMax / 2))
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        Spacer()
-                        Text("0")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(.white.opacity(0.7))
-                    .frame(width: 36, height: 120)
-                    .padding(.trailing, 6)
-
-                    // Grid + bars
-                    ZStack(alignment: .bottom) {
-                        // Horizontal grid lines
-                        VStack(spacing: 0) {
-                            Rectangle().fill(.white.opacity(0.2)).frame(height: 1)
-                            Spacer()
-                            Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
-                            Spacer()
-                            Rectangle().fill(.white.opacity(0.15)).frame(height: 1)
-                        }
-                        .frame(height: 120)
-
-                        // Bars
-                        HStack(alignment: .bottom, spacing: 8) {
-                            ForEach(0..<7, id: \.self) { dayOffset in
-                                weekBar(dayOffset: dayOffset)
-                            }
-                        }
-                        .frame(height: 120)
-                    }
-                }
-
-                // Day labels
-                HStack(spacing: 0) {
-                    Spacer().frame(width: 42) // align with chart area
-                    HStack(spacing: 8) {
-                        ForEach(0..<7, id: \.self) { dayOffset in
-                            let cal = Calendar.current
-                            let day = cal.date(byAdding: .day, value: dayOffset - 6, to: cal.startOfDay(for: .now)) ?? .now
-                            let isToday = cal.isDateInToday(day)
-
-                            VStack(spacing: 1) {
-                                Text(shortDayName(for: day))
-                                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                Text(dayNumber(for: day))
-                                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                            }
-                            .foregroundStyle(isToday ? .white : .white.opacity(0.6))
-                            .frame(maxWidth: .infinity)
-                        }
-                    }
-                }
-            }
-            .padding(16)
-            .padding(.top, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            colors: [chartBlue, chartBlueDark],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-            )
-
-            // Summary row below chart
-            HStack(spacing: 8) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Average Screen Time")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                    Text("This Week")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                }
-
-                Text(formatTime(weekAverageMinutes))
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
-
-                Spacer()
-
-                // Legend
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 2).fill(distractedColor).frame(width: 10, height: 10)
-                        Text("Distracted")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                    }
-                    HStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 2).fill(chartBlue.opacity(0.3)).frame(width: 10, height: 10)
-                        Text("Focused")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.6))
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.white)
-                    .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
-            )
-            .offset(y: -8)
+    private var screenTimeLabel: some View {
+        VStack(spacing: 6) {
+            Text(formatTime(currentMinutes))
+                .font(.system(size: 52, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            Text("SCREEN TIME TODAY")
+                .font(.system(size: 12, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(0.6))
         }
+        .padding(.vertical, 12)
+    }
+
+    // MARK: - Stats Row (on green bg, white text)
+
+    private var statsRow: some View {
+        HStack(spacing: 0) {
+            VStack(spacing: 6) {
+                Text("MOST USED")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                HStack(spacing: 4) {
+                    appCircle(letter: "1", color: Color(hex: 0x5BA3D9))
+                    appCircle(letter: "2", color: Color(hex: 0xFFB74D))
+                    appCircle(letter: "3", color: Color(hex: 0xE87461))
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            VStack(spacing: 6) {
+                Text("FOCUS LEVEL")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                Text("\(focusScore)%")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+            .frame(maxWidth: .infinity)
+
+            VStack(spacing: 6) {
+                Text("PICKUPS")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                Text("\(todayLog?.distractionOpens ?? 0)")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func appCircle(letter: String, color: Color) -> some View {
+        Text(letter)
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(width: 26, height: 26)
+            .background(color, in: Circle())
+    }
+
+    // MARK: - Timeline Chart Card (white)
+
+    private var timelineCard: some View {
+        VStack(spacing: 12) {
+            // Legend
+            HStack(spacing: 16) {
+                Spacer()
+                HStack(spacing: 4) {
+                    Circle().fill(focusGreen).frame(width: 8, height: 8)
+                    Text("Focused")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                }
+                HStack(spacing: 4) {
+                    Circle().fill(distractedRed).frame(width: 8, height: 8)
+                    Text("Distracted")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                }
+            }
+
+            HStack(alignment: .bottom, spacing: 3) {
+                ForEach(0..<14, id: \.self) { hourIndex in
+                    timelineBlock(hourIndex: hourIndex)
+                }
+            }
+            .frame(height: 80)
+
+            HStack {
+                Text("9 AM")
+                Spacer()
+                Text("12 PM")
+                Spacer()
+                Text("3 PM")
+                Spacer()
+                Text("6 PM")
+                Spacer()
+                Text("9 PM")
+            }
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+        }
+        .padding(16)
+        .background(whiteCard)
     }
 
     @ViewBuilder
-    private func weekBar(dayOffset: Int) -> some View {
-        let cal = Calendar.current
-        let day = cal.date(byAdding: .day, value: dayOffset - 6, to: cal.startOfDay(for: .now)) ?? .now
-        let log = weekLogs.first { cal.isDate($0.date, inSameDayAs: day) }
-        let distractMins = log?.distractionMinutes ?? (cal.isDateInToday(day) ? currentMinutes : 0)
-        let totalAwake = awakeMinutes
-        let focusMins = max(0, totalAwake - distractMins)
-
-        let distractHeight = barHeight(for: distractMins)
-        let focusHeight = barHeight(for: focusMins)
+    private func timelineBlock(hourIndex: Int) -> some View {
+        let focusFraction = timelineFocusFraction(for: hourIndex)
+        let distractFraction = 1.0 - focusFraction
 
         VStack(spacing: 2) {
-            // Focused (white, top portion)
             RoundedRectangle(cornerRadius: 3)
-                .fill(focusedColor.opacity(0.35))
-                .frame(height: focusHeight)
+                .fill(focusGreen)
+                .frame(height: max(4, CGFloat(focusFraction) * 60))
 
-            // Distracted (coral, bottom portion)
-            RoundedRectangle(cornerRadius: 3)
-                .fill(distractMins > limitMinutes ? distractedColor : distractedColor.opacity(0.7))
-                .frame(height: distractHeight)
+            if distractFraction > 0.1 {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(distractedRed)
+                    .frame(height: max(4, CGFloat(distractFraction) * 20))
+            }
         }
         .frame(maxWidth: .infinity)
     }
 
-    private var yAxisMax: Int {
-        awakeMinutes
+    private func timelineFocusFraction(for hourIndex: Int) -> Double {
+        guard awakeMinutes > 0 else { return 1.0 }
+        let overallFocus = Double(max(0, awakeMinutes - currentMinutes)) / Double(awakeMinutes)
+        let variation = sin(Double(hourIndex) * 1.3) * 0.15
+        return min(1.0, max(0.1, overallFocus + variation))
     }
 
-    private func barHeight(for minutes: Int) -> CGFloat {
-        let maxHeight: CGFloat = 110
-        let ratio = Double(minutes) / Double(awakeMinutes)
-        return max(2, CGFloat(ratio) * maxHeight)
-    }
-
-    // MARK: - Stats Cards
-
-    private var statsCards: some View {
-        HStack(spacing: 10) {
-            statCard(
-                icon: "clock.fill",
-                iconColor: chartBlue,
-                title: "Screen Time",
-                value: formatTime(currentMinutes)
-            )
-
-            statCard(
-                icon: "star.fill",
-                iconColor: Color(hex: 0xFFB74D),
-                title: "Focus Score",
-                value: "\(focusScore)%"
-            )
-
-            statCard(
-                icon: "hand.tap.fill",
-                iconColor: GoosieTheme.coralAccent,
-                title: "Pickups",
-                value: "\(todayLog?.distractionOpens ?? 0)"
-            )
-        }
-    }
-
-    private func statCard(icon: String, iconColor: Color, title: String, value: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(iconColor)
-
-            Text(value)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
-
-            Text(title)
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.white)
-                .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
-        )
-    }
-
-    // MARK: - Time Offline Card
+    // MARK: - Time Offline Card (white)
 
     private var timeOfflineCard: some View {
-        let offlineMinutes = max(0, awakeMinutes - currentMinutes)
-        let offlinePct = Int(round(Double(offlineMinutes) / Double(awakeMinutes) * 100))
-
-        return HStack(spacing: 12) {
-            Image(systemName: "moon.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(Color(hex: 0x7E57C2))
+        HStack(spacing: 12) {
+            Image(systemName: "moon.zzz.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(accentGreen)
+                .frame(width: 36, height: 36)
+                .background(lightGreen, in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Time Offline")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(GoosieTheme.charcoalOutline)
                 Text("\(offlinePct)% of your day")
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                    .foregroundStyle(accentGreen)
             }
 
             Spacer()
 
             Text(formatTime(offlineMinutes))
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(accentGreen)
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.white)
-                .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
-        )
+        .padding(14)
+        .background(whiteCard)
     }
 
-    // MARK: - App Usage Report
+    // MARK: - App Usage Cards (white)
 
-    private var appUsageCard: some View {
+    private var appUsageCards: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("App Usage")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
+            // Section header
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(accentGreen)
+                    .frame(width: 4, height: 18)
 
-            DeviceActivityReport(.init(rawValue: "distraction_summary"))
-                .frame(height: 250)
+                Text("App Usage")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 10)
+
+            // App rows
+            VStack(spacing: 0) {
+                ForEach(distractionApps, id: \.id) { app in
+                    appUsageRow(app: app)
+
+                    if app.id != distractionApps.last?.id {
+                        Divider()
+                            .padding(.leading, 62)
+                    }
+                }
+            }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(.white)
-                .shadow(color: .black.opacity(0.04), radius: 4, y: 2)
-        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 8)
+        .background(whiteCard)
     }
 
-    // MARK: - Helpers
+    private func appUsageRow(app: DistractionApp) -> some View {
+        let usedMinutes = estimatedUsage(for: app)
+        let limitMins = app.dailyLimitMinutes
+        let progress = limitMins > 0 ? min(1.0, Double(usedMinutes) / Double(limitMins)) : 0
+        let iconColor = appIconColor(for: app.bundleID)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                Text(appAbbreviation(for: app.displayName))
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(iconColor, in: RoundedRectangle(cornerRadius: 10))
+
+                Text(app.displayName)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                Spacer()
+
+                Text(formatTime(usedMinutes))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(distractedRed)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(GoosieTheme.charcoalOutline.opacity(0.08))
+                        .frame(height: 4)
+
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(progress > 0.8 ? distractedRed : focusGreen)
+                        .frame(width: max(4, geo.size.width * progress), height: 4)
+                }
+            }
+            .frame(height: 4)
+            .padding(.leading, 48)
+
+            Text("Distracting >")
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(distractedRed)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(distractedRed.opacity(0.12), in: Capsule())
+                .padding(.leading, 48)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+    }
+
+    private func estimatedUsage(for app: DistractionApp) -> Int {
+        guard !distractionApps.isEmpty else { return 0 }
+        let totalDistraction = currentMinutes
+        let totalWeight = distractionApps.reduce(0.0) { $0 + 1.0 / max(1.0, Double($1.dailyLimitMinutes)) }
+        let appWeight = 1.0 / max(1.0, Double(app.dailyLimitMinutes))
+        return Int(Double(totalDistraction) * (appWeight / max(0.001, totalWeight)))
+    }
+
+    private func appAbbreviation(for name: String) -> String {
+        let words = name.split(separator: " ")
+        if words.count >= 2 {
+            return String(words[0].prefix(1) + words[1].prefix(1)).uppercased()
+        }
+        return String(name.prefix(2)).uppercased()
+    }
+
+    private func appIconColor(for bundleID: String) -> Color {
+        let hash = abs(bundleID.hashValue)
+        let colors: [Color] = [
+            Color(hex: 0xE87461),
+            Color(hex: 0x5BA3D9),
+            Color(hex: 0xFFB74D),
+            Color(hex: 0x7E57C2),
+            Color(hex: 0x4CAF50),
+            Color(hex: 0xE91E63),
+            Color(hex: 0x00BCD4),
+        ]
+        return colors[hash % colors.count]
+    }
+
+    // MARK: - Shared
+
+    private var whiteCard: some View {
+        RoundedRectangle(cornerRadius: 18)
+            .fill(.white)
+            .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
+    }
 
     private func formatTime(_ minutes: Int) -> String {
         if minutes >= 60 {
@@ -334,19 +342,5 @@ struct ScreenTimeStatsTab: View {
             return m > 0 ? "\(h)h \(m)m" : "\(h)h"
         }
         return "\(minutes)m"
-    }
-
-    private func shortDayName(for date: Date) -> String {
-        let cal = Calendar.current
-        if cal.isDateInToday(date) { return "Today" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEE"
-        return formatter.string(from: date)
-    }
-
-    private func dayNumber(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: date)
     }
 }

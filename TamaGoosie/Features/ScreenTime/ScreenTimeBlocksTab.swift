@@ -74,26 +74,32 @@ struct ScreenTimeBlocksTab: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("New Block")
                 .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.7))
 
             HStack(spacing: 12) {
-                newBlockButton(icon: "timer", label: "Block Now", color: GoosieTheme.coralAccent) {
+                newBlockButton(icon: "timer", label: "Block Now", color: Color(hex: 0xE87461)) {
                     editingBlock = nil
                     showBlockNow = true
                 }
-                newBlockButton(icon: "calendar.badge.clock", label: "Schedule", color: GoosieTheme.skyBlue) {
+                newBlockButton(icon: "calendar.badge.clock", label: "Schedule", color: Color(hex: 0x5BA3D9)) {
                     editingBlock = nil
                     showSchedule = true
                 }
-                newBlockButton(icon: "hourglass", label: "App Limit", color: GoosieTheme.warmOrange) {
+                newBlockButton(icon: "hourglass", label: "App Limit", color: Color(hex: 0xFFB74D)) {
                     editingBlock = nil
                     showAppLimit = true
                 }
-                newBlockButton(icon: "lock.fill", label: "Lock", color: .purple) {
+                newBlockButton(icon: "lock.fill", label: "Lock", color: Color(hex: 0x7E57C2)) {
                     editingBlock = nil
                     showLock = true
                 }
             }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(.white)
+                    .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
+            )
         }
     }
 
@@ -132,10 +138,10 @@ struct ScreenTimeBlocksTab: View {
                         .font(.system(size: 13, weight: .heavy, design: .rounded))
                     Text("\(pastBlocks.count)")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.35))
+                        .foregroundStyle(.white.opacity(0.5))
                     Spacer()
                 }
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.7))
                 .padding(.vertical, 8)
             }
 
@@ -156,15 +162,15 @@ struct ScreenTimeBlocksTab: View {
         VStack(spacing: 12) {
             Image(systemName: "shield.checkered")
                 .font(.system(size: 40))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.2))
+                .foregroundStyle(.white.opacity(0.4))
 
             Text("No blocks set up")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline)
+                .foregroundStyle(.white)
 
             Text("Here are some ideas to get you started")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                .foregroundStyle(.white.opacity(0.6))
 
             Button {
                 editingBlock = nil
@@ -180,9 +186,10 @@ struct ScreenTimeBlocksTab: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(
-                    GoosieTheme.coralAccent,
+                    Color(hex: 0x4A8F4A),
                     in: RoundedRectangle(cornerRadius: 14)
                 )
+                .shadow(color: .black.opacity(0.1), radius: 6, y: 3)
             }
             .padding(.top, 8)
         }
