@@ -15,6 +15,7 @@
 		0BF180C0CF793DA035E31032 /* RewardEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE23080F0C585620FA2AA80 /* RewardEngine.swift */; };
 		1344CABD800068004099CC07 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE9FF2C893266ED149C99A6F /* ContentView.swift */; };
 		14047F718F25D0338EBCDA49 /* GooseViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6093B883BCF12E79488221CC /* GooseViewModel.swift */; };
+		151699CB3F051BCEAE8DB291 /* GoalCategorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568240AF79E34F36196A5049 /* GoalCategorySheet.swift */; };
 		160FD47F3B579307B11E774D /* StatDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC9B318097B5BBA56FDFC71 /* StatDetailSheet.swift */; };
 		1DAC8FD935D9C210CEDEC056 /* FocusSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220BD24CBD965B1825F27DF4 /* FocusSessionView.swift */; };
 		22870AF64DE57430F22175C6 /* GoalCompletionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8ADFDBE86EFD3435417994 /* GoalCompletionEvent.swift */; };
@@ -27,6 +28,8 @@
 		2F3E292F809B7EE6E15DD73E /* DistractionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */; };
 		2F4B797DC006B701FEE0AB7D /* StoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5814555EFEBEB93493DC306C /* StoreView.swift */; };
 		301077A680DDD645E5EAF4E3 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB696A4E3DA4C74DEDB95EBC /* OnboardingWelcomeView.swift */; };
+		33111F3DF85EE1C6C7297CD1 /* GoalTabPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7381076FD00EB7CA9B59C0E6 /* GoalTabPicker.swift */; };
+		36293B658F4FBB8D35B6C3D6 /* QuestsGoalsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A65DE90A614D98222821F2F /* QuestsGoalsTab.swift */; };
 		39A0B5BBFFB5E737EE1F64EB /* DailyLogHistoryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */; };
 		3A24313AAF0FA6F43F6C8CC7 /* ShieldConfigurationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A538E34D97F4AE7F789DD632 /* ShieldConfigurationProvider.swift */; };
 		3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */; };
@@ -35,11 +38,14 @@
 		3F5A1C0F9DD55FF2E4DAE47B /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		40972CFF22F4411A11F5D7B1 /* OnboardingReturnWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E747FB746BFBA87BF9DF882 /* OnboardingReturnWelcomeView.swift */; };
 		40BE637AD47A09F5CDFBBC89 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
+		4169C2F4BF691F9445488BEE /* GoalCreateFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0181558E2E6BB28BF818C4 /* GoalCreateFlowView.swift */; };
+		43AD8F27580CCDE11AE8D944 /* GoalEditFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E8C068355FAD069E4C521A1 /* GoalEditFormView.swift */; };
 		4591563ACA9FB615B568ED77 /* ScreenTimePageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A130090E818B89BA7564E7C /* ScreenTimePageView.swift */; };
 		45A0AB0B4C6AD741A245043E /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9F686670F7CA74D19AB1BD /* WatchApp.swift */; };
 		461E317A6611D8B4CF430099 /* InitialGoalPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B02DE509E35AEACBA41B53EB /* InitialGoalPickerSheet.swift */; };
 		4641DE71A6A7AAD75B9019C2 /* TamaGoosieWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		48444724C3D21789368ECF65 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
+		496EDC28C2070C91153BBE09 /* ScreenBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08817E670018B0128A419CD /* ScreenBlock.swift */; };
 		4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A088FE71FAEE764B51B4E397 /* UserProfile.swift */; };
 		4D1AF7EDF505BBF57F0FBFA5 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */; };
 		4D31E6B1F1B96627FD1BEAF3 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
@@ -82,12 +88,14 @@
 		8FCE49D307A4F3661286DBDD /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		8FD395960A763EAE1FC89815 /* ChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A004F556DB773317B1C60A9D /* ChallengesView.swift */; };
 		932428714B941E4DB24F0DE5 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
+		93EEF44A63EECD9EB9BF28D9 /* WeeklyHeatMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68D2178CE7A9ECC8AF740E74 /* WeeklyHeatMap.swift */; };
 		9A59252343D4DAFFA8EEED20 /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
 		9BEC36EB4116237BBFE97F12 /* OnboardingHatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D7418A207CA04634F5B2B18 /* OnboardingHatchView.swift */; };
 		9C4A5FC197A58EF9EC6D0790 /* GooseLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */; };
 		9F3E5B523369CD8D8A13383C /* GooseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7119B3A0869220100DF3B9D /* GooseWidget.swift */; };
 		9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A07D96450F3E9A494C35A911 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94FB212D9417DF655E2DFA09 /* OnboardingCompleteView.swift */; };
+		A170EA4629B0B9AB0FE98D63 /* GoalEditorHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB038A3D390625A5285E78AE /* GoalEditorHelpers.swift */; };
 		A3D514E4572D517AD6575F58 /* DuckFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138F5488540DB4113C8BBD66 /* DuckFaceView.swift */; };
 		A414B526CEBEEB3D3E52B857 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 254B5C8EA4051942ABEC8C35 /* Assets.xcassets */; };
 		A4BFA7900EE7B0AEAA12E357 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952AFEB5B959DAF6DA2884B7 /* FocusTimer.swift */; };
@@ -115,9 +123,11 @@
 		D0DDD308DD96993F2E9DE905 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C031B61EC6D7BE366BE5676 /* SettingsView.swift */; };
 		D3AABE326679EAF4948FB8E2 /* WatchSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16C84C36F09317E8C15BBCC /* WatchSyncService.swift */; };
 		D43B9D7F107A8429110AB1E6 /* GooseLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */; };
+		D835F45A815B321E19791088 /* HabitsGoalsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8AFC04C6B4EDB3F92E522D /* HabitsGoalsTab.swift */; };
 		DD1F64E0FF8DFF52AA76669B /* GooseSpeechGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B20907C2511E6CD56CC290 /* GooseSpeechGenerator.swift */; };
 		DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E129223B490F8E32CA9DF16B /* HealthDashboard.swift */; };
 		DE551AED1717A85D2F0D8F8D /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
+		DFF4BF4A434DF148E28C2BD0 /* GoalFrequencySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E5ADC29570EB791E3601 /* GoalFrequencySheet.swift */; };
 		E005A523FB2B97DAFFC25409 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 671BECFC19E43A1B37691729 /* GoogleSignIn */; };
 		E1A6A88DA02F72BB24473B59 /* GooseAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB12647F1E88BD490B83716 /* GooseAccessory.swift */; };
 		E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */; };
@@ -126,6 +136,7 @@
 		E6F65C8144632F05D5335F42 /* FoundationModels.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C815E45F6F181C73BBDBA8D4 /* FoundationModels.framework */; };
 		E7FF5F4CB6202B053210D30F /* GooseEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60862FF4436630CDC20ABFF6 /* GooseEngine.swift */; };
 		EA0BF3CA79B5086B092064DD /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497F92C8C33F54CCA7A58FD1 /* FriendsView.swift */; };
+		EB2CFFB4A43B2C4A9175B94B /* TodayGoalsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C023C0466C0BD3E3304F0D /* TodayGoalsTab.swift */; };
 		EBB9880751116991E8464909 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9950FF3C0746D604E8C756 /* AuthService.swift */; };
 		EC3A9A6788B8BDB6B35B8689 /* FriendsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F940A793A67DA6F08E61AE86 /* FriendsViewModel.swift */; };
 		EE4C9C8159F689332A7F8B11 /* GooseGlanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B880E96B410E34DD097D19C /* GooseGlanceView.swift */; };
@@ -221,7 +232,7 @@
 		117B204C5AA42A37727CDF30 /* GooseState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseState.swift; sourceTree = "<group>"; };
 		12045A2BE5E70B44DB753553 /* WatchStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStatsView.swift; sourceTree = "<group>"; };
 		138F5488540DB4113C8BBD66 /* DuckFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuckFaceView.swift; sourceTree = "<group>"; };
-		1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		17261D1A6061032AE35D42C6 /* TamaGoosieWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieWatch.entitlements; sourceTree = "<group>"; };
 		17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
 		185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseNotificationSystem.swift; sourceTree = "<group>"; };
@@ -230,7 +241,7 @@
 		20817DC434F39927E7A30358 /* TamaGoosieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamaGoosieApp.swift; sourceTree = "<group>"; };
 		220BD24CBD965B1825F27DF4 /* FocusSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSessionView.swift; sourceTree = "<group>"; };
 		254B5C8EA4051942ABEC8C35 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionApp.swift; sourceTree = "<group>"; };
 		2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseStats.swift; sourceTree = "<group>"; };
 		2E747FB746BFBA87BF9DF882 /* OnboardingReturnWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingReturnWelcomeView.swift; sourceTree = "<group>"; };
@@ -249,35 +260,44 @@
 		484BBB124DE9BDCACB850932 /* EscalationTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EscalationTracker.swift; sourceTree = "<group>"; };
 		491D1D469575C32BD7F539CC /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
 		497F92C8C33F54CCA7A58FD1 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
-		4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EB12647F1E88BD490B83716 /* GooseAccessory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseAccessory.swift; sourceTree = "<group>"; };
 		5026E30DB88C09161C315739 /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
 		50D0DBE78165C290BCA6BA2C /* FriendCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendCardView.swift; sourceTree = "<group>"; };
-		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		53B20907C2511E6CD56CC290 /* GooseSpeechGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSpeechGenerator.swift; sourceTree = "<group>"; };
 		53C5205B9F9287BB3E870F0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		568240AF79E34F36196A5049 /* GoalCategorySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalCategorySheet.swift; sourceTree = "<group>"; };
 		5814555EFEBEB93493DC306C /* StoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreView.swift; sourceTree = "<group>"; };
 		594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosieWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A65DE90A614D98222821F2F /* QuestsGoalsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestsGoalsTab.swift; sourceTree = "<group>"; };
 		5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNotificationsView.swift; sourceTree = "<group>"; };
 		5B47951E494EC28E765569B2 /* GooseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseView.swift; sourceTree = "<group>"; };
 		5C031B61EC6D7BE366BE5676 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		60862FF4436630CDC20ABFF6 /* GooseEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseEngine.swift; sourceTree = "<group>"; };
 		6093B883BCF12E79488221CC /* GooseViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseViewModel.swift; sourceTree = "<group>"; };
+		60C023C0466C0BD3E3304F0D /* TodayGoalsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayGoalsTab.swift; sourceTree = "<group>"; };
 		616EF88AFFEC4F12F716F987 /* OnboardingState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingState.swift; sourceTree = "<group>"; };
 		623B6AAB6F88CC9EAE2E0A37 /* QuickLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLogView.swift; sourceTree = "<group>"; };
+		68D2178CE7A9ECC8AF740E74 /* WeeklyHeatMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyHeatMap.swift; sourceTree = "<group>"; };
 		6A1CD1FB33CE72E4D48E8EA0 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BCA0686348168B60F7AB827 /* GoalListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalListView.swift; sourceTree = "<group>"; };
 		737D9D9590B52AD6B590C972 /* TamaGoosieShield.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieShield.entitlements; sourceTree = "<group>"; };
+		7381076FD00EB7CA9B59C0E6 /* GoalTabPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalTabPicker.swift; sourceTree = "<group>"; };
 		7BCCD8F66DA7FD994B77CB86 /* TamaGoosieDeviceActivity.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieDeviceActivity.entitlements; sourceTree = "<group>"; };
+		7D0181558E2E6BB28BF818C4 /* GoalCreateFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalCreateFlowView.swift; sourceTree = "<group>"; };
 		7D5B641705B00F4C590ADEA2 /* OnboardingHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHealthView.swift; sourceTree = "<group>"; };
 		7D7418A207CA04634F5B2B18 /* OnboardingHatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingHatchView.swift; sourceTree = "<group>"; };
 		7E0C3B783E1A0DEB45F3A005 /* OnboardingTutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTutorialView.swift; sourceTree = "<group>"; };
 		7E44C8076495B92B17387492 /* GoalEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorView.swift; sourceTree = "<group>"; };
+		7E8C068355FAD069E4C521A1 /* GoalEditFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditFormView.swift; sourceTree = "<group>"; };
+		81B8E5ADC29570EB791E3601 /* GoalFrequencySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalFrequencySheet.swift; sourceTree = "<group>"; };
 		81E1E1EF01F2B29A4E6DB9B2 /* OnboardingCreateAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCreateAccountView.swift; sourceTree = "<group>"; };
 		849E37EA66128E6400098165 /* GooseSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSyncService.swift; sourceTree = "<group>"; };
 		86D98E002FB589C7E6874069 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseAnimations.swift; sourceTree = "<group>"; };
 		8954547141902CE3FC703601 /* DailyLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLog.swift; sourceTree = "<group>"; };
+		8A8AFC04C6B4EDB3F92E522D /* HabitsGoalsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsGoalsTab.swift; sourceTree = "<group>"; };
 		8DC9B318097B5BBA56FDFC71 /* StatDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatDetailSheet.swift; sourceTree = "<group>"; };
 		8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseEngineTests.swift; sourceTree = "<group>"; };
 		8FA52C55A9DDABB6A6056E1C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -306,6 +326,7 @@
 		B6005608AC5C4BABBD044679 /* GooseLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseLiveActivityManager.swift; sourceTree = "<group>"; };
 		B922DD91F0DE3DB923769BD1 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
+		C08817E670018B0128A419CD /* ScreenBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenBlock.swift; sourceTree = "<group>"; };
 		C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiAPIClient.swift; sourceTree = "<group>"; };
 		C47A9B7B550DD4EC4C0957A5 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		C815E45F6F181C73BBDBA8D4 /* FoundationModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FoundationModels.framework; path = System/Library/Frameworks/FoundationModels.framework; sourceTree = SDKROOT; };
@@ -323,6 +344,7 @@
 		D6E9D1CB4D404178EF0F3BD5 /* TamaGoosie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosie.entitlements; sourceTree = "<group>"; };
 		DA5121AC95426E42B580756F /* SyncPayloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayloadTests.swift; sourceTree = "<group>"; };
 		DA9950FF3C0746D604E8C756 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		DB038A3D390625A5285E78AE /* GoalEditorHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorHelpers.swift; sourceTree = "<group>"; };
 		DB2CBC4425DDF588BD10E856 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		DF93B1A9A785F410FC571D04 /* CoinAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinAnimationView.swift; sourceTree = "<group>"; };
 		E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLogHistoryProvider.swift; sourceTree = "<group>"; };
@@ -331,7 +353,7 @@
 		E2E3270DF17E2F22F9077425 /* WatchSyncReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncReceiver.swift; sourceTree = "<group>"; };
 		E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionConfigView.swift; sourceTree = "<group>"; };
 		E7119B3A0869220100DF3B9D /* GooseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseWidget.swift; sourceTree = "<group>"; };
-		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestViewModel.swift; sourceTree = "<group>"; };
 		F364D3304C552899B83259F9 /* ConvexManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexManager.swift; sourceTree = "<group>"; };
 		F79CF4AEE7DB44EA15A7D22C /* FriendRequestSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestSheetView.swift; sourceTree = "<group>"; };
@@ -397,10 +419,20 @@
 		05E4BD8E7C0524D456EFC5D6 /* Goals */ = {
 			isa = PBXGroup;
 			children = (
+				568240AF79E34F36196A5049 /* GoalCategorySheet.swift */,
+				7D0181558E2E6BB28BF818C4 /* GoalCreateFlowView.swift */,
+				7E8C068355FAD069E4C521A1 /* GoalEditFormView.swift */,
+				DB038A3D390625A5285E78AE /* GoalEditorHelpers.swift */,
 				7E44C8076495B92B17387492 /* GoalEditorView.swift */,
+				81B8E5ADC29570EB791E3601 /* GoalFrequencySheet.swift */,
 				6BCA0686348168B60F7AB827 /* GoalListView.swift */,
+				7381076FD00EB7CA9B59C0E6 /* GoalTabPicker.swift */,
 				347903A27040413E68451AD9 /* GoalViewModel.swift */,
+				8A8AFC04C6B4EDB3F92E522D /* HabitsGoalsTab.swift */,
 				B02DE509E35AEACBA41B53EB /* InitialGoalPickerSheet.swift */,
+				5A65DE90A614D98222821F2F /* QuestsGoalsTab.swift */,
+				60C023C0466C0BD3E3304F0D /* TodayGoalsTab.swift */,
+				68D2178CE7A9ECC8AF740E74 /* WeeklyHeatMap.swift */,
 			);
 			path = Goals;
 			sourceTree = "<group>";
@@ -717,6 +749,7 @@
 				D1DF8D904D7E63E9887D5341 /* GoalProgress.swift */,
 				117B204C5AA42A37727CDF30 /* GooseState.swift */,
 				45E891BC9D028499BD9C7AF7 /* HealthSnapshot.swift */,
+				C08817E670018B0128A419CD /* ScreenBlock.swift */,
 				A088FE71FAEE764B51B4E397 /* UserProfile.swift */,
 			);
 			path = Models;
@@ -922,6 +955,24 @@
 					2967A832F6E06D9198E4D9D3 = {
 						DevelopmentTeam = "";
 					};
+					3212585604C1E2524B96F439 = {
+						DevelopmentTeam = "";
+					};
+					828D1BDA4ABFF8D091834CB1 = {
+						DevelopmentTeam = "";
+					};
+					9E9022483AE9A7FF06F6AFA3 = {
+						DevelopmentTeam = "";
+					};
+					CC28230EF5A0A7CF4F72B801 = {
+						DevelopmentTeam = "";
+					};
+					D2388AC1D58B7EAEDE83FEA0 = {
+						DevelopmentTeam = "";
+					};
+					F328FFA5B3C55DB8650693FC = {
+						DevelopmentTeam = "";
+					};
 				};
 			};
 			buildConfigurationList = 6760D016B07310E134124FA7 /* Build configuration list for PBXProject "TamaGoosie" */;
@@ -1042,10 +1093,16 @@
 				EC3A9A6788B8BDB6B35B8689 /* FriendsViewModel.swift in Sources */,
 				E5B1E33B43611E47CB7ADCE6 /* GeminiAPIClient.swift in Sources */,
 				673B7B0F82D1381297552048 /* Goal.swift in Sources */,
+				151699CB3F051BCEAE8DB291 /* GoalCategorySheet.swift in Sources */,
 				22870AF64DE57430F22175C6 /* GoalCompletionEvent.swift in Sources */,
+				4169C2F4BF691F9445488BEE /* GoalCreateFlowView.swift in Sources */,
+				43AD8F27580CCDE11AE8D944 /* GoalEditFormView.swift in Sources */,
+				A170EA4629B0B9AB0FE98D63 /* GoalEditorHelpers.swift in Sources */,
 				8A1C3754E0D255985FC38D18 /* GoalEditorView.swift in Sources */,
+				DFF4BF4A434DF148E28C2BD0 /* GoalFrequencySheet.swift in Sources */,
 				045511F37A331C29DAD6B7F5 /* GoalListView.swift in Sources */,
 				B6078E1137C1C8D10610DF42 /* GoalProgress.swift in Sources */,
+				33111F3DF85EE1C6C7297CD1 /* GoalTabPicker.swift in Sources */,
 				797E5DDDA429D96A2F55FFA8 /* GoalViewModel.swift in Sources */,
 				52464770254C773EE9362E4D /* Goose3DView.swift in Sources */,
 				E1A6A88DA02F72BB24473B59 /* GooseAccessory.swift in Sources */,
@@ -1064,6 +1121,7 @@
 				FA700BBA888F6144D8A8763B /* GoosieComponents.swift in Sources */,
 				8011B9135369B9163BF57D74 /* GoosieTheme.swift in Sources */,
 				87BE0232BC88B878959B0702 /* GrassyBackgroundView.swift in Sources */,
+				D835F45A815B321E19791088 /* HabitsGoalsTab.swift in Sources */,
 				DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */,
 				E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */,
 				68E1ADD5A49B6F106B8692B0 /* HealthSnapshot.swift in Sources */,
@@ -1085,7 +1143,9 @@
 				6640EAD69F900ECAEE727B41 /* OnboardingTutorialView.swift in Sources */,
 				8C53B0EA1FA080395F5865B4 /* OnboardingUsernameView.swift in Sources */,
 				301077A680DDD645E5EAF4E3 /* OnboardingWelcomeView.swift in Sources */,
+				36293B658F4FBB8D35B6C3D6 /* QuestsGoalsTab.swift in Sources */,
 				0BF180C0CF793DA035E31032 /* RewardEngine.swift in Sources */,
+				496EDC28C2070C91153BBE09 /* ScreenBlock.swift in Sources */,
 				548424445040D52E3EE887FF /* ScreenTimeDashboardView.swift in Sources */,
 				65219561A649089002577B30 /* ScreenTimeManager.swift in Sources */,
 				BF426CAB22C91AC9CFCC22DB /* ScreenTimeOnboardingView.swift in Sources */,
@@ -1098,8 +1158,10 @@
 				2F4B797DC006B701FEE0AB7D /* StoreView.swift in Sources */,
 				9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */,
 				C20ECD2853A27096D410D90A /* TamaGoosieApp.swift in Sources */,
+				EB2CFFB4A43B2C4A9175B94B /* TodayGoalsTab.swift in Sources */,
 				4AB345509C5A405F7F7F99F2 /* UserProfile.swift in Sources */,
 				D3AABE326679EAF4948FB8E2 /* WatchSyncService.swift in Sources */,
+				93EEF44A63EECD9EB9BF28D9 /* WeeklyHeatMap.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1172,7 +1234,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1189,7 +1250,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1208,7 +1268,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1226,7 +1285,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -1239,7 +1297,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Shield/TamaGoosieShield.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Shield/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1256,7 +1313,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieDeviceActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1274,7 +1330,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -1287,7 +1342,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Report/TamaGoosieReport.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Report/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1378,7 +1432,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Report/TamaGoosieReport.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Report/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1395,7 +1448,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Shield/TamaGoosieShield.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Shield/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1412,7 +1464,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieDeviceActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1510,7 +1561,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
-				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

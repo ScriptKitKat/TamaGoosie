@@ -86,6 +86,7 @@ struct TamaGoosieApp: App {
             HealthSnapshot.self,
             DailyLog.self,
             UserProfile.self,
+            ScreenBlock.self,
         ])
 
         // Try to open the persistent store. If the schema is incompatible with the
