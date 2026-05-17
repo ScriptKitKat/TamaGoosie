@@ -87,6 +87,7 @@
 		87BE0232BC88B878959B0702 /* GrassyBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03176AACE9B4F7126A98B59F /* GrassyBackgroundView.swift */; };
 		8A1C3754E0D255985FC38D18 /* GoalEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E44C8076495B92B17387492 /* GoalEditorView.swift */; };
 		8AFF2413D1D0DAA538DCEA4B /* OnboardingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 616EF88AFFEC4F12F716F987 /* OnboardingState.swift */; };
+		8BBABD96430C4095D01E775C /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		8C53B0EA1FA080395F5865B4 /* OnboardingUsernameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059C65D5074E896A7DE5CD4E /* OnboardingUsernameView.swift */; };
 		8FCE49D307A4F3661286DBDD /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		8FD395960A763EAE1FC89815 /* ChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A004F556DB773317B1C60A9D /* ChallengesView.swift */; };
@@ -238,7 +239,7 @@
 		117B204C5AA42A37727CDF30 /* GooseState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseState.swift; sourceTree = "<group>"; };
 		12045A2BE5E70B44DB753553 /* WatchStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStatsView.swift; sourceTree = "<group>"; };
 		138F5488540DB4113C8BBD66 /* DuckFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuckFaceView.swift; sourceTree = "<group>"; };
-		1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		17261D1A6061032AE35D42C6 /* TamaGoosieWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieWatch.entitlements; sourceTree = "<group>"; };
 		17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
 		185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseNotificationSystem.swift; sourceTree = "<group>"; };
@@ -246,7 +247,7 @@
 		1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNameView.swift; sourceTree = "<group>"; };
 		20817DC434F39927E7A30358 /* TamaGoosieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamaGoosieApp.swift; sourceTree = "<group>"; };
 		254B5C8EA4051942ABEC8C35 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionApp.swift; sourceTree = "<group>"; };
 		2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseStats.swift; sourceTree = "<group>"; };
 		2E747FB746BFBA87BF9DF882 /* OnboardingReturnWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingReturnWelcomeView.swift; sourceTree = "<group>"; };
@@ -268,12 +269,12 @@
 		491D1D469575C32BD7F539CC /* DeviceActivityMonitorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityMonitorExtension.swift; sourceTree = "<group>"; };
 		497F92C8C33F54CCA7A58FD1 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
 		49E51C01ED06EAC9365F5849 /* DayOfWeekPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayOfWeekPicker.swift; sourceTree = "<group>"; };
-		4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4EB12647F1E88BD490B83716 /* GooseAccessory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseAccessory.swift; sourceTree = "<group>"; };
 		4EF850327AD57669A486CA88 /* BlockCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockCardView.swift; sourceTree = "<group>"; };
 		5026E30DB88C09161C315739 /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
 		50D0DBE78165C290BCA6BA2C /* FriendCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendCardView.swift; sourceTree = "<group>"; };
-		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5147463B115B9A90E0D53823 /* TamaGoosie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		53B20907C2511E6CD56CC290 /* GooseSpeechGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSpeechGenerator.swift; sourceTree = "<group>"; };
 		53C5205B9F9287BB3E870F0F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		568240AF79E34F36196A5049 /* GoalCategorySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalCategorySheet.swift; sourceTree = "<group>"; };
@@ -365,7 +366,7 @@
 		E2E3270DF17E2F22F9077425 /* WatchSyncReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncReceiver.swift; sourceTree = "<group>"; };
 		E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionConfigView.swift; sourceTree = "<group>"; };
 		E7119B3A0869220100DF3B9D /* GooseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseWidget.swift; sourceTree = "<group>"; };
-		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestViewModel.swift; sourceTree = "<group>"; };
 		F364D3304C552899B83259F9 /* ConvexManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexManager.swift; sourceTree = "<group>"; };
 		F79CF4AEE7DB44EA15A7D22C /* FriendRequestSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestSheetView.swift; sourceTree = "<group>"; };
@@ -389,6 +390,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5DB11E1A6531567ADBF33AF4 /* DeviceActivity.framework in Frameworks */,
+				8BBABD96430C4095D01E775C /* ManagedSettings.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -973,24 +975,6 @@
 					2967A832F6E06D9198E4D9D3 = {
 						DevelopmentTeam = "";
 					};
-					3212585604C1E2524B96F439 = {
-						DevelopmentTeam = "";
-					};
-					828D1BDA4ABFF8D091834CB1 = {
-						DevelopmentTeam = "";
-					};
-					9E9022483AE9A7FF06F6AFA3 = {
-						DevelopmentTeam = "";
-					};
-					CC28230EF5A0A7CF4F72B801 = {
-						DevelopmentTeam = "";
-					};
-					D2388AC1D58B7EAEDE83FEA0 = {
-						DevelopmentTeam = "";
-					};
-					F328FFA5B3C55DB8650693FC = {
-						DevelopmentTeam = "";
-					};
 				};
 			};
 			buildConfigurationList = 6760D016B07310E134124FA7 /* Build configuration list for PBXProject "TamaGoosie" */;
@@ -1258,6 +1242,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1274,6 +1259,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1292,6 +1278,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosie/TamaGoosie.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosie/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1309,6 +1296,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -1321,6 +1309,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Shield/TamaGoosieShield.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Shield/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1337,6 +1326,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieDeviceActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1354,6 +1344,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWatch/TamaGoosieWatch.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.watch;
 				SDKROOT = watchos;
@@ -1366,6 +1357,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Report/TamaGoosieReport.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Report/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1456,6 +1448,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Report/TamaGoosieReport.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Report/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1472,6 +1465,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Extensions/Shield/TamaGoosieShield.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = Extensions/Shield/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1488,6 +1482,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieDeviceActivity/TamaGoosieDeviceActivity.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieDeviceActivity/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1585,6 +1580,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = TamaGoosieWidgets/TamaGoosieWidgets.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
 				INFOPLIST_FILE = TamaGoosieWidgets/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

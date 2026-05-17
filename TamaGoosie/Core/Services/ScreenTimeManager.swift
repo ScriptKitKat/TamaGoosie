@@ -1,6 +1,7 @@
 import Foundation
 import FamilyControls
 import DeviceActivity
+import ManagedSettings
 
 @Observable
 @MainActor
@@ -201,6 +202,116 @@ final class ScreenTimeManager {
 
     func stopMonitoring() {
         activityCenter.stopMonitoring()
+    }
+
+    // MARK: - All Apps Usage Data
+
+    struct AppUsageEntry: Identifiable {
+        let id: String // base64 token key
+        let token: ApplicationToken
+        let durationSeconds: TimeInterval
+
+        var durationMinutes: Int { Int(durationSeconds / 60) }
+    }
+
+    struct HourlyUsage {
+        let hour: Int
+        let totalSeconds: TimeInterval
+        let distractingSeconds: TimeInterval
+    }
+
+    /// All apps sorted by duration (from AllAppsReportScene)
+    var allAppsUsageEntries: [AppUsageEntry] {
+        guard let entries = defaults.array(forKey: "allAppsUsageEntries") as? [[String: Any]] else {
+            return []
+        }
+        return entries.compactMap { dict in
+            guard let tokenBase64 = dict["token"] as? String,
+                  let duration = dict["duration"] as? TimeInterval,
+                  let tokenData = Data(base64Encoded: tokenBase64),
+                  let token = try? JSONDecoder().decode(ApplicationToken.self, from: tokenData)
+            else { return nil }
+            return AppUsageEntry(id: tokenBase64, token: token, durationSeconds: duration)
+        }
+    }
+
+    /// Total screen time across all apps (seconds)
+    var totalScreenTimeSeconds: TimeInterval {
+        defaults.double(forKey: "totalScreenTimeSeconds")
+    }
+
+    var totalScreenTimeMinutes: Int {
+        Int(totalScreenTimeSeconds / 60)
+    }
+
+    /// Pickups today
+    var totalPickups: Int {
+        defaults.integer(forKey: "totalPickups")
+    }
+
+    /// Per-hour breakdown for the timeline graph
+    var hourlyUsageData: [HourlyUsage] {
+        guard let entries = defaults.array(forKey: "hourlyUsageData") as? [[String: Any]] else {
+            return []
+        }
+        return entries.compactMap { dict in
+            guard let hour = dict["hour"] as? Int,
+                  let total = dict["totalSeconds"] as? TimeInterval,
+                  let distracting = dict["distractingSeconds"] as? TimeInterval
+            else { return nil }
+            return HourlyUsage(hour: hour, totalSeconds: total, distractingSeconds: distracting)
+        }
+    }
+
+    /// Distracting minutes today (sum of all apps categorized as distracting)
+    var distractingMinutesToday: Int {
+        let entries = allAppsUsageEntries
+        var total: TimeInterval = 0
+        for entry in entries {
+            if category(for: entry.token) == .distracting {
+                total += entry.durationSeconds
+            }
+        }
+        return Int(total / 60)
+    }
+
+    // MARK: - App Category
+
+    private var categoryMap: [String: String] {
+        get {
+            defaults.dictionary(forKey: "appCategoryMap") as? [String: String] ?? [:]
+        }
+        set {
+            defaults.set(newValue, forKey: "appCategoryMap")
+        }
+    }
+
+    func category(for token: ApplicationToken) -> AppCategory {
+        let key = tokenKey(token)
+        if let raw = categoryMap[key], let cat = AppCategory(rawValue: raw) {
+            return cat
+        }
+        return .distracting
+    }
+
+    func cycleCategory(for token: ApplicationToken) {
+        let current = category(for: token)
+        let next: AppCategory
+        switch current {
+        case .productive: next = .neutral
+        case .neutral: next = .distracting
+        case .distracting: next = .productive
+        }
+        var map = categoryMap
+        map[tokenKey(token)] = next.rawValue
+        categoryMap = map
+    }
+
+    private func tokenKey(_ token: ApplicationToken) -> String {
+        if let data = try? JSONEncoder().encode(token) {
+            return data.base64EncodedString()
+        }
+        return "\(token.hashValue)"
     }
 
     // MARK: - Per-Block Monitoring
