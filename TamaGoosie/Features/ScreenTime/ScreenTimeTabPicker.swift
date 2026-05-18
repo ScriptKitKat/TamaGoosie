@@ -13,7 +13,7 @@ enum ScreenTimePeriod: String, CaseIterable {
 
 struct ScreenTimeTabPicker: View {
     @Binding var selected: ScreenTimeTab
-    @State private var period: ScreenTimePeriod = .today
+    @Binding var period: ScreenTimePeriod
 
     private let selectedGreen = Color(hex: 0x4A8F4A)
 

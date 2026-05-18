@@ -15,6 +15,7 @@ struct ScreenTimePageView: View {
     @Query(sort: \ScreenBlock.createdAt, order: .reverse) private var allBlocks: [ScreenBlock]
 
     @State private var selectedTab: ScreenTimeTab = .stats
+    @State private var selectedPeriod: ScreenTimePeriod = .today
     @State private var showBlockNow = false
     @State private var scrolledDown = false
 
@@ -43,7 +44,7 @@ struct ScreenTimePageView: View {
             VStack(spacing: 0) {
                 if manager.isSetupComplete {
                     // Fixed tab picker
-                    ScreenTimeTabPicker(selected: $selectedTab)
+                    ScreenTimeTabPicker(selected: $selectedTab, period: $selectedPeriod)
                         .padding(.horizontal, GoosieTheme.padding)
                         .padding(.top, 52)
                         .padding(.bottom, 10)
@@ -52,7 +53,7 @@ struct ScreenTimePageView: View {
                         VStack(spacing: 14) {
                             switch selectedTab {
                             case .stats:
-                                ScreenTimeStatsTab()
+                                ScreenTimeStatsTab(period: selectedPeriod)
                             case .blocks:
                                 ScreenTimeBlocksTab()
                             }

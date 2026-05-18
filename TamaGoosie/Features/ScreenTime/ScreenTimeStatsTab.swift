@@ -5,6 +5,7 @@ import ManagedSettings
 import DeviceActivity
 
 struct ScreenTimeStatsTab: View {
+    var period: ScreenTimePeriod = .today
     @State private var manager = ScreenTimeManager.shared
 
     private var allActivityFilter: DeviceActivityFilter {
