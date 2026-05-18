@@ -204,6 +204,16 @@ final class ScreenTimeManager {
         activityCenter.stopMonitoring()
     }
 
+    // MARK: - Refresh Trigger
+
+    /// Incrementing this forces @Observable to re-notify views that read usage data.
+    var refreshTick: Int = 0
+
+    func triggerRefresh() {
+        defaults.synchronize()
+        refreshTick += 1
+    }
+
     // MARK: - All Apps Usage Data
 
     struct AppUsageEntry: Identifiable {
@@ -220,14 +230,21 @@ final class ScreenTimeManager {
         let distractingSeconds: TimeInterval
     }
 
+    private struct HourlyAppUsage {
+        let hour: Int
+        let tokenKey: String
+        let durationSeconds: TimeInterval
+    }
+
     /// All apps sorted by duration (from AllAppsReportScene)
     var allAppsUsageEntries: [AppUsageEntry] {
+        _ = refreshTick
         guard let entries = defaults.array(forKey: "allAppsUsageEntries") as? [[String: Any]] else {
             return []
         }
         return entries.compactMap { dict in
             guard let tokenBase64 = dict["token"] as? String,
-                  let duration = dict["duration"] as? TimeInterval,
+                  let duration = doubleValue(dict["duration"]),
                   let tokenData = Data(base64Encoded: tokenBase64),
                   let token = try? JSONDecoder().decode(ApplicationToken.self, from: tokenData)
             else { return nil }
@@ -237,7 +254,8 @@ final class ScreenTimeManager {
 
     /// Total screen time across all apps (seconds)
     var totalScreenTimeSeconds: TimeInterval {
-        defaults.double(forKey: "totalScreenTimeSeconds")
+        _ = refreshTick
+        return defaults.double(forKey: "totalScreenTimeSeconds")
     }
 
     var totalScreenTimeMinutes: Int {
@@ -246,20 +264,42 @@ final class ScreenTimeManager {
 
     /// Pickups today
     var totalPickups: Int {
-        defaults.integer(forKey: "totalPickups")
+        _ = refreshTick
+        return defaults.integer(forKey: "totalPickups")
     }
 
     /// Per-hour breakdown for the timeline graph
     var hourlyUsageData: [HourlyUsage] {
+        _ = refreshTick
         guard let entries = defaults.array(forKey: "hourlyUsageData") as? [[String: Any]] else {
             return []
         }
-        return entries.compactMap { dict in
-            guard let hour = dict["hour"] as? Int,
-                  let total = dict["totalSeconds"] as? TimeInterval,
-                  let distracting = dict["distractingSeconds"] as? TimeInterval
+        let storedEntries: [HourlyUsage] = entries.compactMap { dict in
+            guard let hour = intValue(dict["hour"]),
+                  let total = doubleValue(dict["totalSeconds"]),
+                  let distracting = doubleValue(dict["distractingSeconds"])
             else { return nil }
             return HourlyUsage(hour: hour, totalSeconds: total, distractingSeconds: distracting)
+        }
+
+        let rawAppUsage = hourlyAppUsageData
+        guard !rawAppUsage.isEmpty else { return storedEntries }
+
+        let distractingByHour = Dictionary(grouping: rawAppUsage, by: \.hour)
+            .mapValues { entries in
+                entries.reduce(0) { total, entry in
+                    category(forKey: entry.tokenKey) == .distracting
+                        ? total + entry.durationSeconds
+                        : total
+                }
+            }
+
+        return storedEntries.map { entry in
+            HourlyUsage(
+                hour: entry.hour,
+                totalSeconds: entry.totalSeconds,
+                distractingSeconds: distractingByHour[entry.hour] ?? entry.distractingSeconds
+            )
         }
     }
 
@@ -287,7 +327,10 @@ final class ScreenTimeManager {
     }
 
     func category(for token: ApplicationToken) -> AppCategory {
-        let key = tokenKey(token)
+        category(forKey: tokenKey(token))
+    }
+
+    private func category(forKey key: String) -> AppCategory {
         if let raw = categoryMap[key], let cat = AppCategory(rawValue: raw) {
             return cat
         }
@@ -305,6 +348,8 @@ final class ScreenTimeManager {
         var map = categoryMap
         map[tokenKey(token)] = next.rawValue
         categoryMap = map
+        defaults.synchronize()
+        triggerRefresh()
     }
 
     private func tokenKey(_ token: ApplicationToken) -> String {
@@ -312,6 +357,85 @@ final class ScreenTimeManager {
             return data.base64EncodedString()
         }
         return "\(token.hashValue)"
+    }
+
+    private var hourlyAppUsageData: [HourlyAppUsage] {
+        guard let entries = defaults.array(forKey: "hourlyAppUsageData") as? [[String: Any]] else {
+            return []
+        }
+        return entries.compactMap { dict in
+            guard let hour = intValue(dict["hour"]),
+                  let tokenKey = dict["token"] as? String,
+                  let duration = doubleValue(dict["duration"]),
+                  !tokenKey.isEmpty
+            else { return nil }
+            return HourlyAppUsage(hour: hour, tokenKey: tokenKey, durationSeconds: duration)
+        }
+    }
+
+    var allAppsUsageLastRun: Date? {
+        _ = refreshTick
+        return defaults.object(forKey: "allAppsUsageLastRun") as? Date
+    }
+
+    var allAppsUsageDataCount: Int {
+        _ = refreshTick
+        return defaults.integer(forKey: "allAppsUsageDataCount")
+    }
+
+    var allAppsUsageSegmentCount: Int {
+        _ = refreshTick
+        return defaults.integer(forKey: "allAppsUsageSegmentCount")
+    }
+
+    var allAppsUsageRawSegmentSeconds: TimeInterval {
+        _ = refreshTick
+        return defaults.double(forKey: "allAppsUsageRawSegmentSeconds")
+    }
+
+    var allAppsUsageRawApplicationSeconds: TimeInterval {
+        _ = refreshTick
+        return defaults.double(forKey: "allAppsUsageRawApplicationSeconds")
+    }
+
+    var debugSnapshot: String {
+        "auth=\(authorizationStatus) setup=\(isSetupComplete) paused=\(isPaused) selectionApps=\(selection.applicationTokens.count) selectionCategories=\(selection.categoryTokens.count) selectionWeb=\(selection.webDomainTokens.count) lastRun=\(allAppsUsageLastRun?.formatted(date: .omitted, time: .standard) ?? "never") data=\(allAppsUsageDataCount) segments=\(allAppsUsageSegmentCount) storedSeconds=\(Int(totalScreenTimeSeconds)) rawSegment=\(Int(allAppsUsageRawSegmentSeconds)) rawApps=\(Int(allAppsUsageRawApplicationSeconds)) apps=\(allAppsUsageEntries.count) approx=\(approxMinutesToday)"
+    }
+
+    func refreshAuthorizationStatus() {
+        authorizationStatus = authCenter.authorizationStatus
+        triggerRefresh()
+        print("[ScreenTimeManager] refreshAuthorizationStatus status=\(authorizationStatus)")
+    }
+
+    private func doubleValue(_ value: Any?) -> Double? {
+        switch value {
+        case let number as Double:
+            return number
+        case let number as Float:
+            return Double(number)
+        case let number as Int:
+            return Double(number)
+        case let number as NSNumber:
+            return number.doubleValue
+        default:
+            return nil
+        }
+    }
+
+    private func intValue(_ value: Any?) -> Int? {
+        switch value {
+        case let number as Int:
+            return number
+        case let number as Double:
+            return Int(number)
+        case let number as Float:
+            return Int(number)
+        case let number as NSNumber:
+            return number.intValue
+        default:
+            return nil
+        }
     }
 
     // MARK: - Per-Block Monitoring

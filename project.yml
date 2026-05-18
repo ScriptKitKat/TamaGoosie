@@ -103,6 +103,7 @@ targets:
     dependencies:
       - sdk: DeviceActivity.framework
       - sdk: ManagedSettings.framework
+      - sdk: FamilyControls.framework
       - sdk: UserNotifications.framework
     settings:
       base:
@@ -136,12 +137,13 @@ targets:
         com.apple.developer.family-controls: true
 
   TamaGoosieReport:
-    type: app-extension
+    type: com.apple.product-type.extensionkit-extension
     platform: iOS
     sources:
       - Extensions/Report
     dependencies:
       - sdk: DeviceActivity.framework
+      - sdk: FamilyControls.framework
       - sdk: ManagedSettings.framework
     settings:
       base:

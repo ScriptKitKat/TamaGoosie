@@ -82,7 +82,7 @@ struct DistractionConfigView: View {
             if screenTimeManager.hasSelection {
                 limitCard
                 usageCard
-                DeviceActivityReport(.init(rawValue: "distraction_summary"))
+                DeviceActivityReport(.init(rawValue: "distraction_summary"), filter: visibleAppsFilter)
                     .frame(height: 120)
             }
         }
@@ -194,5 +194,16 @@ struct DistractionConfigView: View {
         case (0, let c): return "\(c) categor\(c == 1 ? "y" : "ies") selected"
         default: return "\(apps) app\(apps == 1 ? "" : "s") and \(categories) categor\(categories == 1 ? "y" : "ies") selected"
         }
+    }
+
+    private var visibleAppsFilter: DeviceActivityFilter {
+        let startOfDay = Calendar.current.startOfDay(for: .now)
+        return DeviceActivityFilter(
+            segment: .hourly(during: DateInterval(start: startOfDay, end: .now)),
+            devices: .all,
+            applications: screenTimeManager.selection.applicationTokens,
+            categories: screenTimeManager.selection.categoryTokens,
+            webDomains: screenTimeManager.selection.webDomainTokens
+        )
     }
 }

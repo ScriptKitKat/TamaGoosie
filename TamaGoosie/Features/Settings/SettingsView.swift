@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import FamilyControls
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -20,6 +21,9 @@ struct SettingsView: View {
     @State private var showResetConfirmation = false
     @State private var showSignOutConfirmation = false
     @State private var showEditProfile = false
+    @State private var screenTimeManager = ScreenTimeManager.shared
+    @State private var showScreenTimePicker = false
+    @State private var draftScreenTimeSelection = FamilyActivitySelection(includeEntireCategory: true)
 
     private var gooseState: GooseState? { gooseStates.first }
     private var profile: UserProfile? { profiles.first }
@@ -57,6 +61,13 @@ struct SettingsView: View {
         }
         .onAppear {
             geminiAPIKeyInput = geminiAPIKey
+            draftScreenTimeSelection = screenTimeManager.selection
+        }
+        .familyActivityPicker(isPresented: $showScreenTimePicker, selection: $draftScreenTimeSelection)
+        .onChange(of: showScreenTimePicker) { wasShowing, isShowing in
+            if wasShowing && !isShowing {
+                screenTimeManager.saveSelection(draftScreenTimeSelection)
+            }
         }
         .sheet(isPresented: $showEditProfile) {
             EditProfileSheet()
@@ -324,6 +335,11 @@ struct SettingsView: View {
             .background(whiteCard)
             .padding(.horizontal, GoosieTheme.padding)
             .padding(.top, 12)
+
+            // Screen Time visibility card
+            screenTimeVisibilityCard
+                .padding(.horizontal, GoosieTheme.padding)
+                .padding(.top, 12)
         }
     }
 
@@ -448,6 +464,89 @@ struct SettingsView: View {
         }
         .padding(16)
         .background(whiteCard)
+    }
+
+    // MARK: - Screen Time Visibility
+
+    private var screenTimeVisibilityCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "eye.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color(hex: 0x42A5F5))
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Screen Time Apps")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
+
+                    Text(screenTimeSelectionSummary)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
+                }
+
+                Spacer()
+            }
+
+            Text("Choose the apps and categories TamaGoosie can include in Screen Time stats and guarding.")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.55))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                if screenTimeManager.isAuthorized {
+                    draftScreenTimeSelection = screenTimeManager.selection
+                    showScreenTimePicker = true
+                } else {
+                    Task {
+                        await screenTimeManager.requestAuthorization()
+                        draftScreenTimeSelection = screenTimeManager.selection
+                        if screenTimeManager.isAuthorized {
+                            showScreenTimePicker = true
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: screenTimeManager.isAuthorized ? "app.badge" : "lock.open")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(screenTimeManager.isAuthorized ? "Choose Apps" : "Allow Screen Time Access")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(hex: 0x42A5F5))
+                )
+            }
+        }
+        .padding(16)
+        .background(whiteCard)
+    }
+
+    private var screenTimeSelectionSummary: String {
+        guard screenTimeManager.isAuthorized else {
+            return "Access not enabled"
+        }
+
+        let appCount = screenTimeManager.selection.applicationTokens.count
+        let categoryCount = screenTimeManager.selection.categoryTokens.count
+        switch (appCount, categoryCount) {
+        case (0, 0):
+            return "No apps selected"
+        case (let apps, 0):
+            return "\(apps) app\(apps == 1 ? "" : "s") selected"
+        case (0, let categories):
+            return "\(categories) categor\(categories == 1 ? "y" : "ies") selected"
+        default:
+            return "\(appCount) app\(appCount == 1 ? "" : "s") and \(categoryCount) categor\(categoryCount == 1 ? "y" : "ies") selected"
+        }
     }
 
     // MARK: - Shared Components

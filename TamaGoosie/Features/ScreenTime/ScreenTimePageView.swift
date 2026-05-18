@@ -48,7 +48,6 @@ struct ScreenTimePageView: View {
                         .padding(.top, 52)
                         .padding(.bottom, 10)
 
-                    // Scrollable content
                     ScrollView {
                         VStack(spacing: 14) {
                             switch selectedTab {
@@ -60,25 +59,11 @@ struct ScreenTimePageView: View {
                         }
                         .padding(.horizontal, GoosieTheme.padding)
                         .padding(.bottom, 80)
-                        .trackScrollOffset()
-                        .background(
-                            GeometryReader { geo in
-                                Color.clear.preference(
-                                    key: STScrollOffsetKey.self,
-                                    value: geo.frame(in: .named("stScroll")).minY
-                                )
-                            }
-                        )
                     }
-                    .coordinateSpace(name: "stScroll")
-                    .onPreferenceChange(STScrollOffsetKey.self) { offset in
-                        let isScrolled = offset < -100
-                        if isScrolled != scrolledDown {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                scrolledDown = isScrolled
-                            }
-                        }
+                    .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { _ in
+                        manager.triggerRefresh()
                     }
+
                 } else {
                     ScreenTimeOnboardingView(gooseName: gooseName) {
                         // onComplete

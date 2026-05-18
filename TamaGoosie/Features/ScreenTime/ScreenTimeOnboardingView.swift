@@ -10,13 +10,13 @@ struct ScreenTimeOnboardingView: View {
     @State private var showPicker = false
     @State private var draftSelection = FamilyActivitySelection(includeEntireCategory: true)
 
-    private let totalSteps = 6
+    private let totalSteps = 5
 
     var body: some View {
         VStack(spacing: 0) {
             progressBar
                 .padding(.horizontal, GoosieTheme.padding)
-                .padding(.top, 12)
+                .padding(.top, 52)
 
             ZStack {
                 switch step {
@@ -25,7 +25,6 @@ struct ScreenTimeOnboardingView: View {
                 case 2: solutionStep
                 case 3: permissionsStep
                 case 4: appSelectionStep
-                case 5: scheduleStep
                 default: EmptyView()
                 }
             }
@@ -198,24 +197,10 @@ struct ScreenTimeOnboardingView: View {
                     .padding(.top, 8)
             }
             Spacer()
-            stepButton(title: "Continue", isEnabled: manager.hasSelection) { step = 5 }
-        }
-    }
-
-    private var scheduleStep: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                Text("Set your limits")
-                    .font(GoosieTheme.titleFont(24))
-                    .foregroundStyle(GoosieTheme.charcoalOutline)
-                    .padding(.top, 20)
-
-                ScreenTimeScheduleView {
-                    manager.isSetupComplete = true
-                    onComplete()
-                }
+            stepButton(title: "Finish", isEnabled: manager.hasSelection) {
+                manager.isSetupComplete = true
+                onComplete()
             }
-            .padding(.horizontal, GoosieTheme.padding)
         }
     }
 
