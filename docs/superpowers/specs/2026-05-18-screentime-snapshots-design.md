@@ -1,170 +1,169 @@
-# Screen Time Snapshots — Yesterday & Weekly Aggregates
+# Screen Time Historical Views — Yesterday & Weekly Aggregates
 
 **Date:** 2026-05-18
-**Status:** Approved
+**Status:** Approved (v2 — simplified, no persistence)
 
 ## Overview
 
-Add persistent screen time data capture so users can view yesterday's stats and a rolling 7-day weekly aggregate. The existing dropdown picker in `ScreenTimeTabPicker` (Today / Yesterday / This Week) drives navigation between live and historical views.
+Add yesterday and rolling 7-day weekly screen time views by querying Apple's DeviceActivity API directly with historical date ranges. No new data models or capture pipelines needed — the `DeviceActivityReport` view already accepts a `DeviceActivityFilter` with arbitrary `DateInterval`, and Apple retains usage data for at least 1-2 weeks.
 
-## Data Model
+The existing dropdown picker in `ScreenTimeTabPicker` (Today / Yesterday / This Week) drives navigation.
 
-### `ScreenTimeSnapshot` (SwiftData `@Model`)
+## Architecture
 
-One row per calendar day. Upserted on capture — partial snapshots are overwritten by more complete ones.
+### Core Insight
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `UUID` | Primary key |
-| `date` | `Date` | Start-of-day for the snapshot |
-| `isComplete` | `Bool` | `true` = end-of-day capture, `false` = partial/in-progress |
-| `totalScreenTimeSeconds` | `Int` | Total screen time for the day |
-| `totalPickups` | `Int` | Number of device pickups |
-| `focusLevelPercent` | `Int` | 0-100, percentage of time in non-distracting apps |
-| `timeOfflinePercent` | `Int` | 0-100, percentage of waking hours offline |
-| `topAppsData` | `Data` | JSON-encoded `[AppUsageRecord]` — top apps |
-| `allAppsData` | `Data` | JSON-encoded `[AppUsageRecord]` — full list |
-| `hourlyData` | `Data` | JSON-encoded `[HourlyRecord]` — per-hour breakdown |
-| `distractingMinutes` | `Int` | Minutes in distracting apps |
-| `productiveMinutes` | `Int` | Minutes in productive apps |
-| `neutralMinutes` | `Int` | Minutes in neutral apps |
-| `capturedAt` | `Date` | Timestamp of when this snapshot was taken |
-
-### Supporting Codable Structs
+`DeviceActivityFilter` accepts any `DateInterval`. The current code queries today:
 
 ```swift
-struct AppUsageRecord: Codable {
-    let name: String
-    let bundleID: String?
-    let tokenKey: String?
-    let durationSeconds: Int
-    let category: String // "productive" | "neutral" | "distracting"
-}
-
-struct HourlyRecord: Codable {
-    let hour: Int       // 0-23
-    let focusedSeconds: Int
-    let distractedSeconds: Int
-}
+DeviceActivityFilter(
+    segment: .hourly(during: DateInterval(start: startOfDay, end: Date())),
+    users: .all,
+    devices: .all
+)
 ```
 
-### Staging Payload
+For yesterday and weekly, we just change the date interval:
 
 ```swift
-struct ScreenTimeSnapshotPayload: Codable {
-    let dateString: String          // "yyyy-MM-dd"
-    let totalScreenTimeSeconds: Int
-    let totalPickups: Int
-    let focusLevelPercent: Int
-    let timeOfflinePercent: Int
-    let topApps: [AppUsageRecord]
-    let allApps: [AppUsageRecord]
-    let hourlyData: [HourlyRecord]
-    let distractingMinutes: Int
-    let productiveMinutes: Int
-    let neutralMinutes: Int
-    let capturedAt: Date
-}
+// Yesterday
+DeviceActivityFilter(
+    segment: .hourly(during: DateInterval(start: yesterdayStart, end: todayStart)),
+    users: .all,
+    devices: .all
+)
+
+// This Week (rolling 7 days)
+DeviceActivityFilter(
+    segment: .daily(during: DateInterval(start: sevenDaysAgo, end: now)),
+    users: .all,
+    devices: .all
+)
 ```
 
-Written to app group UserDefaults under key `"latestScreenTimeSnapshot"`.
+The report extension processes whatever data matches the filter via `makeConfiguration(representing:)`. No persistence layer needed.
 
-## Capture Pipeline
+### Filter Construction
 
-### Stage 1: Report Extension Capture (Primary)
+`ScreenTimeStatsTab` computes the filter based on `ScreenTimePeriod`:
 
-`DistractionReportScene` already processes full `DeviceActivityResults`. On every render:
+| Period | Segment | DateInterval |
+|--------|---------|-------------|
+| Today | `.hourly` | start of today ... now |
+| Yesterday | `.hourly` | start of yesterday ... start of today |
+| This Week | `.daily` | 7 days ago start of day ... now |
 
-1. Serialize processed data into `ScreenTimeSnapshotPayload`
-2. Write JSON to app group UserDefaults key `"latestScreenTimeSnapshot"`
-3. Include timestamp for freshness checking
+### Report Extension Scenes
 
-This is the primary capture mechanism — the report extension is the only component with access to per-app usage data via `DeviceActivityResults`.
+**Existing scenes (work for Today + Yesterday):**
 
-### Stage 2: Monitor Extension End-of-Day Signal
+- `DistractionReportScene` (context: `"distraction_summary"`) — Processes hourly segments, renders: total screen time header, stats row (top 3 apps, focus level, pickups), hourly stacked bar graph, time offline card
+- `AllAppsReportScene` (context: `"all_apps_usage"`) — Lists top 20 apps with duration bars and category badges
 
-`DeviceActivityMonitorExtension.intervalDidEnd()` (already fires daily):
+These work unchanged for Yesterday because the data shape is identical (hourly segments for a single day).
 
-1. Write trigger flag `"pendingSnapshotDate"` = yesterday's date string to app group
-2. This signals the main app to ingest any staged data on next foreground
+**New scene for weekly view:**
 
-### Stage 3: Main App Foreground Ingestion
+- `WeeklySummaryReportScene` (context: `"weekly_summary"`) — Processes daily segments over 7 days, renders:
+  - Total screen time header (sum across 7 days)
+  - Stats row: top 3 apps by aggregate time, average focus level, total pickups
+  - Daily stacked bar graph — 7 bars (one per day), each showing focused (green) vs distracted (red) time
+  - Average time offline card
 
-On app foreground (`scenePhase` change to `.active`):
+- `WeeklyAppsReportScene` (context: `"weekly_apps_usage"`) — Aggregates app usage across 7 daily segments, ranks by total duration, shows top 20 with category badges
 
-1. Read `"latestScreenTimeSnapshot"` from app group UserDefaults
-2. Parse `ScreenTimeSnapshotPayload`
-3. Upsert `ScreenTimeSnapshot` in SwiftData:
-   - If snapshot date = today: upsert with `isComplete: false`
-   - If snapshot date = yesterday (or pending flag set): upsert with `isComplete: true`
-4. Clear processed entries from app group staging area
+### Weekly Report Scene Data Processing
 
-### Limitation
+`WeeklySummaryReportScene.makeConfiguration(representing:)`:
 
-If the user never opens the app for a full day, no snapshot is captured for that day. The report extension only runs when the `DeviceActivityReport` SwiftUI view is rendered. This is an Apple platform constraint.
+```
+for each day in DeviceActivityResults:
+    for each segment in day.activitySegments:
+        accumulate total screen time
+        accumulate pickups
+        for each category > app:
+            accumulate per-app durations
+            track distracting vs focused time
+    produce one DailyBar(date, focusedSeconds, distractedSeconds)
+
+Output:
+    totalScreenTime across all days
+    totalPickups across all days
+    topApps by aggregate duration (top 3)
+    focusLevel = avg(daily focused% )
+    dailyBars = [DailyBar] for graph (7 entries)
+    timeOffline = avg(daily offline%)
+```
+
+### Header Label
+
+The total screen time header label changes based on period:
+- Today: "SCREEN TIME TODAY"
+- Yesterday: "SCREEN TIME YESTERDAY"
+- This Week: "SCREEN TIME THIS WEEK"
+
+The header context is passed implicitly — the report extension can infer it from the date interval in the filter (single day = today/yesterday, multi-day = week). Or we use distinct report contexts which already separate the scenes.
 
 ## View Architecture
 
-### Navigation
+### Navigation Wiring
 
-`ScreenTimeTabPicker` already has the `ScreenTimePeriod` enum (Today / Yesterday / This Week) and dropdown UI. Changes:
+`ScreenTimeTabPicker` already has `ScreenTimePeriod` enum and dropdown UI. Changes:
 
 1. `period` changes from local `@State` to `@Binding` passed from `ScreenTimePageView`
-2. `ScreenTimePageView` passes `period` down to `ScreenTimeStatsTab`
-3. `ScreenTimeStatsTab` switches content based on period
+2. `ScreenTimePageView` owns the `period` state, passes it down
+3. `ScreenTimeStatsTab` accepts `period` and switches filters/scenes accordingly
 
-### Stats Tab by Period
+### Stats Tab Behavior
 
-**Today:** Current behavior unchanged — live `DeviceActivityReport` views.
+```swift
+// ScreenTimeStatsTab
+switch period {
+case .today, .yesterday:
+    // Same two DeviceActivityReport views, different filter date range
+    DeviceActivityReport(.init(rawValue: "distraction_summary"), filter: periodFilter)
+    DeviceActivityReport(.init(rawValue: "all_apps_usage"), filter: periodFilter)
 
-**Yesterday:** Native SwiftUI view reading from `ScreenTimeSnapshot` for yesterday's date. Same visual layout as the live report:
-- Total screen time header
-- Stats row: top 3 apps, focus level %, pickups count
-- Hourly stacked bar graph (focused green vs distracted red)
-- Time offline card
-- App usage list with category badges (read-only, non-interactive)
+case .week:
+    // Weekly-specific report scenes with .daily segments
+    DeviceActivityReport(.init(rawValue: "weekly_summary"), filter: weeklyFilter)
+    DeviceActivityReport(.init(rawValue: "weekly_apps_usage"), filter: weeklyFilter)
+}
+```
 
-**This Week:** Native SwiftUI view with aggregated data from up to 7 `ScreenTimeSnapshot` records (rolling 7-day window):
-- Total screen time header (sum of daily totals)
-- Stats row: top 3 apps by aggregate time, average focus level, total pickups
-- Daily stacked bar graph — 7 bars (one per day), focused vs distracted
-- Average time offline
-- App usage list ranked by aggregate duration
+**Today:** Current behavior unchanged.
 
-### Aggregation Logic
+**Yesterday:** Same `DeviceActivityReport` scenes with yesterday's date interval. The hourly graph, top apps, focus level, pickups, time offline all render identically — just for yesterday's data. Header says "SCREEN TIME YESTERDAY".
 
-`ScreenTimeAggregator` utility:
-- Total screentime = sum of daily `totalScreenTimeSeconds`
-- Average focus = mean of daily `focusLevelPercent`
-- Top apps = merge `allAppsData` across days, sum durations per app, sort descending
-- Daily graph bars = one bar per `ScreenTimeSnapshot` (date, total focused, total distracted)
-- Time offline = mean of daily `timeOfflinePercent`
+**This Week:** Uses the two new weekly report scenes. Daily bar graph instead of hourly. Aggregated stats. Header says "SCREEN TIME THIS WEEK".
 
 ### Empty States
 
-- Yesterday with no snapshot: "No data for yesterday. Open the app daily to capture screen time."
-- Week with <2 snapshots: Show available data + same hint message
+If Apple returns no data for the requested interval (e.g., the device was off), the existing empty-state handling in the report scenes applies — the graph shows empty bars and stats show zeros.
 
 ## Files to Create/Modify
 
 ### New Files
-- `TamaGoosie/Core/Models/ScreenTimeSnapshot.swift` — SwiftData model + Codable structs
-- `TamaGoosie/Core/Services/ScreenTimeSnapshotService.swift` — Ingestion from app group, upsert logic
-- `TamaGoosie/Core/Services/ScreenTimeAggregator.swift` — Weekly aggregation
-- `TamaGoosie/Features/ScreenTime/ScreenTimeSavedStatsView.swift` — Yesterday/week native view
-- `TamaGoosie/Features/ScreenTime/ScreenTimeDailyBarGraph.swift` — Weekly daily bar graph component
+- `Extensions/Report/WeeklySummaryReportScene.swift` — Weekly summary report scene (daily bar graph, aggregate stats)
+- `Extensions/Report/WeeklyAppsReportScene.swift` — Weekly app usage report scene (aggregate app list)
 
 ### Modified Files
-- `Extensions/Report/DistractionReportScene.swift` — Add payload serialization to app group on render
-- `TamaGoosieDeviceActivity/DeviceActivityMonitorExtension.swift` — Add pending snapshot flag on interval end
-- `TamaGoosie/Features/ScreenTime/ScreenTimeTabPicker.swift` — Change `period` to `@Binding`
-- `TamaGoosie/Features/ScreenTime/ScreenTimePageView.swift` — Own `period` state, pass as binding
-- `TamaGoosie/Features/ScreenTime/ScreenTimeStatsTab.swift` — Accept `period`, switch between live/saved views
-- `project.yml` — Add new Swift files to sources (if needed)
+- `Extensions/Report/DistractionReportScene.swift` — Update header label to be dynamic (today vs yesterday); register new scenes in `DistractionReportExtension.body`
+- `TamaGoosie/Features/ScreenTime/ScreenTimeTabPicker.swift` — Change `period` from `@State` to `@Binding`
+- `TamaGoosie/Features/ScreenTime/ScreenTimePageView.swift` — Own `period` state, pass as binding to picker and stats tab
+- `TamaGoosie/Features/ScreenTime/ScreenTimeStatsTab.swift` — Accept `period` parameter, compute filter from period, switch between daily/weekly report scenes
+
+### No New Models or Services Needed
+
+The entire feature is driven by:
+1. Changing the `DeviceActivityFilter` date interval
+2. Adding two new report scenes for weekly aggregation
+3. Wiring the existing dropdown picker
 
 ## Constraints
 
-- All data stored as standard types (Int, Date, Data) in SwiftData — no iOS-only framework imports in model
-- App group ID: `group.com.tamagoosie`, staging key: `"latestScreenTimeSnapshot"`
-- Report extension writes to both `UserDefaults.standard` and app group (following existing `CategoryMapStore` pattern)
-- `ScreenTimeSnapshot` model must be added to the SwiftData `ModelContainer` configuration
+- Apple retains DeviceActivity data for approximately 1-2 weeks — sufficient for our rolling 7-day window
+- If Apple limits historical access in a future OS update, we can add the snapshot persistence layer as a fallback (design from v1 of this spec)
+- Report extension scenes must be registered in `DistractionReportExtension.body`
+- Weekly scenes use `.daily` segments; today/yesterday scenes use `.hourly` segments
+- Category map (productive/neutral/distracting) is shared across all scenes via existing `CategoryMapStore`
