@@ -15,6 +15,10 @@ struct AppLimitSheet: View {
     @State private var draftSelection = FamilyActivitySelection()
     @State private var selectionData: Data?
 
+    private let accentGreen = Color(hex: 0x4A8F4A)
+    private let sheetBackground = Color(hex: 0xF5F5F0)
+    private let cardBackground = Color.white
+
     private var hasSelection: Bool {
         !draftSelection.applicationTokens.isEmpty || !draftSelection.categoryTokens.isEmpty
     }
@@ -22,7 +26,7 @@ struct AppLimitSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                sheetBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 16) {
@@ -32,28 +36,34 @@ struct AppLimitSheet: View {
                                 .foregroundStyle(GoosieTheme.warmOrange)
                             TextField("Limit name", text: $name)
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
                         }
                         .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                        .background(
+                            RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                        )
 
                         // App selection
                         Button { showPicker = true } label: {
                             HStack {
                                 Text("App")
                                     .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
                                 Spacer()
                                 let count = draftSelection.applicationTokens.count + draftSelection.categoryTokens.count
                                 Text(count > 0 ? "\(count) selected" : "Choose")
                                     .font(.system(size: 14, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.3))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
                             }
                             .padding(14)
-                            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                            .background(
+                                RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                    .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                            )
                         }
 
                         // Time allowed
@@ -61,15 +71,18 @@ struct AppLimitSheet: View {
                             HStack {
                                 Text("Time Allowed")
                                     .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
                                 Spacer()
                                 Stepper("\(timeLimitMinutes)m", value: $timeLimitMinutes, in: 15...240, step: 15)
                                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
                             }
                         }
                         .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                        .background(
+                            RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                        )
 
                         // Days
                         DayOfWeekPicker(activeDays: $activeDays)
@@ -80,10 +93,11 @@ struct AppLimitSheet: View {
                         Button(action: save) {
                             Text("Save")
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                                .background(accentGreen, in: RoundedRectangle(cornerRadius: 16))
+                                .shadow(color: accentGreen.opacity(0.4), radius: 8, y: 4)
                         }
                         .disabled(name.isEmpty || !hasSelection)
                         .opacity(name.isEmpty || !hasSelection ? 0.4 : 1)
@@ -97,7 +111,7 @@ struct AppLimitSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.down")
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
                     }
                 }
             }
@@ -108,7 +122,6 @@ struct AppLimitSheet: View {
                 }
             }
             .onAppear { loadExisting() }
-            .preferredColorScheme(.dark)
         }
     }
 

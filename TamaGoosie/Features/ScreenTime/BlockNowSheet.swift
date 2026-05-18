@@ -27,10 +27,23 @@ struct BlockNowSheet: View {
         activeBlock?.startedAt != nil && activeBlock?.endedAt == nil
     }
 
+    private let accentGreen = Color(hex: 0x4A8F4A)
+    private let sheetBackground = Color(hex: 0xF5F5F0)
+    private let cardBackground = Color.white
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                if isSessionActive {
+                    LinearGradient(
+                        colors: [Color(hex: 0x6BAE6B), Color(hex: 0x95D095)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                } else {
+                    sheetBackground.ignoresSafeArea()
+                }
 
                 ScrollView {
                     VStack(spacing: 16) {
@@ -54,7 +67,7 @@ struct BlockNowSheet: View {
                         dismiss()
                     } label: {
                         Image(systemName: "chevron.down")
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(isSessionActive ? .white.opacity(0.6) : GoosieTheme.charcoalOutline.opacity(0.5))
                     }
                 }
             }
@@ -82,7 +95,7 @@ struct BlockNowSheet: View {
             .onDisappear {
                 timer?.invalidate()
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(isSessionActive ? .dark : .light)
         }
     }
 
@@ -96,41 +109,53 @@ struct BlockNowSheet: View {
                     .foregroundStyle(.orange)
                 TextField("Session name", text: $name)
                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
             }
             .padding(14)
-            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(cardBackground)
+                    .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+            )
 
             // Duration
             HStack {
                 Text("Duration")
                     .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
                 Spacer()
                 Stepper("\(durationMinutes)m", value: $durationMinutes, in: 5...120, step: 5)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
             }
             .padding(14)
-            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(cardBackground)
+                    .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+            )
 
             // Apps Blocked
             Button { showPicker = true } label: {
                 HStack {
                     Text("Apps Blocked")
                         .font(.system(size: 15, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(GoosieTheme.charcoalOutline)
                     Spacer()
                     let count = draftSelection.applicationTokens.count + draftSelection.categoryTokens.count
                     Text(count > 0 ? "\(count) selected" : "Choose")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
                 }
                 .padding(14)
-                .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(cardBackground)
+                        .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                )
             }
 
             Spacer().frame(height: 20)
@@ -139,10 +164,11 @@ struct BlockNowSheet: View {
             Button(action: startSession) {
                 Text("Start Session")
                     .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                    .background(accentGreen, in: RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: accentGreen.opacity(0.4), radius: 8, y: 4)
             }
             .disabled(!hasSelection)
             .opacity(hasSelection ? 1 : 0.4)
@@ -158,13 +184,13 @@ struct BlockNowSheet: View {
             // Timer ring
             ZStack {
                 Circle()
-                    .stroke(.white.opacity(0.1), lineWidth: 8)
+                    .stroke(.white.opacity(0.2), lineWidth: 8)
                     .frame(width: 220, height: 220)
 
                 Circle()
                     .trim(from: 0, to: sessionProgress)
                     .stroke(
-                        GoosieTheme.coralAccent,
+                        .white,
                         style: StrokeStyle(lineWidth: 8, lineCap: .round)
                     )
                     .frame(width: 220, height: 220)
@@ -192,7 +218,8 @@ struct BlockNowSheet: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(GoosieTheme.coralAccent, in: RoundedRectangle(cornerRadius: 16))
+                    .background(accentGreen.opacity(0.8), in: RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .black.opacity(0.15), radius: 6, y: 3)
             }
         }
     }

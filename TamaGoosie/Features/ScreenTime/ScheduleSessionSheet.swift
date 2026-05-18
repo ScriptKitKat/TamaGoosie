@@ -17,6 +17,10 @@ struct ScheduleSessionSheet: View {
     @State private var draftSelection = FamilyActivitySelection()
     @State private var selectionData: Data?
 
+    private let accentGreen = Color(hex: 0x4A8F4A)
+    private let sheetBackground = Color(hex: 0xF5F5F0)
+    private let cardBackground = Color.white
+
     private var hasSelection: Bool {
         !draftSelection.applicationTokens.isEmpty || !draftSelection.categoryTokens.isEmpty
     }
@@ -24,7 +28,7 @@ struct ScheduleSessionSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                sheetBackground.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 16) {
@@ -34,41 +38,45 @@ struct ScheduleSessionSheet: View {
                                 .foregroundStyle(GoosieTheme.skyBlue)
                             TextField("Session name", text: $name)
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(GoosieTheme.charcoalOutline)
                         }
                         .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                        .background(
+                            RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                        )
 
                         // Time range
                         VStack(spacing: 0) {
                             HStack {
-                                Circle().fill(.green).frame(width: 8, height: 8)
+                                Circle().fill(accentGreen).frame(width: 8, height: 8)
                                 Text("From")
                                     .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
                                 Spacer()
                                 DatePicker("", selection: $startTime, displayedComponents: .hourAndMinute)
                                     .labelsHidden()
-                                    .colorScheme(.dark)
                             }
                             .padding(.vertical, 10)
 
-                            Divider().background(.white.opacity(0.1))
+                            Divider()
 
                             HStack {
-                                Circle().stroke(.white.opacity(0.3), lineWidth: 1.5).frame(width: 8, height: 8)
+                                Circle().stroke(GoosieTheme.charcoalOutline.opacity(0.3), lineWidth: 1.5).frame(width: 8, height: 8)
                                 Text("To")
                                     .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
                                 Spacer()
                                 DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
                                     .labelsHidden()
-                                    .colorScheme(.dark)
                             }
                             .padding(.vertical, 10)
                         }
                         .padding(.horizontal, 14)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                        .background(
+                            RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                        )
 
                         // Days
                         DayOfWeekPicker(activeDays: $activeDays)
@@ -78,18 +86,21 @@ struct ScheduleSessionSheet: View {
                             HStack {
                                 Text("Apps Blocked")
                                     .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(GoosieTheme.charcoalOutline)
                                 Spacer()
                                 let count = draftSelection.applicationTokens.count + draftSelection.categoryTokens.count
                                 Text(count > 0 ? "\(count) selected" : "Choose")
                                     .font(.system(size: 14, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(.white.opacity(0.3))
+                                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.3))
                             }
                             .padding(14)
-                            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                            .background(
+                                RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                    .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                            )
                         }
 
                         // Vacation mode
@@ -98,18 +109,21 @@ struct ScheduleSessionSheet: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Vacation Mode")
                                         .font(.system(size: 15, weight: .medium, design: .rounded))
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(GoosieTheme.charcoalOutline)
                                     Text("Temporarily disable this session")
                                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                                        .foregroundStyle(.white.opacity(0.4))
+                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
                                 }
                                 Spacer()
                                 Toggle("", isOn: $isVacationMode)
                                     .labelsHidden()
-                                    .tint(GoosieTheme.skyBlue)
+                                    .tint(accentGreen)
                             }
                             .padding(14)
-                            .background(RoundedRectangle(cornerRadius: 14).fill(.white.opacity(0.08)))
+                            .background(
+                                RoundedRectangle(cornerRadius: 16).fill(cardBackground)
+                                    .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                            )
                         }
 
                         Spacer().frame(height: 20)
@@ -118,10 +132,11 @@ struct ScheduleSessionSheet: View {
                         Button(action: save) {
                             Text("Save")
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                                .background(accentGreen, in: RoundedRectangle(cornerRadius: 16))
+                                .shadow(color: accentGreen.opacity(0.4), radius: 8, y: 4)
                         }
                         .disabled(name.isEmpty || !hasSelection)
                         .opacity(name.isEmpty || !hasSelection ? 0.4 : 1)
@@ -135,7 +150,7 @@ struct ScheduleSessionSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.down")
-                            .foregroundStyle(.white.opacity(0.6))
+                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
                     }
                 }
             }
@@ -146,7 +161,6 @@ struct ScheduleSessionSheet: View {
                 }
             }
             .onAppear { loadExisting() }
-            .preferredColorScheme(.dark)
         }
     }
 

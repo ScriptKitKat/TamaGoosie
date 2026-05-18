@@ -438,7 +438,7 @@ final class ScreenTimeManager {
         }
     }
 
-    // MARK: - Per-Block Monitoring
+    // MARK: - Per-Block Monitoring & Shielding
 
     func registerBlock(_ block: ScreenBlock) {
         guard isAuthorized else { return }
@@ -450,13 +450,16 @@ final class ScreenTimeManager {
         // Stop any existing monitor for this block
         activityCenter.stopMonitoring([activityName])
 
+        // Persist selection data to app group so the extension can apply shields
+        if let data = block.selectionData {
+            defaults.set(data, forKey: "blockShield-\(blockID)")
+        }
+
         let startComps: DateComponents
         let endComps: DateComponents
 
         switch block.type {
         case "blockNow":
-            // Block Now: monitor from now until duration expires
-            // The timer handles completion; we just need the shield active
             startComps = DateComponents(hour: 0, minute: 0)
             endComps = DateComponents(hour: 23, minute: 59)
 
@@ -466,12 +469,10 @@ final class ScreenTimeManager {
             endComps = DateComponents(hour: block.scheduleEndHour, minute: block.scheduleEndMinute)
 
         case "appLimit":
-            // App Limit: monitor all day, with threshold event at the limit
             startComps = DateComponents(hour: 0, minute: 0)
             endComps = DateComponents(hour: 23, minute: 59)
 
         case "lock":
-            // Lock: monitor all day
             startComps = DateComponents(hour: 0, minute: 0)
             endComps = DateComponents(hour: 23, minute: 59)
 
@@ -502,16 +503,56 @@ final class ScreenTimeManager {
         } catch {
             print("[ScreenTimeManager] registerBlock failed for \(block.name): \(error)")
         }
+
+        // Apply shield immediately for blockNow, lock, and currently-active schedules
+        if block.type == "blockNow" || block.type == "lock" {
+            applyShield(blockID: blockID, selection: selection)
+        } else if block.type == "schedule" {
+            if isScheduleCurrentlyActive(block) {
+                applyShield(blockID: blockID, selection: selection)
+            }
+        }
+        // appLimit: shield applied when threshold fires in the DeviceActivity extension
     }
 
     func unregisterBlock(_ block: ScreenBlock) {
-        let activityName = DeviceActivityName("block-\(block.id.uuidString)")
+        let blockID = block.id.uuidString
+        let activityName = DeviceActivityName("block-\(blockID)")
         activityCenter.stopMonitoring([activityName])
+        removeShield(blockID: blockID)
+        defaults.removeObject(forKey: "blockShield-\(blockID)")
     }
 
     func refreshAllBlocks(_ blocks: [ScreenBlock]) {
         for block in blocks where !block.isPast {
             registerBlock(block)
         }
+    }
+
+    // MARK: - Shield Management
+
+    func applyShield(blockID: String, selection: FamilyActivitySelection) {
+        let store = ManagedSettingsStore(named: .init("block-\(blockID)"))
+        store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
+        store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
+        store.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
+    }
+
+    func removeShield(blockID: String) {
+        let store = ManagedSettingsStore(named: .init("block-\(blockID)"))
+        store.clearAllSettings()
+    }
+
+    private func isScheduleCurrentlyActive(_ block: ScreenBlock) -> Bool {
+        let cal = Calendar.current
+        let now = Date()
+        let weekday = cal.component(.weekday, from: now)
+        guard block.activeDaysSet.contains(weekday) else { return false }
+        let hour = cal.component(.hour, from: now)
+        let minute = cal.component(.minute, from: now)
+        let nowMins = hour * 60 + minute
+        let startMins = block.scheduleStartHour * 60 + block.scheduleStartMinute
+        let endMins = block.scheduleEndHour * 60 + block.scheduleEndMinute
+        return nowMins >= startMins && nowMins < endMins
     }
 }
