@@ -18,22 +18,26 @@ struct DistractionReportScene: DeviceActivityReportScene {
         var distractingMinutes: Int = 0
         var topAppTokens: [ApplicationToken] = []
         var hourlyBuckets: [HourlyBucket] = []
+        var isToday: Bool = true
     }
 
     typealias Configuration = ReportData
 
     func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async -> ReportData {
-        let defaults = UserDefaults(suiteName: "group.com.tamagoosie")
-        let appCategoryMap = defaults?.dictionary(forKey: "appCategoryMap") as? [String: String] ?? [:]
+        let appCategoryMap = Self.loadCategoryMap()
 
         var totalScreenTime: TimeInterval = 0
         var totalPickups = 0
+        var latestSegmentStart: Date = .distantPast
         var appDurations: [(key: String, token: ApplicationToken, duration: TimeInterval)] = []
         var hourlyTotal: [Int: TimeInterval] = [:]
         var hourlyDistracting: [Int: TimeInterval] = [:]
 
         for await activityData in data {
             for await segment in activityData.activitySegments {
+                if segment.dateInterval.start > latestSegmentStart {
+                    latestSegmentStart = segment.dateInterval.start
+                }
                 let hour = Calendar.current.component(.hour, from: segment.dateInterval.start)
                 let segmentDuration = segment.totalActivityDuration
                 var segmentAppDuration: TimeInterval = 0
@@ -92,12 +96,16 @@ struct DistractionReportScene: DeviceActivityReportScene {
             )
         }
 
+        let startOfToday = Calendar.current.startOfDay(for: Date())
+        let isToday = latestSegmentStart >= startOfToday || latestSegmentStart == .distantPast
+
         return ReportData(
             totalScreenTime: totalScreenTime,
             totalPickups: totalPickups,
             distractingMinutes: Int(distractingSec / 60),
             topAppTokens: topTokens,
-            hourlyBuckets: buckets
+            hourlyBuckets: buckets,
+            isToday: isToday
         )
     }
 
@@ -125,7 +133,7 @@ struct DistractionReportScene: DeviceActivityReportScene {
                         .foregroundStyle(.white)
                         .lineLimit(1)
                         .minimumScaleFactor(0.65)
-                    Text("SCREEN TIME TODAY")
+                    Text(config.isToday ? "SCREEN TIME TODAY" : "SCREEN TIME YESTERDAY")
                         .font(.system(size: 12, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -259,7 +267,7 @@ struct DistractionReportScene: DeviceActivityReportScene {
                         Text("Time Offline")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundStyle(charcoal)
-                        Text("\(offlinePct)% of your day")
+                        Text(config.isToday ? "\(offlinePct)% of your day" : "\(offlinePct)% of yesterday")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(accentGreen)
                     }
@@ -282,6 +290,31 @@ struct DistractionReportScene: DeviceActivityReportScene {
     }
 }
 
+// MARK: - Shared Category Map Persistence
+
+/// Extension's own UserDefaults is always writable; shared app group may not be.
+/// Read from standard first, fall back to shared app group (written by main app).
+private enum CategoryMapStore {
+    private static let key = "appCategoryMap"
+    private static var shared: UserDefaults? { UserDefaults(suiteName: "group.com.tamagoosie") }
+
+    static func load() -> [String: String] {
+        if let map = UserDefaults.standard.dictionary(forKey: key) as? [String: String], !map.isEmpty {
+            return map
+        }
+        return shared?.dictionary(forKey: key) as? [String: String] ?? [:]
+    }
+
+    static func save(_ map: [String: String]) {
+        UserDefaults.standard.set(map, forKey: key)
+        shared?.set(map, forKey: key)
+    }
+}
+
+extension DistractionReportScene {
+    static func loadCategoryMap() -> [String: String] { CategoryMapStore.load() }
+}
+
 // MARK: - All Apps Usage Report Scene
 
 struct AllAppsReportScene: DeviceActivityReportScene {
@@ -302,7 +335,7 @@ struct AllAppsReportScene: DeviceActivityReportScene {
     typealias Configuration = ReportData
 
     func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async -> ReportData {
-        let appCategoryMap = UserDefaults(suiteName: "group.com.tamagoosie")?.dictionary(forKey: "appCategoryMap") as? [String: String] ?? [:]
+        let appCategoryMap = CategoryMapStore.load()
 
         var totalScreenTime: TimeInterval = 0
         var appData: [String: (token: ApplicationToken, duration: TimeInterval)] = [:]
@@ -484,7 +517,7 @@ private struct AppUsageContentView: View {
         default: next = "distracting"
         }
         categoryMap[appId] = next
-        UserDefaults(suiteName: "group.com.tamagoosie")?.set(categoryMap, forKey: "appCategoryMap")
+        CategoryMapStore.save(categoryMap)
     }
 
     private func colorForCategory(_ cat: String) -> Color {
