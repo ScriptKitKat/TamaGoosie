@@ -115,6 +115,7 @@
 		ABF9CF827C3739BE790208A4 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		ACDC9A32AB4FAC485190FD1D /* TamaGoosieShield.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B0544B8CEC98A4FB74057644 /* OnboardingNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */; };
+		B2501E30EB35C4B7B40F30A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E065A106962BBE37019343E8 /* Assets.xcassets */; };
 		B58015436BCCD9B7C4D2F570 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B922DD91F0DE3DB923769BD1 /* SignInView.swift */; };
 		B5E7D7CEA8CEB76189E6CD87 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		B6078E1137C1C8D10610DF42 /* GoalProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DF8D904D7E63E9887D5341 /* GoalProgress.swift */; };
@@ -374,6 +375,7 @@
 		DB038A3D390625A5285E78AE /* GoalEditorHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorHelpers.swift; sourceTree = "<group>"; };
 		DB2CBC4425DDF588BD10E856 /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		DF93B1A9A785F410FC571D04 /* CoinAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoinAnimationView.swift; sourceTree = "<group>"; };
+		E065A106962BBE37019343E8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLogHistoryProvider.swift; sourceTree = "<group>"; };
 		E129223B490F8E32CA9DF16B /* HealthDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDashboard.swift; sourceTree = "<group>"; };
 		E23CC00F66CA1B00B195BDD9 /* ScreenTimeOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeOnboardingView.swift; sourceTree = "<group>"; };
@@ -439,6 +441,7 @@
 		00B7E0BE06E5E97AB768201D /* Shield */ = {
 			isa = PBXGroup;
 			children = (
+				E065A106962BBE37019343E8 /* Assets.xcassets */,
 				B0C409473141F7BF33953458 /* Info.plist */,
 				A538E34D97F4AE7F789DD632 /* ShieldConfigurationProvider.swift */,
 				737D9D9590B52AD6B590C972 /* TamaGoosieShield.entitlements */,
@@ -950,6 +953,7 @@
 			buildConfigurationList = 2E5EC17278B0D12BA3B3674D /* Build configuration list for PBXNativeTarget "TamaGoosieShield" */;
 			buildPhases = (
 				8C297376F55641C4106C6CF6 /* Sources */,
+				B4B1A5E4610A1AEE4BC4AD86 /* Resources */,
 				C3C605BBF94DD4DDBA58CDA9 /* Frameworks */,
 			);
 			buildRules = (
@@ -1025,6 +1029,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		B4B1A5E4610A1AEE4BC4AD86 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2501E30EB35C4B7B40F30A6 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CCD685CB56C63388E0FDED40 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
