@@ -3,11 +3,13 @@ import FamilyControls
 import ManagedSettings
 import SwiftUI
 
-struct DistractionReportScene: DeviceActivityReportScene {
-    let context: DeviceActivityReport.Context = .init(rawValue: "distraction_summary")
+// MARK: - Weekly Summary Report Scene
 
-    struct HourlyBucket {
-        let hour: Int
+struct WeeklySummaryReportScene: DeviceActivityReportScene {
+    let context: DeviceActivityReport.Context = .init(rawValue: "weekly_summary")
+
+    struct DailyBucket {
+        let date: Date
         var totalSeconds: TimeInterval = 0
         var distractingSeconds: TimeInterval = 0
     }
@@ -17,30 +19,30 @@ struct DistractionReportScene: DeviceActivityReportScene {
         var totalPickups: Int = 0
         var distractingMinutes: Int = 0
         var topAppTokens: [ApplicationToken] = []
-        var hourlyBuckets: [HourlyBucket] = []
-        var isToday: Bool = true
+        var dailyBuckets: [DailyBucket] = []
+        var dayCount: Int = 0
     }
 
     typealias Configuration = ReportData
 
     func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async -> ReportData {
-        let appCategoryMap = Self.loadCategoryMap()
+        let appCategoryMap = DistractionReportScene.loadCategoryMap()
+        let calendar = Calendar.current
 
         var totalScreenTime: TimeInterval = 0
         var totalPickups = 0
-        var latestSegmentStart: Date = .distantPast
-        var appDurations: [(key: String, token: ApplicationToken, duration: TimeInterval)] = []
-        var hourlyTotal: [Int: TimeInterval] = [:]
-        var hourlyDistracting: [Int: TimeInterval] = [:]
+        var appDurations: [String: (token: ApplicationToken, duration: TimeInterval)] = [:]
+        var dailyTotals: [DateComponents: (total: TimeInterval, distracting: TimeInterval)] = [:]
+        var datesSet: Set<DateComponents> = []
 
         for await activityData in data {
             for await segment in activityData.activitySegments {
-                if segment.dateInterval.start > latestSegmentStart {
-                    latestSegmentStart = segment.dateInterval.start
-                }
-                let hour = Calendar.current.component(.hour, from: segment.dateInterval.start)
+                let dayComponents = calendar.dateComponents([.year, .month, .day], from: segment.dateInterval.start)
+                datesSet.insert(dayComponents)
+
                 let segmentDuration = segment.totalActivityDuration
                 var segmentAppDuration: TimeInterval = 0
+                var segmentDistractingSec: TimeInterval = 0
                 totalPickups += segment.totalPickupsWithoutApplicationActivity
 
                 for await category in segment.categories {
@@ -52,69 +54,74 @@ struct DistractionReportScene: DeviceActivityReportScene {
 
                         if let token = app.application.token {
                             let key = (try? JSONEncoder().encode(token))?.base64EncodedString() ?? "\(token.hashValue)"
-                            appDurations.append((key: key, token: token, duration: duration))
+
+                            if let existing = appDurations[key] {
+                                appDurations[key] = (token: existing.token, duration: existing.duration + duration)
+                            } else {
+                                appDurations[key] = (token: token, duration: duration)
+                            }
 
                             let cat = appCategoryMap[key] ?? "distracting"
                             if cat == "distracting" {
-                                hourlyDistracting[hour, default: 0] += duration
+                                segmentDistractingSec += duration
                             }
                         }
                     }
                 }
+
                 let effective = max(segmentDuration, segmentAppDuration)
                 totalScreenTime += effective
-                hourlyTotal[hour, default: 0] += effective
+
+                let existing = dailyTotals[dayComponents] ?? (total: 0, distracting: 0)
+                dailyTotals[dayComponents] = (
+                    total: existing.total + effective,
+                    distracting: existing.distracting + segmentDistractingSec
+                )
             }
         }
 
-        // Merge app duplicates
-        var merged: [String: (token: ApplicationToken, duration: TimeInterval)] = [:]
-        for entry in appDurations {
-            if let existing = merged[entry.key] {
-                merged[entry.key] = (token: existing.token, duration: existing.duration + entry.duration)
-            } else {
-                merged[entry.key] = (token: entry.token, duration: entry.duration)
-            }
+        // Build sorted daily buckets for the last 7 days
+        let startOfToday = calendar.startOfDay(for: Date())
+        var buckets: [DailyBucket] = []
+        for dayOffset in (-6...0) {
+            let date = calendar.date(byAdding: .day, value: dayOffset, to: startOfToday)!
+            let components = calendar.dateComponents([.year, .month, .day], from: date)
+            let entry = dailyTotals[components]
+            buckets.append(DailyBucket(
+                date: date,
+                totalSeconds: entry?.total ?? 0,
+                distractingSeconds: entry?.distracting ?? 0
+            ))
         }
 
-        let sorted = merged.sorted { $0.value.duration > $1.value.duration }
+        // Top 3 apps by aggregate duration
+        let sorted = appDurations.sorted { $0.value.duration > $1.value.duration }
         let topTokens = sorted.prefix(3).map { $0.value.token }
 
         var distractingSec: TimeInterval = 0
-        for (key, value) in merged {
+        for (key, value) in appDurations {
             if (appCategoryMap[key] ?? "distracting") == "distracting" {
                 distractingSec += value.duration
             }
         }
-
-        // Build hourly buckets for graph
-        let buckets = (0..<24).map { hour in
-            HourlyBucket(
-                hour: hour,
-                totalSeconds: hourlyTotal[hour, default: 0],
-                distractingSeconds: hourlyDistracting[hour, default: 0]
-            )
-        }
-
-        let startOfToday = Calendar.current.startOfDay(for: Date())
-        let isToday = latestSegmentStart >= startOfToday || latestSegmentStart == .distantPast
 
         return ReportData(
             totalScreenTime: totalScreenTime,
             totalPickups: totalPickups,
             distractingMinutes: Int(distractingSec / 60),
             topAppTokens: topTokens,
-            hourlyBuckets: buckets,
-            isToday: isToday
+            dailyBuckets: buckets,
+            dayCount: max(1, datesSet.count)
         )
     }
 
-    var content: (ReportData) -> AnyView = { (config: ReportData) in
-        let awakeMinutes = 960
+    var content: (ReportData) -> AnyView = { config in
+        let awakeMinutesTotal = 960 * max(1, config.dayCount)
         let totalMinutes = Int(config.totalScreenTime / 60)
-        let focusScore = max(0, min(100, 100 - Int(round(Double(config.distractingMinutes) / Double(awakeMinutes) * 100))))
-        let offlineMinutes = max(0, awakeMinutes - totalMinutes)
-        let offlinePct = Int(round(Double(offlineMinutes) / Double(awakeMinutes) * 100))
+        let avgFocusScore = max(0, min(100, 100 - Int(round(Double(config.distractingMinutes) / Double(awakeMinutesTotal) * 100))))
+        let totalOfflineMinutes = max(0, awakeMinutesTotal - totalMinutes)
+        let avgOfflineMinutes = totalOfflineMinutes / max(1, config.dayCount)
+        let avgOfflinePct = Int(round(Double(totalOfflineMinutes) / Double(awakeMinutesTotal) * 100))
 
         let accentGreen = Color(red: 0.29, green: 0.56, blue: 0.29)
         let focusGreen = Color(red: 0.40, green: 0.73, blue: 0.42)
@@ -122,18 +129,22 @@ struct DistractionReportScene: DeviceActivityReportScene {
         let lightGreen = Color(red: 0.91, green: 0.96, blue: 0.91)
         let charcoal = Color(red: 0.18, green: 0.18, blue: 0.18)
 
-        let graphHours = Array(9...22)
+        let dayFormatter: DateFormatter = {
+            let f = DateFormatter()
+            f.dateFormat = "EEE"
+            return f
+        }()
 
         return AnyView(
             VStack(spacing: 14) {
                 // Screen time header
                 VStack(spacing: 6) {
-                    Text(reportFormatTime(totalMinutes))
+                    Text(weeklyFormatTime(totalMinutes))
                         .font(.system(size: 52, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                         .minimumScaleFactor(0.65)
-                    Text(config.isToday ? "SCREEN TIME TODAY" : "SCREEN TIME YESTERDAY")
+                    Text("SCREEN TIME THIS WEEK")
                         .font(.system(size: 12, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -166,10 +177,10 @@ struct DistractionReportScene: DeviceActivityReportScene {
                     .frame(maxWidth: .infinity)
 
                     VStack(spacing: 4) {
-                        Text("FOCUS LEVEL")
+                        Text("AVG FOCUS")
                             .font(.system(size: 10, weight: .heavy, design: .rounded))
                             .foregroundStyle(.white.opacity(0.6))
-                        Text("\(focusScore)%")
+                        Text("\(avgFocusScore)%")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                     }
@@ -187,7 +198,7 @@ struct DistractionReportScene: DeviceActivityReportScene {
                 }
                 .padding(.bottom, 4)
 
-                // Timeline graph card
+                // Daily bar graph card
                 VStack(spacing: 12) {
                     HStack(spacing: 16) {
                         Spacer()
@@ -205,48 +216,7 @@ struct DistractionReportScene: DeviceActivityReportScene {
                         }
                     }
 
-                    HStack(alignment: .bottom, spacing: 3) {
-                        ForEach(graphHours, id: \.self) { hour in
-                            let bucket = config.hourlyBuckets.first { $0.hour == hour }
-                            let totalSec = bucket?.totalSeconds ?? 0
-                            let distractSec = bucket?.distractingSeconds ?? 0
-                            let focusedSec = max(0, totalSec - distractSec)
-                            let maxH: CGFloat = 60
-                            let focusedH = CGFloat(focusedSec / 3600) * maxH
-                            let distractH = CGFloat(distractSec / 3600) * maxH
-
-                            VStack(spacing: 2) {
-                                if focusedH > 1 || distractH > 1 {
-                                    if focusedH > 1 {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(focusGreen)
-                                            .frame(height: max(4, focusedH))
-                                    }
-                                    if distractH > 1 {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(distractedRed)
-                                            .frame(height: max(4, distractH))
-                                    }
-                                } else {
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(charcoal.opacity(0.08))
-                                        .frame(height: 4)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .frame(height: 80)
-
-                    HStack {
-                        Text("9 AM"); Spacer()
-                        Text("12 PM"); Spacer()
-                        Text("3 PM"); Spacer()
-                        Text("6 PM"); Spacer()
-                        Text("9 PM")
-                    }
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundStyle(charcoal.opacity(0.4))
+                    WeeklyBarGraphView(buckets: config.dailyBuckets, dayFormatter: dayFormatter, focusGreen: focusGreen, distractedRed: distractedRed, charcoal: charcoal)
                 }
                 .padding(16)
                 .background(
@@ -255,7 +225,7 @@ struct DistractionReportScene: DeviceActivityReportScene {
                         .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
                 )
 
-                // Time offline card
+                // Avg time offline card
                 HStack(spacing: 12) {
                     Image(systemName: "moon.zzz.fill")
                         .font(.system(size: 18))
@@ -264,17 +234,17 @@ struct DistractionReportScene: DeviceActivityReportScene {
                         .background(lightGreen, in: Circle())
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Time Offline")
+                        Text("Avg Time Offline")
                             .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundStyle(charcoal)
-                        Text(config.isToday ? "\(offlinePct)% of your day" : "\(offlinePct)% of yesterday")
+                        Text("\(avgOfflinePct)% of your day")
                             .font(.system(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(accentGreen)
                     }
 
                     Spacer()
 
-                    Text(reportFormatTime(offlineMinutes))
+                    Text(weeklyFormatTime(avgOfflineMinutes))
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundStyle(accentGreen)
                 }
@@ -290,35 +260,62 @@ struct DistractionReportScene: DeviceActivityReportScene {
     }
 }
 
-// MARK: - Shared Category Map Persistence
+// MARK: - Weekly Bar Graph (extracted to avoid closure complexity)
 
-/// Extension's own UserDefaults is always writable; shared app group may not be.
-/// Read from standard first, fall back to shared app group (written by main app).
-enum CategoryMapStore {
-    private static let key = "appCategoryMap"
-    private static var shared: UserDefaults? { UserDefaults(suiteName: "group.com.tamagoosie") }
+private struct WeeklyBarGraphView: View {
+    let buckets: [WeeklySummaryReportScene.DailyBucket]
+    let dayFormatter: DateFormatter
+    let focusGreen: Color
+    let distractedRed: Color
+    let charcoal: Color
 
-    static func load() -> [String: String] {
-        if let map = UserDefaults.standard.dictionary(forKey: key) as? [String: String], !map.isEmpty {
-            return map
+    private var maxDailySeconds: TimeInterval {
+        buckets.map(\.totalSeconds).max() ?? 1
+    }
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 6) {
+            ForEach(Array(buckets.enumerated()), id: \.offset) { _, bucket in
+                let distractSec = bucket.distractingSeconds
+                let focusedSec = max(0, bucket.totalSeconds - distractSec)
+                let maxH: CGFloat = 80
+                let scale = maxDailySeconds > 0 ? maxH / maxDailySeconds : 0
+                let focusedH = focusedSec * scale
+                let distractH = distractSec * scale
+
+                VStack(spacing: 2) {
+                    if focusedH > 1 || distractH > 1 {
+                        if focusedH > 1 {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(focusGreen)
+                                .frame(height: max(4, focusedH))
+                        }
+                        if distractH > 1 {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(distractedRed)
+                                .frame(height: max(4, distractH))
+                        }
+                    } else {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(charcoal.opacity(0.08))
+                            .frame(height: 4)
+                    }
+
+                    Text(dayFormatter.string(from: bucket.date))
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .foregroundStyle(charcoal.opacity(0.4))
+                }
+                .frame(maxWidth: .infinity)
+            }
         }
-        return shared?.dictionary(forKey: key) as? [String: String] ?? [:]
-    }
-
-    static func save(_ map: [String: String]) {
-        UserDefaults.standard.set(map, forKey: key)
-        shared?.set(map, forKey: key)
+        .frame(height: 100)
     }
 }
 
-extension DistractionReportScene {
-    static func loadCategoryMap() -> [String: String] { CategoryMapStore.load() }
-}
+// MARK: - Weekly Apps Usage Report Scene
 
-// MARK: - All Apps Usage Report Scene
-
-struct AllAppsReportScene: DeviceActivityReportScene {
-    let context: DeviceActivityReport.Context = .init(rawValue: "all_apps_usage")
+struct WeeklyAppsReportScene: DeviceActivityReportScene {
+    let context: DeviceActivityReport.Context = .init(rawValue: "weekly_apps_usage")
 
     struct AppEntry: Identifiable {
         let id: String
@@ -335,7 +332,7 @@ struct AllAppsReportScene: DeviceActivityReportScene {
     typealias Configuration = ReportData
 
     func makeConfiguration(representing data: DeviceActivityResults<DeviceActivityData>) async -> ReportData {
-        let appCategoryMap = CategoryMapStore.load()
+        let appCategoryMap = DistractionReportScene.loadCategoryMap()
 
         var totalScreenTime: TimeInterval = 0
         var appData: [String: (token: ApplicationToken, duration: TimeInterval)] = [:]
@@ -367,7 +364,6 @@ struct AllAppsReportScene: DeviceActivityReportScene {
             }
         }
 
-        // Limit to top 20 apps
         let sortedEntries = appData.sorted { $0.value.duration > $1.value.duration }
             .prefix(20)
             .map { AppEntry(id: $0.key, token: $0.value.token, durationSeconds: $0.value.duration) }
@@ -380,14 +376,12 @@ struct AllAppsReportScene: DeviceActivityReportScene {
     }
 
     var content: (ReportData) -> AnyView = { config in
-        AnyView(AppUsageContentView(config: config))
+        AnyView(WeeklyAppUsageContentView(config: config))
     }
 }
 
-// MARK: - App Usage Content View (with tappable category tags)
-
-private struct AppUsageContentView: View {
-    let config: AllAppsReportScene.ReportData
+private struct WeeklyAppUsageContentView: View {
+    let config: WeeklyAppsReportScene.ReportData
     @State private var categoryMap: [String: String]
 
     private let accentGreen = Color(red: 0.29, green: 0.56, blue: 0.29)
@@ -395,7 +389,7 @@ private struct AppUsageContentView: View {
     private let distractedRed = Color(red: 0.90, green: 0.45, blue: 0.45)
     private let neutralGray = Color(red: 0.62, green: 0.62, blue: 0.62)
 
-    init(config: AllAppsReportScene.ReportData) {
+    init(config: WeeklyAppsReportScene.ReportData) {
         self.config = config
         self._categoryMap = State(initialValue: config.categoryMap)
     }
@@ -411,13 +405,13 @@ private struct AppUsageContentView: View {
                     RoundedRectangle(cornerRadius: 2)
                         .fill(accentGreen)
                         .frame(width: 4, height: 18)
-                    Text("App Usage")
+                    Text("App Usage This Week")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundStyle(charcoal)
 
                     Spacer()
 
-                    Text(reportFormatDuration(config.totalScreenTime))
+                    Text(weeklyFormatDuration(config.totalScreenTime))
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundStyle(accentGreen)
                 }
@@ -433,7 +427,7 @@ private struct AppUsageContentView: View {
                 } else {
                     VStack(spacing: 0) {
                         ForEach(Array(config.entries.enumerated()), id: \.element.id) { index, entry in
-                            appRow(entry: entry)
+                            weeklyAppRow(entry: entry)
 
                             if index < config.entries.count - 1 {
                                 Divider()
@@ -454,7 +448,7 @@ private struct AppUsageContentView: View {
     }
 
     @ViewBuilder
-    private func appRow(entry: AllAppsReportScene.AppEntry) -> some View {
+    private func weeklyAppRow(entry: WeeklyAppsReportScene.AppEntry) -> some View {
         let catRaw = categoryMap[entry.id] ?? "distracting"
         let catColor = colorForCategory(catRaw)
         let catLabel = labelForCategory(catRaw)
@@ -474,7 +468,7 @@ private struct AppUsageContentView: View {
 
                 Spacer()
 
-                Text(reportFormatDuration(entry.durationSeconds))
+                Text(weeklyFormatDuration(entry.durationSeconds))
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(catColor)
             }
@@ -537,7 +531,9 @@ private struct AppUsageContentView: View {
     }
 }
 
-private func reportFormatTime(_ minutes: Int) -> String {
+// MARK: - Weekly Formatting Helpers
+
+private func weeklyFormatTime(_ minutes: Int) -> String {
     if minutes >= 60 {
         let h = minutes / 60
         let m = minutes % 60
@@ -546,23 +542,12 @@ private func reportFormatTime(_ minutes: Int) -> String {
     return "\(minutes)m"
 }
 
-private func reportFormatDuration(_ seconds: TimeInterval) -> String {
+private func weeklyFormatDuration(_ seconds: TimeInterval) -> String {
     let totalSeconds = Int(seconds)
     let hours = totalSeconds / 3600
     let minutes = (totalSeconds % 3600) / 60
-    let secs = totalSeconds % 60
     if hours > 0 {
         return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
     }
-    return "\(minutes)m \(secs)s"
-}
-
-@main
-struct DistractionReportExtension: DeviceActivityReportExtension {
-    var body: some DeviceActivityReportScene {
-        DistractionReportScene()
-        AllAppsReportScene()
-        WeeklySummaryReportScene()
-        WeeklyAppsReportScene()
-    }
+    return "\(minutes)m"
 }
