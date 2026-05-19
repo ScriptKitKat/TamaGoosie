@@ -140,6 +140,7 @@
 		DFCEC0FE750B8274A548A438 /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		DFF4BF4A434DF148E28C2BD0 /* GoalFrequencySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B8E5ADC29570EB791E3601 /* GoalFrequencySheet.swift */; };
 		E005A523FB2B97DAFFC25409 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 671BECFC19E43A1B37691729 /* GoogleSignIn */; };
+		E13FDE8FD4B3A6316F5F2863 /* Slackey-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2AECAF502C61E260F38867D4 /* Slackey-Regular.ttf */; };
 		E1A6A88DA02F72BB24473B59 /* GooseAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB12647F1E88BD490B83716 /* GooseAccessory.swift */; };
 		E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */; };
 		E5B1E33B43611E47CB7ADCE6 /* GeminiAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */; };
@@ -262,6 +263,7 @@
 		1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNameView.swift; sourceTree = "<group>"; };
 		20817DC434F39927E7A30358 /* TamaGoosieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamaGoosieApp.swift; sourceTree = "<group>"; };
 		254B5C8EA4051942ABEC8C35 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2AECAF502C61E260F38867D4 /* Slackey-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Slackey-Regular.ttf"; sourceTree = "<group>"; };
 		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionApp.swift; sourceTree = "<group>"; };
 		2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseStats.swift; sourceTree = "<group>"; };
@@ -716,6 +718,14 @@
 			path = ScreenTime;
 			sourceTree = "<group>";
 		};
+		C94A942B1DAC039E075E324D /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				2AECAF502C61E260F38867D4 /* Slackey-Regular.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		CF2565352B123876F9BC1F94 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
@@ -829,6 +839,7 @@
 		F4F0DFEC80BF07B16C060977 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				C94A942B1DAC039E075E324D /* Fonts */,
 				0D59F30ADA27A66E78D15370 /* Assets.xcassets */,
 				44622786FF505622AE9483DA /* Models.scnassets */,
 			);
@@ -1051,6 +1062,7 @@
 			files = (
 				6518F54CF53495BE62C6735E /* Assets.xcassets in Resources */,
 				6ECFC2CFE9AA440E40A834F6 /* Models.scnassets in Resources */,
+				E13FDE8FD4B3A6316F5F2863 /* Slackey-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

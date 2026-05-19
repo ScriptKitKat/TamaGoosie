@@ -113,7 +113,7 @@ struct ScreenTimePageView: View {
         }
         .onAppear {
             let activeBlocks = allBlocks.filter { !$0.isPast }
-            ScreenTimeManager.shared.refreshAllBlocks(activeBlocks)
+            ScreenTimeManager.shared.reconcileBlocks(activeBlocks)
         }
     }
 }

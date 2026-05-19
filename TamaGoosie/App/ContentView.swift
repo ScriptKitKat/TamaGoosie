@@ -30,6 +30,7 @@ struct ContentView: View {
     @Query private var profiles: [UserProfile]
     @Query private var goals: [Goal]
     @Query private var gooseStates: [GooseState]
+    @Query private var screenBlocks: [ScreenBlock]
     @EnvironmentObject private var notificationDelegate: AppNotificationDelegate
     @Query(sort: \Goal.sortOrder) private var allGoals: [Goal]
     @StateObject private var watchSync = WatchSyncService.shared
@@ -74,6 +75,10 @@ struct ContentView: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     guard hasCompletedOnboarding else { return }
+                    // Reconcile block shields on foreground; only re-registers
+                    // missing monitors so the system can fire extension callbacks.
+                    let activeBlocks = screenBlocks.filter { !$0.isPast }
+                    ScreenTimeManager.shared.reconcileBlocks(activeBlocks)
                     Task {
                         await restoreIdentityIfNeeded()
                         await syncHealthData()

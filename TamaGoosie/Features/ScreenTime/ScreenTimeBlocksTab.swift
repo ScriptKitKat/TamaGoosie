@@ -4,6 +4,7 @@ import SwiftData
 struct ScreenTimeBlocksTab: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ScreenBlock.createdAt, order: .reverse) private var allBlocks: [ScreenBlock]
+    @State private var manager = ScreenTimeManager.shared
 
     @State private var showBlockNow = false
     @State private var showSchedule = false
@@ -11,6 +12,7 @@ struct ScreenTimeBlocksTab: View {
     @State private var showLock = false
     @State private var editingBlock: ScreenBlock?
     @State private var showHistory = false
+    @State private var showDiagnostics = false
 
     private var activeBlocks: [ScreenBlock] {
         allBlocks.filter { !$0.isPast }
@@ -47,6 +49,9 @@ struct ScreenTimeBlocksTab: View {
 
             // New block buttons
             newBlockSection
+
+            // Debug diagnostics (temporary)
+            diagnosticsSection
 
             Spacer().frame(height: 20)
         }
@@ -194,6 +199,114 @@ struct ScreenTimeBlocksTab: View {
             .padding(.top, 8)
         }
         .padding(.top, 40)
+    }
+
+    // MARK: - Diagnostics
+
+    private var diagnosticsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showDiagnostics.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: showDiagnostics ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                    Text("Debug Info")
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    Spacer()
+                }
+                .foregroundStyle(.white.opacity(0.5))
+                .padding(.vertical, 4)
+            }
+
+            if showDiagnostics {
+                VStack(alignment: .leading, spacing: 8) {
+                    Group {
+                        Text("Registered Activities:")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        let activities = manager.registeredActivities
+                        if activities.isEmpty {
+                            Text("  (none)")
+                                .font(.system(size: 10, design: .monospaced))
+                        } else {
+                            ForEach(activities, id: \.self) { a in
+                                Text("  \(a)")
+                                    .font(.system(size: 10, design: .monospaced))
+                            }
+                        }
+                    }
+
+                    Divider().background(.white.opacity(0.3))
+
+                    Group {
+                        if let last = manager.extensionLastCallback {
+                            Text("Extension last fired: \(last.formatted(date: .abbreviated, time: .standard))")
+                                .font(.system(size: 10, design: .monospaced))
+                        } else {
+                            Text("Extension has NEVER fired")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.red)
+                        }
+                        Text("Bundle: \(manager.extensionBundleStatus)")
+                            .font(.system(size: 10, design: .monospaced))
+                    }
+
+                    Divider().background(.white.opacity(0.3))
+
+                    Group {
+                        Text("Extension Log:")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        let extLog = manager.extensionBreadcrumbs
+                        if extLog.isEmpty {
+                            Text("  (empty — extension never called)")
+                                .font(.system(size: 10, design: .monospaced))
+                        } else {
+                            ForEach(Array(extLog.suffix(10).enumerated()), id: \.offset) { _, entry in
+                                Text(entry)
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .lineLimit(3)
+                            }
+                        }
+                    }
+
+                    Divider().background(.white.opacity(0.3))
+
+                    Group {
+                        Text("Manager Log:")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        let mgrLog = manager.managerBreadcrumbs
+                        if mgrLog.isEmpty {
+                            Text("  (empty)")
+                                .font(.system(size: 10, design: .monospaced))
+                        } else {
+                            ForEach(Array(mgrLog.suffix(10).enumerated()), id: \.offset) { _, entry in
+                                Text(entry)
+                                    .font(.system(size: 9, design: .monospaced))
+                                    .lineLimit(3)
+                            }
+                        }
+                    }
+
+                    Button("Clear Diagnostics") {
+                        manager.clearDiagnostics()
+                    }
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(.red.opacity(0.5), in: Capsule())
+                }
+                .foregroundStyle(.white.opacity(0.8))
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(.black.opacity(0.3))
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 
     // MARK: - Helpers

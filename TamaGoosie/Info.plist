@@ -46,9 +46,18 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.tamagoosie.app.block-reconcile</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>processing</string>
+		<string>fetch</string>
+	</array>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Slackey-Regular.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

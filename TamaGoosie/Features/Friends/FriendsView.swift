@@ -87,76 +87,21 @@ struct FriendsView: View {
 
     private var gooseBanner: some View {
         ZStack {
-            // Soft pond gradient
-            RoundedRectangle(cornerRadius: 16)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: 0xE0F2F1), Color(hex: 0xB2DFDB), Color(hex: 0xC8E6C9)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            Image("goose_pals_banner")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
 
-            // Title
+            // Title overlay
             VStack(spacing: 4) {
                 Text("Goose Pals")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(hex: 0x2E7D32))
-
-                // Wave accent
-                HStack(spacing: 6) {
-                    WaveAccent()
-                        .stroke(Color(hex: 0x4DB6AC).opacity(0.5), lineWidth: 2)
-                        .frame(width: 30, height: 6)
-
-                    Circle()
-                        .fill(Color(hex: 0x4DB6AC).opacity(0.4))
-                        .frame(width: 4, height: 4)
-
-                    WaveAccent()
-                        .stroke(Color(hex: 0x4DB6AC).opacity(0.5), lineWidth: 2)
-                        .frame(width: 30, height: 6)
-                }
+                    .font(.custom("Slackey", size: 26))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.5), radius: 6, y: 2)
+                    .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
             }
         }
+        .frame(height: 120)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay {
-            ZStack {
-                // Lily pad accents (clipped inside)
-                Ellipse()
-                    .fill(Color(hex: 0x81C784).opacity(0.2))
-                    .frame(width: 60, height: 28)
-                    .offset(x: -110, y: 25)
-
-                Ellipse()
-                    .fill(Color(hex: 0x81C784).opacity(0.15))
-                    .frame(width: 45, height: 20)
-                    .offset(x: 100, y: -20)
-
-                Ellipse()
-                    .fill(Color(hex: 0xA5D6A7).opacity(0.25))
-                    .frame(width: 55, height: 22)
-                    .offset(x: 70, y: 30)
-
-                // Ripple rings
-                Circle()
-                    .strokeBorder(Color(hex: 0x80CBC4).opacity(0.3), lineWidth: 1)
-                    .frame(width: 22, height: 22)
-                    .offset(x: -55, y: -18)
-
-                Circle()
-                    .strokeBorder(Color(hex: 0x80CBC4).opacity(0.2), lineWidth: 1)
-                    .frame(width: 14, height: 14)
-                    .offset(x: -45, y: -8)
-
-                Circle()
-                    .strokeBorder(Color(hex: 0x80CBC4).opacity(0.25), lineWidth: 1)
-                    .frame(width: 18, height: 18)
-                    .offset(x: 35, y: 12)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-        }
-        .frame(height: 100)
         .padding(.horizontal, GoosieTheme.padding)
     }
 
@@ -433,19 +378,3 @@ struct FriendsView: View {
     }
 }
 
-// MARK: - Wave Accent Shape
-
-private struct WaveAccent: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let w = rect.width
-        let h = rect.height
-        path.move(to: CGPoint(x: 0, y: h * 0.5))
-        path.addCurve(
-            to: CGPoint(x: w, y: h * 0.5),
-            control1: CGPoint(x: w * 0.3, y: -h * 0.5),
-            control2: CGPoint(x: w * 0.7, y: h * 1.5)
-        )
-        return path
-    }
-}

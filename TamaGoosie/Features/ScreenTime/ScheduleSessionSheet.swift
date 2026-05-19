@@ -25,6 +25,21 @@ struct ScheduleSessionSheet: View {
         !draftSelection.applicationTokens.isEmpty || !draftSelection.categoryTokens.isEmpty
     }
 
+    /// Apple requires DeviceActivitySchedule intervals to be at least 15 minutes.
+    private var intervalMinutes: Int {
+        let cal = Calendar.current
+        let startComps = cal.dateComponents([.hour, .minute], from: startTime)
+        let endComps = cal.dateComponents([.hour, .minute], from: endTime)
+        let startMins = (startComps.hour ?? 0) * 60 + (startComps.minute ?? 0)
+        let endMins = (endComps.hour ?? 0) * 60 + (endComps.minute ?? 0)
+        let diff = endMins - startMins
+        return diff > 0 ? diff : diff + 24 * 60
+    }
+
+    private var intervalTooShort: Bool {
+        intervalMinutes < 15
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -77,6 +92,17 @@ struct ScheduleSessionSheet: View {
                             RoundedRectangle(cornerRadius: 16).fill(cardBackground)
                                 .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
                         )
+
+                        if intervalTooShort {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.system(size: 12))
+                                Text("Schedule must be at least 15 minutes")
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                            }
+                            .foregroundStyle(.orange)
+                            .padding(.horizontal, 4)
+                        }
 
                         // Days
                         DayOfWeekPicker(activeDays: $activeDays)
@@ -138,8 +164,8 @@ struct ScheduleSessionSheet: View {
                                 .background(accentGreen, in: RoundedRectangle(cornerRadius: 16))
                                 .shadow(color: accentGreen.opacity(0.4), radius: 8, y: 4)
                         }
-                        .disabled(name.isEmpty || !hasSelection)
-                        .opacity(name.isEmpty || !hasSelection ? 0.4 : 1)
+                        .disabled(name.isEmpty || !hasSelection || intervalTooShort)
+                        .opacity(name.isEmpty || !hasSelection || intervalTooShort ? 0.4 : 1)
                     }
                     .padding(GoosieTheme.padding)
                     .padding(.top, 20)

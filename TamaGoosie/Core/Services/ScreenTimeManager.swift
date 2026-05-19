@@ -2,6 +2,7 @@ import Foundation
 import FamilyControls
 import DeviceActivity
 import ManagedSettings
+import BackgroundTasks
 
 @Observable
 @MainActor
@@ -157,7 +158,8 @@ final class ScreenTimeManager {
             return
         }
 
-        activityCenter.stopMonitoring()
+        // Only stop the daily-distraction monitor, NOT per-block monitors
+        activityCenter.stopMonitoring([DeviceActivityName("daily-distraction")])
 
         let startComps: DateComponents
         let endComps: DateComponents
@@ -183,7 +185,8 @@ final class ScreenTimeManager {
                     applications: selection.applicationTokens,
                     categories: selection.categoryTokens,
                     webDomains: selection.webDomainTokens,
-                    threshold: DateComponents(minute: mins)
+                    threshold: DateComponents(minute: mins),
+                    includesPastActivity: true
                 )
                 return (name, event)
             }
@@ -201,7 +204,8 @@ final class ScreenTimeManager {
     }
 
     func stopMonitoring() {
-        activityCenter.stopMonitoring()
+        // Only stop the daily-distraction monitor, NOT per-block monitors
+        activityCenter.stopMonitoring([DeviceActivityName("daily-distraction")])
     }
 
     // MARK: - Refresh Trigger
@@ -440,6 +444,9 @@ final class ScreenTimeManager {
 
     // MARK: - Per-Block Monitoring & Shielding
 
+    /// Register a DeviceActivity monitor for a block. The system will call
+    /// the DeviceActivityMonitor extension's intervalDidStart / intervalDidEnd
+    /// at the scheduled times — no polling required.
     func registerBlock(_ block: ScreenBlock) {
         guard isAuthorized else { return }
         guard let selection = block.selection else { return }
@@ -447,12 +454,10 @@ final class ScreenTimeManager {
         let blockID = block.id.uuidString
         let activityName = DeviceActivityName("block-\(blockID)")
 
-        // Stop any existing monitor for this block
-        activityCenter.stopMonitoring([activityName])
-
         // Persist selection data to app group so the extension can apply shields
         if let data = block.selectionData {
             defaults.set(data, forKey: "blockShield-\(blockID)")
+            defaults.synchronize()
         }
 
         let startComps: DateComponents
@@ -465,6 +470,17 @@ final class ScreenTimeManager {
 
         case "schedule":
             guard !block.isVacationMode else { return }
+            let startMins = block.scheduleStartHour * 60 + block.scheduleStartMinute
+            let endMins = block.scheduleEndHour * 60 + block.scheduleEndMinute
+            let interval = endMins > startMins ? endMins - startMins : endMins + 1440 - startMins
+            if interval < 15 {
+                logDiagnostic("registerBlock SKIPPED: \(block.name) interval \(interval)m < 15m minimum")
+                // Still apply shield if currently active (foreground safety net)
+                if isScheduleCurrentlyActive(block) {
+                    applyShield(blockID: blockID, selection: selection)
+                }
+                return
+            }
             startComps = DateComponents(hour: block.scheduleStartHour, minute: block.scheduleStartMinute)
             endComps = DateComponents(hour: block.scheduleEndHour, minute: block.scheduleEndMinute)
 
@@ -483,7 +499,8 @@ final class ScreenTimeManager {
         let schedule = DeviceActivitySchedule(
             intervalStart: startComps,
             intervalEnd: endComps,
-            repeats: block.type != "blockNow"
+            repeats: block.type != "blockNow",
+            warningTime: DateComponents(minute: 1)
         )
 
         var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
@@ -498,21 +515,87 @@ final class ScreenTimeManager {
             )
         }
 
+        // Backup event: fires after 1 minute of use on the selected apps.
+        // includesPastActivity: if the user was already on a blocked app when the
+        // interval started, that prior usage counts toward the threshold — so the
+        // event fires almost immediately instead of waiting for 1 fresh minute.
+        if block.type == "schedule" || block.type == "blockNow" || block.type == "lock" {
+            let eventName = DeviceActivityEvent.Name("shield-\(blockID)")
+            events[eventName] = DeviceActivityEvent(
+                applications: selection.applicationTokens,
+                categories: selection.categoryTokens,
+                webDomains: selection.webDomainTokens,
+                threshold: DateComponents(minute: 1),
+                includesPastActivity: true
+            )
+        }
+
+        // startMonitoring replaces any existing monitor with the same name —
+        // no need to call stopMonitoring first.
         do {
             try activityCenter.startMonitoring(activityName, during: schedule, events: events)
+            // Verify registration succeeded
+            let registered = activityCenter.activities.map(\.rawValue)
+            let isRegistered = registered.contains(activityName.rawValue)
+            logDiagnostic("registerBlock OK: \(block.name) type=\(block.type) schedule=\(startComps.hour ?? 0):\(startComps.minute ?? 0)-\(endComps.hour ?? 0):\(endComps.minute ?? 0) registered=\(isRegistered) events=\(events.keys.map(\.rawValue))")
         } catch {
+            logDiagnostic("registerBlock FAILED: \(block.name) error=\(error)")
             print("[ScreenTimeManager] registerBlock failed for \(block.name): \(error)")
         }
 
-        // Apply shield immediately for blockNow, lock, and currently-active schedules
+        // Apply shield immediately for blockNow, lock, and currently-active schedules.
+        // For future schedules, the extension's intervalDidStart handles it.
         if block.type == "blockNow" || block.type == "lock" {
             applyShield(blockID: blockID, selection: selection)
         } else if block.type == "schedule" {
             if isScheduleCurrentlyActive(block) {
+                logDiagnostic("registerBlock: schedule currently active, applying shield now")
                 applyShield(blockID: blockID, selection: selection)
+            } else {
+                logDiagnostic("registerBlock: schedule NOT active, deferring to extension. start=\(block.scheduleStartHour):\(block.scheduleStartMinute) end=\(block.scheduleEndHour):\(block.scheduleEndMinute)")
+            }
+            // Schedule a BGTask as backup in case the extension doesn't fire
+            scheduleBackgroundReconcile(for: block)
+        }
+    }
+
+    /// Schedule a BGAppRefreshTask to apply/remove shields at block boundaries.
+    private func scheduleBackgroundReconcile(for block: ScreenBlock) {
+        let cal = Calendar.current
+        let now = Date()
+
+        // Find the next start or end time for this block
+        for dayOffset in 0...1 {
+            guard let baseDate = cal.date(byAdding: .day, value: dayOffset, to: now) else { continue }
+            let weekday = cal.component(.weekday, from: baseDate)
+            guard block.activeDaysSet.contains(weekday) else { continue }
+
+            if let startDate = cal.date(bySettingHour: block.scheduleStartHour, minute: block.scheduleStartMinute, second: 0, of: baseDate),
+               startDate > now {
+                let request = BGAppRefreshTaskRequest(identifier: "com.tamagoosie.app.block-reconcile")
+                request.earliestBeginDate = startDate.addingTimeInterval(5)
+                do {
+                    try BGTaskScheduler.shared.submit(request)
+                    logDiagnostic("BGTask scheduled for \(startDate.formatted(date: .omitted, time: .standard))")
+                } catch {
+                    logDiagnostic("BGTask schedule failed: \(error)")
+                }
+                return
+            }
+
+            if let endDate = cal.date(bySettingHour: block.scheduleEndHour, minute: block.scheduleEndMinute, second: 0, of: baseDate),
+               endDate > now {
+                let request = BGAppRefreshTaskRequest(identifier: "com.tamagoosie.app.block-reconcile")
+                request.earliestBeginDate = endDate.addingTimeInterval(5)
+                do {
+                    try BGTaskScheduler.shared.submit(request)
+                    logDiagnostic("BGTask scheduled for \(endDate.formatted(date: .omitted, time: .standard))")
+                } catch {
+                    logDiagnostic("BGTask schedule failed: \(error)")
+                }
+                return
             }
         }
-        // appLimit: shield applied when threshold fires in the DeviceActivity extension
     }
 
     func unregisterBlock(_ block: ScreenBlock) {
@@ -523,9 +606,43 @@ final class ScreenTimeManager {
         defaults.removeObject(forKey: "blockShield-\(blockID)")
     }
 
-    func refreshAllBlocks(_ blocks: [ScreenBlock]) {
+    /// Called on foreground as a safety net. Reconciles shield state based on
+    /// current time and re-registers only monitors the system has dropped
+    /// (e.g. after a reboot). Does NOT stop/restart existing monitors so the
+    /// system can fire extension callbacks reliably.
+    func reconcileBlocks(_ blocks: [ScreenBlock]) {
+        let monitoredActivities = Set(activityCenter.activities.map(\.rawValue))
+
         for block in blocks where !block.isPast {
-            registerBlock(block)
+            let blockID = block.id.uuidString
+            let activityName = "block-\(blockID)"
+
+            // Only re-register if the system lost the monitor
+            if !monitoredActivities.contains(activityName) {
+                registerBlock(block)
+            }
+
+            guard let selection = block.selection else { continue }
+
+            // Reconcile shield state based on current time
+            switch block.type {
+            case "blockNow":
+                if block.startedAt != nil && block.endedAt == nil {
+                    applyShield(blockID: blockID, selection: selection)
+                } else if block.endedAt != nil {
+                    removeShield(blockID: blockID)
+                }
+            case "schedule":
+                if !block.isVacationMode && isScheduleCurrentlyActive(block) {
+                    applyShield(blockID: blockID, selection: selection)
+                } else {
+                    removeShield(blockID: blockID)
+                }
+            case "lock":
+                applyShield(blockID: blockID, selection: selection)
+            default:
+                break // appLimit handled by threshold events
+            }
         }
     }
 
@@ -541,6 +658,70 @@ final class ScreenTimeManager {
     func removeShield(blockID: String) {
         let store = ManagedSettingsStore(named: .init("block-\(blockID)"))
         store.clearAllSettings()
+    }
+
+    // MARK: - Diagnostics
+
+    private func logDiagnostic(_ message: String) {
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let entry = "[\(timestamp)] \(message)"
+        var log = defaults.stringArray(forKey: "managerBreadcrumbs") ?? []
+        log.append(entry)
+        if log.count > 50 { log = Array(log.suffix(50)) }
+        defaults.set(log, forKey: "managerBreadcrumbs")
+        defaults.synchronize()
+        print("[ScreenTimeManager] \(message)")
+    }
+
+    /// Extension breadcrumbs written by the DeviceActivityMonitor extension
+    var extensionBreadcrumbs: [String] {
+        defaults.synchronize()
+        return defaults.stringArray(forKey: "extensionBreadcrumbs") ?? []
+    }
+
+    /// Manager breadcrumbs written by ScreenTimeManager
+    var managerBreadcrumbs: [String] {
+        defaults.synchronize()
+        return defaults.stringArray(forKey: "managerBreadcrumbs") ?? []
+    }
+
+    /// Last time any extension callback fired
+    var extensionLastCallback: Date? {
+        defaults.synchronize()
+        let ts = defaults.double(forKey: "extensionLastCallback")
+        return ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+    }
+
+    /// Currently registered activity names
+    var registeredActivities: [String] {
+        activityCenter.activities.map(\.rawValue)
+    }
+
+    /// Check if the extension appex is embedded in the app bundle
+    var extensionBundleStatus: String {
+        guard let plugInsURL = Bundle.main.builtInPlugInsURL else {
+            return "NO PlugIns directory"
+        }
+        let extURL = plugInsURL.appendingPathComponent("TamaGoosieDeviceActivity.appex")
+        let exists = FileManager.default.fileExists(atPath: extURL.path)
+        if exists {
+            if let bundle = Bundle(url: extURL) {
+                let nsExt = bundle.infoDictionary?["NSExtension"] as? [String: Any]
+                let pointID = (nsExt?["NSExtensionPointIdentifier"] as? String) ?? "unknown"
+                let className = (nsExt?["NSExtensionPrincipalClass"] as? String) ?? "unknown"
+                return "EMBEDDED. Point: \(pointID) Principal: \(className)"
+            }
+            return "EMBEDDED but bundle unreadable"
+        }
+        return "MISSING from PlugIns"
+    }
+
+    /// Clear all diagnostic breadcrumbs
+    func clearDiagnostics() {
+        defaults.removeObject(forKey: "extensionBreadcrumbs")
+        defaults.removeObject(forKey: "managerBreadcrumbs")
+        defaults.removeObject(forKey: "extensionLastCallback")
+        defaults.synchronize()
     }
 
     private func isScheduleCurrentlyActive(_ block: ScreenBlock) -> Bool {
