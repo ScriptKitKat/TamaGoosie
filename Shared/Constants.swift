@@ -18,9 +18,9 @@ public enum GoosieConstants {
     public static let outsideWeightWithOutside: Double = 0.15
 
     // MARK: - Happiness Formula Weights
-    public static let goalScoreWeight: Double = 0.50
+    public static let goalScoreWeight: Double = 0.65
     public static let distractionWeight: Double = 0.30
-    public static let baseHappinessWeight: Double = 0.20
+    public static let baseHappinessWeight: Double = 0.05
     public static let distractionMaxMinutes: Double = 120
     public static let maxStreakBonus: Double = 0.1
 

@@ -75,34 +75,30 @@ struct LockSheet: View {
 
                         // Lock settings
                         VStack(spacing: 0) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Opens Allowed")
-                                        .font(.system(size: 15, weight: .medium, design: .rounded))
-                                        .foregroundStyle(GoosieTheme.charcoalOutline)
-                                    Text("Per day")
-                                        .font(.system(size: 11, weight: .medium, design: .rounded))
-                                        .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
-                                }
-                                Spacer()
-                                Stepper("\(opensAllowed)", value: $opensAllowed, in: 1...20)
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                            settingRow(
+                                title: "Opens Allowed",
+                                subtitle: "Per day",
+                                valueText: "\(opensAllowed)"
+                            ) {
+                                Stepper("", value: $opensAllowed, in: 1...20)
+                                    .labelsHidden()
                             }
-                            .padding(.vertical, 10)
 
-                            Divider()
+                            Divider().padding(.leading, 4)
 
-                            HStack {
-                                Text("For Up To")
-                                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
-                                Spacer()
-                                Stepper("\(unlockDurationMinutes)m", value: $unlockDurationMinutes, in: 5...60, step: 5)
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                            settingRow(
+                                title: "For Up To",
+                                subtitle: "Minutes",
+                                valueText: "\(unlockDurationMinutes)m"
+                            ) {
+                                Stepper(
+                                    "",
+                                    value: $unlockDurationMinutes,
+                                    in: 1...60,
+                                    step: unlockDurationMinutes < 5 ? 1 : 5
+                                )
+                                .labelsHidden()
                             }
-                            .padding(.vertical, 10)
                         }
                         .padding(.horizontal, 14)
                         .background(
@@ -165,6 +161,34 @@ struct LockSheet: View {
             }
             .onAppear { loadExisting() }
         }
+    }
+
+    @ViewBuilder
+    private func settingRow<Control: View>(
+        title: String,
+        subtitle: String,
+        valueText: String,
+        @ViewBuilder control: () -> Control
+    ) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline)
+                Text(subtitle)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.45))
+            }
+            Spacer()
+            Text(valueText)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(GoosieTheme.charcoalOutline)
+                .monospacedDigit()
+                .frame(minWidth: 36, alignment: .trailing)
+            control()
+                .fixedSize()
+        }
+        .padding(.vertical, 12)
     }
 
     private func loadExisting() {

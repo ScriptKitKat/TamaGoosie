@@ -33,6 +33,16 @@ final class DailyLog {
     @Relationship(deleteRule: .cascade, inverse: \HealthSnapshot.dailyLog)
     var healthSnapshots: [HealthSnapshot] = []
 
+    /// True when at least one HealthKit metric has been recorded.
+    var hasHealthData: Bool {
+        steps > 0 || exerciseMinutes > 0 || sleepHours > 0 || standHours > 0 || outsideMinutes > 0
+    }
+
+    /// True when any data (health, goals, or distraction) has been recorded.
+    var hasAnyData: Bool {
+        hasHealthData || goalsTotal > 0 || distractionMinutes > 0 || distractionOpens > 0
+    }
+
     init(date: Date = .now) {
         self.id = UUID()
         self.date = Calendar.current.startOfDay(for: date)

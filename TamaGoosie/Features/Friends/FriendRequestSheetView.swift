@@ -1,34 +1,66 @@
 import SwiftUI
 import ConvexMobile
 
+enum FriendSheetTab: String, CaseIterable {
+    case search = "Search"
+    case requests = "Requests"
+}
+
 struct FriendRequestSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = FriendRequestViewModel()
+    @State var selectedTab: FriendSheetTab = .search
 
     var body: some View {
         NavigationStack {
             ZStack {
                 GoosieTheme.mintBackground.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // Search section
-                        searchSection
-
-                        // Incoming requests
-                        if !viewModel.incomingRequests.isEmpty {
-                            incomingSection
-                        }
-
-                        // Outgoing requests
-                        if !viewModel.outgoingRequests.isEmpty {
-                            outgoingSection
+                VStack(spacing: 0) {
+                    // Tab picker
+                    Picker("Tab", selection: $selectedTab) {
+                        ForEach(FriendSheetTab.allCases, id: \.self) { tab in
+                            Text(tab.rawValue).tag(tab)
                         }
                     }
-                    .padding(GoosieTheme.padding)
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, GoosieTheme.padding)
+                    .padding(.top, 8)
+
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            if selectedTab == .search {
+                                searchSection
+                            } else {
+                                // Incoming requests
+                                if !viewModel.incomingRequests.isEmpty {
+                                    incomingSection
+                                }
+
+                                // Outgoing requests
+                                if !viewModel.outgoingRequests.isEmpty {
+                                    outgoingSection
+                                }
+
+                                if viewModel.incomingRequests.isEmpty && viewModel.outgoingRequests.isEmpty {
+                                    VStack(spacing: 12) {
+                                        Image(systemName: "tray")
+                                            .font(.system(size: 32))
+                                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.25))
+                                        Text("No pending requests")
+                                            .font(GoosieTheme.bodyFont(14))
+                                            .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.5))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top, 40)
+                                }
+                            }
+                        }
+                        .padding(GoosieTheme.padding)
+                    }
                 }
             }
-            .navigationTitle("Add Friends")
+            .navigationTitle(selectedTab == .search ? "Add Friends" : "Friend Requests")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

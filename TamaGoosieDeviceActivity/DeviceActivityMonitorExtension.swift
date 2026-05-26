@@ -10,7 +10,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     override init() {
         super.init()
-        // Log that the extension process was launched by the system
         let ts = ISO8601DateFormatter().string(from: Date())
         let ud = UserDefaults(suiteName: "group.com.tamagoosie")!
         ud.synchronize()
@@ -31,7 +30,6 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         var log = defaults.stringArray(forKey: "extensionBreadcrumbs") ?? []
         log.append(entry)
-        // Keep last 50 entries
         if log.count > 50 { log = Array(log.suffix(50)) }
         defaults.set(log, forKey: "extensionBreadcrumbs")
         defaults.set(Date().timeIntervalSince1970, forKey: "extensionLastCallback")
@@ -47,7 +45,49 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     override func intervalDidStart(for activity: DeviceActivityName) {
         logBreadcrumb("intervalDidStart: \(activity.rawValue)")
         defaults.synchronize()
+
+        // Handle unlock relock: temporary monitor fires at unlock expiry
+        // Keep lockUnlockExpiry so the ShieldConfigurationProvider can detect
+        // "time's up" state (expired = in the past). The reconciler already
+        // handles expired entries correctly (only skips if unexpired).
+        if let blockID = extractUnlockBlockID(from: activity) {
+            logBreadcrumb("intervalDidStart: unlock-\(blockID) expired — re-shielding")
+
+            // Clear any stale countdown state for this block
+            defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
+            defaults.synchronize()
+
+            // lockUnlockExpiry is kept — ShieldConfigurationProvider uses
+            // LockRuntime.state() to derive "recentlyExpired" from the
+            // now-past expiry timestamp, showing the time's-up UI.
+            LockShieldReconciler.reconcile()
+            return
+        }
+
         if let blockID = extractBlockID(from: activity) {
+            let blockType = defaults.string(forKey: "blockType-\(blockID)") ?? ""
+
+            // App limits: wait for threshold, don't shield now
+            if blockType == "appLimit" {
+                logBreadcrumb("intervalDidStart: appLimit block \(blockID) — skipping shield (waiting for threshold)")
+                return
+            }
+
+            // Lock blocks: daily reset + reconcile
+            if blockType == "lock" {
+                defaults.set(0, forKey: "lockOpensUsed-\(blockID)")
+                defaults.set(Date(), forKey: "lockLastReset-\(blockID)")
+                defaults.removeObject(forKey: "lockUnlockExpiry-\(blockID)")
+                defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
+                defaults.synchronize()
+                logBreadcrumb("intervalDidStart: lock block \(blockID) — daily reset")
+                // Clear old per-block named store (migration from old approach)
+                ManagedSettingsStore(named: .init("block-\(blockID)")).clearAllSettings()
+                LockShieldReconciler.reconcile()
+                return
+            }
+
+            // Schedule / blockNow: use per-block named store
             applyBlockShield(blockID: blockID)
         }
     }
@@ -58,7 +98,40 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
         logBreadcrumb("intervalDidEnd: \(activity.rawValue)")
+
+        // Unlock monitor end-of-day cleanup.
+        //
+        // iOS also fires intervalDidEnd when an active unlock-<id> monitor is
+        // REPLACED by a new startMonitoring call (e.g. user re-unlocks from the
+        // time's-up shield, which schedules a new monitor for the new expiry).
+        // In that case the new expiry sits in the future — we must NOT clobber it,
+        // or the next reconcile() will treat the block as .locked and re-shield
+        // the app immediately, burning the unlock the user just spent.
+        if let blockID = extractUnlockBlockID(from: activity) {
+            let expiry = defaults.double(forKey: "lockUnlockExpiry-\(blockID)")
+            let now = Date().timeIntervalSince1970
+            let isStaleExpiry = expiry > 0 && now - expiry >= LockRuntime.timesUpWindow
+            if isStaleExpiry {
+                logBreadcrumb("intervalDidEnd: unlock-\(blockID) clearing stale expiry")
+                defaults.removeObject(forKey: "lockUnlockExpiry-\(blockID)")
+                defaults.synchronize()
+            } else {
+                logBreadcrumb("intervalDidEnd: unlock-\(blockID) keep expiry (future or within times-up window)")
+            }
+            LockShieldReconciler.reconcile()
+            return
+        }
+
         if let blockID = extractBlockID(from: activity) {
+            let blockType = defaults.string(forKey: "blockType-\(blockID)") ?? ""
+
+            // Lock blocks: reconciler handles shield state, just log
+            if blockType == "lock" {
+                logBreadcrumb("intervalDidEnd: lock block \(blockID) — reconciler manages shield")
+                return
+            }
+
+            // Non-lock blocks: clear per-block named store
             removeBlockShield(blockID: blockID)
         } else {
             // Global distraction monitor cleanup
@@ -67,6 +140,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             defaults.set(0, forKey: "distractionHitsToday")
             defaults.set(0, forKey: "distractionApproxMinutes")
             defaults.set(0, forKey: "lastPenaltyApproxMinutes")
+            // Re-apply lock shields that may have been on the default store
+            LockShieldReconciler.reconcile()
         }
     }
 
@@ -82,10 +157,15 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             return
         }
 
-        // Backup shield event for schedule/blockNow/lock blocks
+        // Shield event for schedule/blockNow/lock blocks
         if event.rawValue.hasPrefix("shield-") {
             let blockID = String(event.rawValue.dropFirst("shield-".count))
-            applyBlockShield(blockID: blockID)
+            let blockType = defaults.string(forKey: "blockType-\(blockID)") ?? ""
+            if blockType == "lock" {
+                LockShieldReconciler.reconcile()
+            } else {
+                applyBlockShield(blockID: blockID)
+            }
             return
         }
 
@@ -106,12 +186,18 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         sendNotification(approxMinutes: approxMinutes)
     }
 
-    // MARK: - Per-Block Shielding
+    // MARK: - Per-Block Shielding (non-lock blocks only)
 
     private func extractBlockID(from activity: DeviceActivityName) -> String? {
         let raw = activity.rawValue
         guard raw.hasPrefix("block-") else { return nil }
         return String(raw.dropFirst("block-".count))
+    }
+
+    private func extractUnlockBlockID(from activity: DeviceActivityName) -> String? {
+        let raw = activity.rawValue
+        guard raw.hasPrefix("unlock-") else { return nil }
+        return String(raw.dropFirst("unlock-".count))
     }
 
     private func applyBlockShield(blockID: String) {

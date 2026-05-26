@@ -10,6 +10,7 @@
 		017959C9F45D8E0D4A01C5A6 /* GooseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B47951E494EC28E765569B2 /* GooseView.swift */; };
 		02EEA7EC9EBFB369FF402410 /* GooseAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EBBC7BC7B69040EE79888B /* GooseAnimations.swift */; };
 		045511F37A331C29DAD6B7F5 /* GoalListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BCA0686348168B60F7AB827 /* GoalListView.swift */; };
+		09911567F82C9D97E37FFE53 /* ShieldActionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3458CD7C9AD2DC28230C3950 /* ShieldActionHandler.swift */; };
 		09B1533E68A74A85D1DBCF75 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96D8FFA4499285869D1C942D /* KeychainService.swift */; };
 		0BEF6D342A9C49C74D646DC8 /* DeviceActivityMonitorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 491D1D469575C32BD7F539CC /* DeviceActivityMonitorExtension.swift */; };
 		0BF180C0CF793DA035E31032 /* RewardEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE23080F0C585620FA2AA80 /* RewardEngine.swift */; };
@@ -23,6 +24,7 @@
 		22398DAAAB35DAD069805F7C /* TamaGoosieReport.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		22870AF64DE57430F22175C6 /* GoalCompletionEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8ADFDBE86EFD3435417994 /* GoalCompletionEvent.swift */; };
 		230757F0F8310BC6259A15ED /* ScreenTimeStatsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7CF87934086F92D2BD04457 /* ScreenTimeStatsTab.swift */; };
+		237B8B54C73327932040F1E4 /* LockShieldReconciler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0281B722FCA7FF8011C024 /* LockShieldReconciler.swift */; };
 		254A18A38E738D541F60B840 /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		27B01CCD612F6AA99A180327 /* GooseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117B204C5AA42A37727CDF30 /* GooseState.swift */; };
 		28342EDC7F7E26F32FEB3CB4 /* OnboardingSignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B11597C0B375663C2B2A99 /* OnboardingSignInView.swift */; };
@@ -33,6 +35,8 @@
 		2F4B797DC006B701FEE0AB7D /* StoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5814555EFEBEB93493DC306C /* StoreView.swift */; };
 		301077A680DDD645E5EAF4E3 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB696A4E3DA4C74DEDB95EBC /* OnboardingWelcomeView.swift */; };
 		33111F3DF85EE1C6C7297CD1 /* GoalTabPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7381076FD00EB7CA9B59C0E6 /* GoalTabPicker.swift */; };
+		344005F7BF55365A9B8BA91B /* LockShieldReconciler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0281B722FCA7FF8011C024 /* LockShieldReconciler.swift */; };
+		34D2CF3899A83D9CE6B0E32B /* LockShieldReconciler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0281B722FCA7FF8011C024 /* LockShieldReconciler.swift */; };
 		36293B658F4FBB8D35B6C3D6 /* QuestsGoalsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A65DE90A614D98222821F2F /* QuestsGoalsTab.swift */; };
 		39A0B5BBFFB5E737EE1F64EB /* DailyLogHistoryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */; };
 		3A24313AAF0FA6F43F6C8CC7 /* ShieldConfigurationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A538E34D97F4AE7F789DD632 /* ShieldConfigurationProvider.swift */; };
@@ -61,8 +65,11 @@
 		53DBD07D153F7C6D7307CEB6 /* OnboardingNameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */; };
 		54FD6A457C1A94A50F640084 /* OnboardingHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5B641705B00F4C590ADEA2 /* OnboardingHealthView.swift */; };
 		5AFCF8E96FB304949AEC57D9 /* GooseNotificationSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */; };
+		5CB990EC96834DA7D4AC15A3 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */; };
 		5DB11E1A6531567ADBF33AF4 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
+		5DEEE3963993DDE521A990BE /* LockRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2621805D6B8803AF62F4E438 /* LockRuntime.swift */; };
 		601C0BC4F1BCD2C082CCE95C /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */; };
+		61483D81D4953EC606CB3B7A /* TamaGoosieShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = ECBE51BB2A27147F330BFF59 /* TamaGoosieShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		61B66545A6F3411AD3008413 /* BlockNowSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E5EDA083D766E76B7159E8 /* BlockNowSheet.swift */; };
 		62FEE01D7B201E49F60BB363 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		6518F54CF53495BE62C6735E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D59F30ADA27A66E78D15370 /* Assets.xcassets */; };
@@ -72,6 +79,7 @@
 		673B7B0F82D1381297552048 /* Goal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDDD2DC5109B05AB1A3A6BE /* Goal.swift */; };
 		68E1ADD5A49B6F106B8692B0 /* HealthSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E891BC9D028499BD9C7AF7 /* HealthSnapshot.swift */; };
 		6AC042C8F1D9EFFFA2BF0EBA /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
+		6C3D2DE5F98805F9F2B4E96D /* LockRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2621805D6B8803AF62F4E438 /* LockRuntime.swift */; };
 		6C420832D884DEB8E7135990 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1CD1FB33CE72E4D48E8EA0 /* NotificationManager.swift */; };
 		6D484F3FC4E2407B8BED7252 /* AccountCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42B2993B0CEA1A8E2DD97864 /* AccountCreationView.swift */; };
 		6ECFC2CFE9AA440E40A834F6 /* Models.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 44622786FF505622AE9483DA /* Models.scnassets */; };
@@ -80,6 +88,7 @@
 		75DD0AC472950585037683BF /* DailyLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8954547141902CE3FC703601 /* DailyLog.swift */; };
 		797E5DDDA429D96A2F55FFA8 /* GoalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347903A27040413E68451AD9 /* GoalViewModel.swift */; };
 		7BF10BBE8852A8B71C3B5D68 /* ConvexManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F364D3304C552899B83259F9 /* ConvexManager.swift */; };
+		7F765208B42FFD86D949DB7D /* LockShieldReconciler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0281B722FCA7FF8011C024 /* LockShieldReconciler.swift */; };
 		7F90AD15EFBAA118058BDD0F /* AppLimitSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5DAEE872C2EA648F35EE33 /* AppLimitSheet.swift */; };
 		7FA68A85580BC057AA3474C6 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D8A110226B972AFB897322 /* EditProfileSheet.swift */; };
 		8011B9135369B9163BF57D74 /* GoosieTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF97FF359441B0799D8CB3D /* GoosieTheme.swift */; };
@@ -113,6 +122,7 @@
 		AA921F9410E758F638E1F8F3 /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		AA92ACAC594E76062C7C5C71 /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2CBC4425DDF588BD10E856 /* NotificationScheduler.swift */; };
 		ABF9CF827C3739BE790208A4 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
+		AC88B89B8C597FC23B4E75EE /* LockRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2621805D6B8803AF62F4E438 /* LockRuntime.swift */; };
 		ACDC9A32AB4FAC485190FD1D /* TamaGoosieShield.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B0544B8CEC98A4FB74057644 /* OnboardingNotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */; };
 		B2501E30EB35C4B7B40F30A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E065A106962BBE37019343E8 /* Assets.xcassets */; };
@@ -133,6 +143,7 @@
 		D3AABE326679EAF4948FB8E2 /* WatchSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16C84C36F09317E8C15BBCC /* WatchSyncService.swift */; };
 		D43B9D7F107A8429110AB1E6 /* GooseLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3D4CFAEACB87A38F0E1286E /* GooseLiveActivity.swift */; };
 		D5C14399BBBF5C57CE726040 /* BlockCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF850327AD57669A486CA88 /* BlockCardView.swift */; };
+		D6067B2920C210750D6DC873 /* LockRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2621805D6B8803AF62F4E438 /* LockRuntime.swift */; };
 		D835F45A815B321E19791088 /* HabitsGoalsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A8AFC04C6B4EDB3F92E522D /* HabitsGoalsTab.swift */; };
 		DD1F64E0FF8DFF52AA76669B /* GooseSpeechGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53B20907C2511E6CD56CC290 /* GooseSpeechGenerator.swift */; };
 		DDE3869EE51EC920EEE17CF9 /* HealthDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E129223B490F8E32CA9DF16B /* HealthDashboard.swift */; };
@@ -151,13 +162,16 @@
 		EB2CFFB4A43B2C4A9175B94B /* TodayGoalsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60C023C0466C0BD3E3304F0D /* TodayGoalsTab.swift */; };
 		EBB9880751116991E8464909 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9950FF3C0746D604E8C756 /* AuthService.swift */; };
 		EC3A9A6788B8BDB6B35B8689 /* FriendsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F940A793A67DA6F08E61AE86 /* FriendsViewModel.swift */; };
+		EDBC407257F0215A0414D3DE /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		EE4C9C8159F689332A7F8B11 /* GooseGlanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B880E96B410E34DD097D19C /* GooseGlanceView.swift */; };
 		F32D8A7DDC42308BF62CF4A2 /* FriendRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */; };
 		F4C4B2DA6ECFB1897B0141DE /* QuickLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623B6AAB6F88CC9EAE2E0A37 /* QuickLogView.swift */; };
 		F5F423CF6403344DEF0857A4 /* EscalationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484BBB124DE9BDCACB850932 /* EscalationTracker.swift */; };
 		F5F770EBC685C351BAD13695 /* FocusSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */; };
 		F6C6021D531FFFD909D9207A /* TamaGoosieWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FA1BAABC20827D49E0809548 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D41C0C8BE0C119347619889 /* ManagedSettings.framework */; };
 		FA700BBA888F6144D8A8763B /* GoosieComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A47CB8B4BE05AD7BADEE3357 /* GoosieComponents.swift */; };
+		FF5F226CB260EDE23974F39F /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -196,6 +210,13 @@
 			remoteGlobalIDString = F328FFA5B3C55DB8650693FC;
 			remoteInfo = TamaGoosieWatch;
 		};
+		C74432FC0E082223D70792A9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50A12A259610BBAA13A0734 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5BBD2FEE2E44A79A812B6E8F;
+			remoteInfo = TamaGoosieShieldAction;
+		};
 		F58D691EDA08BF73434B9F7B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = B50A12A259610BBAA13A0734 /* Project object */;
@@ -226,6 +247,7 @@
 				4641DE71A6A7AAD75B9019C2 /* TamaGoosieWidgets.appex in Embed Foundation Extensions */,
 				8331597DC4B19B13BCDCE64E /* TamaGoosieDeviceActivity.appex in Embed Foundation Extensions */,
 				ACDC9A32AB4FAC485190FD1D /* TamaGoosieShield.appex in Embed Foundation Extensions */,
+				61483D81D4953EC606CB3B7A /* TamaGoosieShieldAction.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -256,6 +278,7 @@
 		12D195FD88B740CD55107803 /* WeeklyReportScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReportScenes.swift; sourceTree = "<group>"; };
 		138F5488540DB4113C8BBD66 /* DuckFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuckFaceView.swift; sourceTree = "<group>"; };
 		1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		164E88B675D9BF7740801339 /* TamaGoosieShieldAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieShieldAction.entitlements; sourceTree = "<group>"; };
 		17261D1A6061032AE35D42C6 /* TamaGoosieWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieWatch.entitlements; sourceTree = "<group>"; };
 		17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchTheme.swift; sourceTree = "<group>"; };
 		185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseNotificationSystem.swift; sourceTree = "<group>"; };
@@ -263,6 +286,7 @@
 		1DDA643721CB2C327D6AF557 /* OnboardingNameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNameView.swift; sourceTree = "<group>"; };
 		20817DC434F39927E7A30358 /* TamaGoosieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TamaGoosieApp.swift; sourceTree = "<group>"; };
 		254B5C8EA4051942ABEC8C35 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2621805D6B8803AF62F4E438 /* LockRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockRuntime.swift; sourceTree = "<group>"; };
 		2AECAF502C61E260F38867D4 /* Slackey-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Slackey-Regular.ttf"; sourceTree = "<group>"; };
 		2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieDeviceActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D3EFD4ADA025B5122C4EBEF /* DistractionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionApp.swift; sourceTree = "<group>"; };
@@ -272,12 +296,14 @@
 		2F4E8216FE4F12721B999D82 /* SyncPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncPayload.swift; sourceTree = "<group>"; };
 		2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		32E5EDA083D766E76B7159E8 /* BlockNowSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockNowSheet.swift; sourceTree = "<group>"; };
+		3458CD7C9AD2DC28230C3950 /* ShieldActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldActionHandler.swift; sourceTree = "<group>"; };
 		347903A27040413E68451AD9 /* GoalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalViewModel.swift; sourceTree = "<group>"; };
 		3791CCB5D6BAD1BB640D0BC7 /* Goose3DView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goose3DView.swift; sourceTree = "<group>"; };
 		3A861762539E3C84D4808A86 /* ScheduleSessionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleSessionSheet.swift; sourceTree = "<group>"; };
 		3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		3DDC68452E992AE126D3FFFF /* GooseComplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseComplication.swift; sourceTree = "<group>"; };
 		3E8ADFDBE86EFD3435417994 /* GoalCompletionEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalCompletionEvent.swift; sourceTree = "<group>"; };
+		3F0281B722FCA7FF8011C024 /* LockShieldReconciler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockShieldReconciler.swift; sourceTree = "<group>"; };
 		42B2993B0CEA1A8E2DD97864 /* AccountCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCreationView.swift; sourceTree = "<group>"; };
 		44622786FF505622AE9483DA /* Models.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Models.scnassets; sourceTree = "<group>"; };
 		45E891BC9D028499BD9C7AF7 /* HealthSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSnapshot.swift; sourceTree = "<group>"; };
@@ -358,6 +384,7 @@
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
 		C08817E670018B0128A419CD /* ScreenBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenBlock.swift; sourceTree = "<group>"; };
 		C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiAPIClient.swift; sourceTree = "<group>"; };
+		C2BC22AFB4E85308B6ADB979 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C47A9B7B550DD4EC4C0957A5 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		C815E45F6F181C73BBDBA8D4 /* FoundationModels.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FoundationModels.framework; path = System/Library/Frameworks/FoundationModels.framework; sourceTree = SDKROOT; };
 		C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSession.swift; sourceTree = "<group>"; };
@@ -385,6 +412,7 @@
 		E6F1F167391F2165F325B1A2 /* DistractionConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DistractionConfigView.swift; sourceTree = "<group>"; };
 		E7119B3A0869220100DF3B9D /* GooseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseWidget.swift; sourceTree = "<group>"; };
 		E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		ECBE51BB2A27147F330BFF59 /* TamaGoosieShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TamaGoosieShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestViewModel.swift; sourceTree = "<group>"; };
 		F364D3304C552899B83259F9 /* ConvexManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexManager.swift; sourceTree = "<group>"; };
 		F79CF4AEE7DB44EA15A7D22C /* FriendRequestSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendRequestSheetView.swift; sourceTree = "<group>"; };
@@ -434,6 +462,17 @@
 				4D31E6B1F1B96627FD1BEAF3 /* ManagedSettings.framework in Frameworks */,
 				4D1AF7EDF505BBF57F0FBFA5 /* ManagedSettingsUI.framework in Frameworks */,
 				AA921F9410E758F638E1F8F3 /* FamilyControls.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FADE6C4EC8411AC153A75510 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA1BAABC20827D49E0809548 /* ManagedSettings.framework in Frameworks */,
+				5CB990EC96834DA7D4AC15A3 /* ManagedSettingsUI.framework in Frameworks */,
+				EDBC407257F0215A0414D3DE /* FamilyControls.framework in Frameworks */,
+				FF5F226CB260EDE23974F39F /* DeviceActivity.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -528,7 +567,9 @@
 			isa = PBXGroup;
 			children = (
 				72118DBE7763E52D56393A4F /* Report */,
+				B94DB52605742439AD51C9FB /* Shared */,
 				00B7E0BE06E5E97AB768201D /* Shield */,
+				441E6E1E58F1820DF3F748F5 /* ShieldAction */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -560,6 +601,7 @@
 				2BC32AFCE1805FE32A5BFBB3 /* TamaGoosieDeviceActivity.appex */,
 				4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */,
 				1529DCB2602A7E7B73C4519F /* TamaGoosieShield.appex */,
+				ECBE51BB2A27147F330BFF59 /* TamaGoosieShieldAction.appex */,
 				CB6F6E769C5BFA19F71041A3 /* TamaGoosieTests.xctest */,
 				594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */,
 				E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */,
@@ -593,6 +635,16 @@
 				17FAE46FCE1CA603A3C839FF /* WatchTheme.swift */,
 			);
 			path = TamaGoosieWatch;
+			sourceTree = "<group>";
+		};
+		441E6E1E58F1820DF3F748F5 /* ShieldAction */ = {
+			isa = PBXGroup;
+			children = (
+				C2BC22AFB4E85308B6ADB979 /* Info.plist */,
+				3458CD7C9AD2DC28230C3950 /* ShieldActionHandler.swift */,
+				164E88B675D9BF7740801339 /* TamaGoosieShieldAction.entitlements */,
+			);
+			path = ShieldAction;
 			sourceTree = "<group>";
 		};
 		53AB40836943321BA3103456 /* Challenges */ = {
@@ -689,6 +741,15 @@
 				E737ACB473E58EB8BE77B462 /* Store */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		B94DB52605742439AD51C9FB /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				2621805D6B8803AF62F4E438 /* LockRuntime.swift */,
+				3F0281B722FCA7FF8011C024 /* LockShieldReconciler.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		BAE5A5A31A290D90F06CF8E6 /* Focus */ = {
@@ -894,6 +955,24 @@
 			productReference = E7EC7D24AD17972EC819FD58 /* TamaGoosieWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		5BBD2FEE2E44A79A812B6E8F /* TamaGoosieShieldAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D10E53C67D0F12685116183B /* Build configuration list for PBXNativeTarget "TamaGoosieShieldAction" */;
+			buildPhases = (
+				B869BA1C62AC4F1EE11740FD /* Sources */,
+				FADE6C4EC8411AC153A75510 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TamaGoosieShieldAction;
+			packageProductDependencies = (
+			);
+			productName = TamaGoosieShieldAction;
+			productReference = ECBE51BB2A27147F330BFF59 /* TamaGoosieShieldAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		828D1BDA4ABFF8D091834CB1 /* TamaGoosie */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6831A85E626B33CC75BDB1E2 /* Build configuration list for PBXNativeTarget "TamaGoosie" */;
@@ -912,6 +991,7 @@
 				9BD0C60C0CC1B48EA52CFE05 /* PBXTargetDependency */,
 				D2C1C499BD9E09AA000F2628 /* PBXTargetDependency */,
 				6953103269C3BE297B2AD585 /* PBXTargetDependency */,
+				F8DC9B10689852609BEB3DC2 /* PBXTargetDependency */,
 				A8B683933618E62330083F65 /* PBXTargetDependency */,
 			);
 			name = TamaGoosie;
@@ -1032,6 +1112,7 @@
 				CC28230EF5A0A7CF4F72B801 /* TamaGoosieDeviceActivity */,
 				9E9022483AE9A7FF06F6AFA3 /* TamaGoosieReport */,
 				D2388AC1D58B7EAEDE83FEA0 /* TamaGoosieShield */,
+				5BBD2FEE2E44A79A812B6E8F /* TamaGoosieShieldAction */,
 				2967A832F6E06D9198E4D9D3 /* TamaGoosieTests */,
 				F328FFA5B3C55DB8650693FC /* TamaGoosieWatch */,
 				3212585604C1E2524B96F439 /* TamaGoosieWidgets */,
@@ -1105,6 +1186,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0BEF6D342A9C49C74D646DC8 /* DeviceActivityMonitorExtension.swift in Sources */,
+				5DEEE3963993DDE521A990BE /* LockRuntime.swift in Sources */,
+				237B8B54C73327932040F1E4 /* LockShieldReconciler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1174,7 +1257,9 @@
 				68E1ADD5A49B6F106B8692B0 /* HealthSnapshot.swift in Sources */,
 				461E317A6611D8B4CF430099 /* InitialGoalPickerSheet.swift in Sources */,
 				09B1533E68A74A85D1DBCF75 /* KeychainService.swift in Sources */,
+				6C3D2DE5F98805F9F2B4E96D /* LockRuntime.swift in Sources */,
 				C62C81A9F98F1C99BC583D7C /* LockSheet.swift in Sources */,
+				7F765208B42FFD86D949DB7D /* LockShieldReconciler.swift in Sources */,
 				8686CC50662892F36DFC53F7 /* NegotiationView.swift in Sources */,
 				6C420832D884DEB8E7135990 /* NotificationManager.swift in Sources */,
 				AA92ACAC594E76062C7C5C71 /* NotificationScheduler.swift in Sources */,
@@ -1220,6 +1305,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D6067B2920C210750D6DC873 /* LockRuntime.swift in Sources */,
+				344005F7BF55365A9B8BA91B /* LockShieldReconciler.swift in Sources */,
 				3A24313AAF0FA6F43F6C8CC7 /* ShieldConfigurationProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1240,6 +1327,16 @@
 				E5F081F904F54922DD854774 /* WatchStatsView.swift in Sources */,
 				75DBFF4769BD7A6028D47972 /* WatchSyncReceiver.swift in Sources */,
 				52F4FC49B90EEB650F9239AA /* WatchTheme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B869BA1C62AC4F1EE11740FD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AC88B89B8C597FC23B4E75EE /* LockRuntime.swift in Sources */,
+				34D2CF3899A83D9CE6B0E32B /* LockShieldReconciler.swift in Sources */,
+				09911567F82C9D97E37FFE53 /* ShieldActionHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1275,6 +1372,11 @@
 			isa = PBXTargetDependency;
 			target = CC28230EF5A0A7CF4F72B801 /* TamaGoosieDeviceActivity */;
 			targetProxy = 08478DF6CB21F886FA11FEA1 /* PBXContainerItemProxy */;
+		};
+		F8DC9B10689852609BEB3DC2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5BBD2FEE2E44A79A812B6E8F /* TamaGoosieShieldAction */;
+			targetProxy = C74432FC0E082223D70792A9 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1502,6 +1604,23 @@
 			};
 			name = Release;
 		};
+		CBC3E8E966C17A1100E764A2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Extensions/ShieldAction/TamaGoosieShieldAction.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
+				INFOPLIST_FILE = Extensions/ShieldAction/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.shieldaction;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		D62DA0F651EE73ECD529906D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1535,6 +1654,23 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
+		};
+		EE0D302E3152E42C1442088D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Extensions/ShieldAction/TamaGoosieShieldAction.entitlements;
+				DEVELOPMENT_TEAM = HXYXVD3RKJ;
+				INFOPLIST_FILE = Extensions/ShieldAction/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tamagoosie.app.shieldaction;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		EF9CE661E43E9DC3CA4E8D15 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -1705,6 +1841,15 @@
 			buildConfigurations = (
 				2C0E08F628253A53771FE941 /* Debug */,
 				608ACA78B10F85E1185BF1C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D10E53C67D0F12685116183B /* Build configuration list for PBXNativeTarget "TamaGoosieShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EE0D302E3152E42C1442088D /* Debug */,
+				CBC3E8E966C17A1100E764A2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

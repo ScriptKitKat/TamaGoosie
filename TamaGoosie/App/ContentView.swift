@@ -1,6 +1,10 @@
 import SwiftUI
 import SwiftData
 
+extension Notification.Name {
+    static let navigateToBlocks = Notification.Name("navigateToBlocks")
+}
+
 // MARK: - Scroll Offset Preference
 
 private struct ScrollOffsetKey: PreferenceKey {
@@ -195,24 +199,25 @@ struct ContentView: View {
     }
 
     private func pageHeader(title: String) -> some View {
-        VStack(spacing: 0) {
+        ZStack {
+            if pageScrolledDown {
+                headerBackgroundColor
+            }
+
+            Text(title)
+                .font(GoosieTheme.titleFont(20))
+                .foregroundStyle(usesLightBackground ? GoosieTheme.charcoalOutline : .white)
+                .shadow(color: usesLightBackground ? .clear : .black.opacity(0.15), radius: 2, y: 1)
+        }
+        .frame(height: 44)
+        .frame(maxWidth: .infinity)
+        .background(alignment: .top) {
             if pageScrolledDown {
                 headerBackgroundColor
                     .ignoresSafeArea(edges: .top)
             }
-
-            ZStack {
-                if pageScrolledDown {
-                    headerBackgroundColor
-                }
-
-                Text(title)
-                    .font(GoosieTheme.titleFont(20))
-                    .foregroundStyle(usesLightBackground ? GoosieTheme.charcoalOutline : .white)
-                    .shadow(color: usesLightBackground ? .clear : .black.opacity(0.15), radius: 2, y: 1)
-            }
-            .frame(height: 44)
         }
+        .allowsHitTesting(false)
         .animation(.easeInOut(duration: 0.2), value: pageScrolledDown)
     }
 

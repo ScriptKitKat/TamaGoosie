@@ -10,6 +10,7 @@ private struct STScrollOffsetKey: PreferenceKey {
 }
 
 struct ScreenTimePageView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var manager = ScreenTimeManager.shared
     @Query private var gooseStates: [GooseState]
     @Query(sort: \ScreenBlock.createdAt, order: .reverse) private var allBlocks: [ScreenBlock]
@@ -18,6 +19,7 @@ struct ScreenTimePageView: View {
     @State private var selectedPeriod: ScreenTimePeriod = .today
     @State private var showBlockNow = false
     @State private var scrolledDown = false
+    @State private var statsLoading = true
 
     // Green palette
     private let greenTop = Color(hex: 0x6BAE6B)
@@ -49,20 +51,45 @@ struct ScreenTimePageView: View {
                         .padding(.top, 52)
                         .padding(.bottom, 10)
 
-                    ScrollView {
-                        VStack(spacing: 14) {
-                            switch selectedTab {
-                            case .stats:
-                                ScreenTimeStatsTab(period: selectedPeriod)
-                            case .blocks:
-                                ScreenTimeBlocksTab()
-                            }
+                    if statsLoading && selectedTab == .stats {
+                        VStack(spacing: 20) {
+                            Spacer().frame(height: 60)
+
+                            GooseCharacterView(mood: .content)
+                                .frame(height: 140)
+
+                            Text("Loading screen time data...")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(1.2)
+
+                            Spacer()
                         }
-                        .padding(.horizontal, GoosieTheme.padding)
-                        .padding(.bottom, 80)
+                        .frame(maxWidth: .infinity)
+                        .transition(.opacity)
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 14) {
+                                switch selectedTab {
+                                case .stats:
+                                    ScreenTimeStatsTab(period: selectedPeriod)
+                                case .blocks:
+                                    ScreenTimeBlocksTab()
+                                }
+                            }
+                            .padding(.horizontal, GoosieTheme.padding)
+                            .padding(.bottom, 80)
+                        }
                     }
-                    .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { _ in
-                        manager.triggerRefresh()
+
+                    if selectedTab == .stats {
+                        EmptyView()
+                            .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { _ in
+                                manager.triggerRefresh()
+                            }
                     }
 
                 } else {
@@ -73,7 +100,7 @@ struct ScreenTimePageView: View {
             }
 
             // Floating "Start Focus Session" bar
-            if manager.isSetupComplete && selectedTab == .stats {
+            if manager.isSetupComplete && selectedTab == .stats && !statsLoading {
                 VStack {
                     Spacer()
                     if !scrolledDown {
@@ -107,13 +134,37 @@ struct ScreenTimePageView: View {
                 }
             }
         }
+        .animation(.easeInOut(duration: 0.4), value: statsLoading)
         .animation(.easeInOut(duration: 0.25), value: selectedTab)
+        .onChange(of: selectedPeriod) {
+            statsLoading = true
+            dismissStatsLoading()
+        }
+        .task {
+            dismissStatsLoading()
+        }
         .fullScreenCover(isPresented: $showBlockNow) {
             BlockNowSheet(existingBlock: nil)
         }
         .onAppear {
             let activeBlocks = allBlocks.filter { !$0.isPast }
             ScreenTimeManager.shared.reconcileBlocks(activeBlocks)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToBlocks)) { _ in
+            selectedTab = .blocks
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                let activeBlocks = allBlocks.filter { !$0.isPast }
+                ScreenTimeManager.shared.reconcileBlocks(activeBlocks)
+            }
+        }
+    }
+
+    private func dismissStatsLoading() {
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            statsLoading = false
         }
     }
 }

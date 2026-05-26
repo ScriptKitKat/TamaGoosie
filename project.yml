@@ -28,6 +28,7 @@ targets:
     sources:
       - TamaGoosie
       - Shared
+      - Extensions/Shared
     dependencies:
       - package: ConvexMobile
         product: ConvexMobile
@@ -39,6 +40,8 @@ targets:
       - target: TamaGoosieDeviceActivity
         embed: true
       - target: TamaGoosieShield
+        embed: true
+      - target: TamaGoosieShieldAction
         embed: true
       - target: TamaGoosieReport
         embed: true
@@ -100,6 +103,7 @@ targets:
     platform: iOS
     sources:
       - TamaGoosieDeviceActivity
+      - Extensions/Shared
     dependencies:
       - sdk: DeviceActivity.framework
       - sdk: ManagedSettings.framework
@@ -121,6 +125,7 @@ targets:
     platform: iOS
     sources:
       - Extensions/Shield
+      - Extensions/Shared
     dependencies:
       - sdk: ManagedSettings.framework
       - sdk: ManagedSettingsUI.framework
@@ -131,6 +136,28 @@ targets:
         INFOPLIST_FILE: Extensions/Shield/Info.plist
     entitlements:
       path: Extensions/Shield/TamaGoosieShield.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.tamagoosie
+        com.apple.developer.family-controls: true
+
+  TamaGoosieShieldAction:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Extensions/ShieldAction
+      - Extensions/Shared
+    dependencies:
+      - sdk: ManagedSettings.framework
+      - sdk: ManagedSettingsUI.framework
+      - sdk: FamilyControls.framework
+      - sdk: DeviceActivity.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tamagoosie.app.shieldaction
+        INFOPLIST_FILE: Extensions/ShieldAction/Info.plist
+    entitlements:
+      path: Extensions/ShieldAction/TamaGoosieShieldAction.entitlements
       properties:
         com.apple.security.application-groups:
           - group.com.tamagoosie
@@ -176,6 +203,7 @@ schemes:
         TamaGoosieWidgets: all
         TamaGoosieDeviceActivity: all
         TamaGoosieShield: all
+        TamaGoosieShieldAction: all
         TamaGoosieReport: all
         TamaGoosieTests: testing
     run:

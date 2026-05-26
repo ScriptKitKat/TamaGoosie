@@ -251,6 +251,12 @@ struct ScreenTimeBlocksTab: View {
                         }
                         Text("Bundle: \(manager.extensionBundleStatus)")
                             .font(.system(size: 10, design: .monospaced))
+                        Text("ShieldAction: \(manager.shieldActionBundleStatus)")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(manager.shieldActionBundleStatus.contains("EMBEDDED") ? .green : .red)
+                        Text("ShieldConfig: \(manager.shieldConfigBundleStatus)")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(manager.shieldConfigBundleStatus.contains("EMBEDDED") ? .green : .red)
                     }
 
                     Divider().background(.white.opacity(0.3))
@@ -285,6 +291,59 @@ struct ScreenTimeBlocksTab: View {
                                 Text(entry)
                                     .font(.system(size: 9, design: .monospaced))
                                     .lineLimit(3)
+                            }
+                        }
+                    }
+
+                    Divider().background(.white.opacity(0.3))
+
+                    // Lock-specific debug info
+                    Group {
+                        Text("Lock Debug:")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+
+                        let globalInfo = manager.lockGlobalDebugInfo
+                        Text("  pending: \(globalInfo["pendingUnlockBlockIDs"] ?? "?")")
+                            .font(.system(size: 9, design: .monospaced))
+                        Text("  activeLockIDs: \(globalInfo["activeLockBlockIDs"] ?? "?")")
+                            .font(.system(size: 9, design: .monospaced))
+                        Text("  ShieldAction crumbs: \(globalInfo["shieldActionCrumbs"] ?? "?")")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(
+                                (globalInfo["shieldActionCrumbs"] ?? "").hasPrefix("0")
+                                    ? .red : .green
+                            )
+                        if let lastSA = globalInfo["lastShieldAction"] {
+                            Text("  last: \(lastSA)")
+                                .font(.system(size: 8, design: .monospaced))
+                        }
+                        Text("  probe: \(globalInfo["shieldActionProbe"] ?? "?")")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(
+                                (globalInfo["shieldActionProbe"] ?? "").contains("NEVER") ? .red : .green
+                            )
+
+                        let lockBlocks = allBlocks.filter { $0.type == "lock" && !$0.isPast }
+                        if lockBlocks.isEmpty {
+                            Text("  (no active lock blocks)")
+                                .font(.system(size: 10, design: .monospaced))
+                        } else {
+                            ForEach(lockBlocks, id: \.id) { block in
+                                let info = manager.lockDebugInfo(for: block)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("  [\(block.name)] id=\(block.id.uuidString.prefix(8))...")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    Text("    opens: \(info["opensUsed"] ?? "?")/\(info["opensAllowed"] ?? "?") (remaining: \(info["remaining"] ?? "?"))")
+                                        .font(.system(size: 9, design: .monospaced))
+                                    Text("    UD opensAllowed: \(info["ud_opensAllowed"] ?? "?")  UD duration: \(info["ud_unlockDuration"] ?? "?")")
+                                        .font(.system(size: 9, design: .monospaced))
+                                    Text("    unlockExpiry: \(info["unlockExpiry"] ?? "?")")
+                                        .font(.system(size: 9, design: .monospaced))
+                                    Text("    isUnlocked: \(info["isUnlocked"] ?? "?")  shieldData: \(info["shieldDataStored"] ?? "?")")
+                                        .font(.system(size: 9, design: .monospaced))
+                                    Text("    blockType_ud: \(info["blockType_ud"] ?? "?")")
+                                        .font(.system(size: 9, design: .monospaced))
+                                }
                             }
                         }
                     }

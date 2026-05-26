@@ -86,7 +86,7 @@ TamaGoosie is a **Tamagotchi-style virtual goose** app with three targets:
 The app uses **exactly 2 stats on a 0.0–1.0 scale** (not 4 stats, not 0-100):
 
 - `healthiness` — weighted composite of HealthKit data (sleep 30%, exercise 30%, steps 25%, sitting 15%; with Watch: adds outside 15%)
-- `happiness` — goal completion ratio (50%) + distraction penalty (30%) + base (20%) + streak bonus
+- `happiness` — goal completion ratio (65%) + distraction penalty (30%) + base (5%) + streak bonus
 
 Stats are stored as `Double` in `GooseState` and displayed as `Int(stat * 100)` percent in views. The `StatBar` component takes values 0–100.
 
@@ -137,8 +137,8 @@ The Watch receives payloads via `WatchSyncReceiver` and stores `currentPayload: 
 ### Mood Derivation
 
 `GooseMood.deriveMood(healthiness:happiness:)` maps `avg = (healthiness + happiness) / 2`:
-- `>= 0.80` → ecstatic, `0.60–0.80` → happy, `0.40–0.60` → content
-- `0.25–0.40` → bored, `0.10–0.25` → sad, `< 0.10` → sick
+- `>= 0.60` → happy, `0.30–0.60` → content
+- `0.15–0.30` → sad, `< 0.15` → sick
 
 There is no `dead` mood and no phase system. The goose's mood is the sole visual feedback signal.
 

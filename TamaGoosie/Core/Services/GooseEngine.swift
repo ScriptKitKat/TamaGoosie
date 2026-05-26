@@ -33,10 +33,10 @@ final class GooseEngine {
         isUpdating = true
         defer { isUpdating = false }
 
-        if let log, let profile {
+        if let log, let profile, log.hasHealthData {
             state.healthiness = RewardEngine.computeHealthiness(log: log, profile: profile)
         }
-        if let log {
+        if let log, log.hasAnyData {
             state.happiness = RewardEngine.computeHappiness(log: log, goals: goals)
         }
         state.updateMood()

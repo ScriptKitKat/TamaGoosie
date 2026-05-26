@@ -24,6 +24,7 @@ final class ScreenTimeManager {
 
     private init() {
         authorizationStatus = authCenter.authorizationStatus
+        isSetupComplete = defaults.bool(forKey: GoosieConstants.screenTimeSetupCompleteKey)
         loadSelection()
         if isAuthorized && hasSelection && !isPaused {
             startDailyMonitoring()
@@ -82,9 +83,8 @@ final class ScreenTimeManager {
 
     // MARK: - Setup Complete
 
-    var isSetupComplete: Bool {
-        get { defaults.bool(forKey: GoosieConstants.screenTimeSetupCompleteKey) }
-        set { defaults.set(newValue, forKey: GoosieConstants.screenTimeSetupCompleteKey) }
+    var isSetupComplete: Bool = false {
+        didSet { defaults.set(isSetupComplete, forKey: GoosieConstants.screenTimeSetupCompleteKey) }
     }
 
     // MARK: - Pause
@@ -454,9 +454,15 @@ final class ScreenTimeManager {
         let blockID = block.id.uuidString
         let activityName = DeviceActivityName("block-\(blockID)")
 
-        // Persist selection data to app group so the extension can apply shields
+        // Persist selection data and block type to app group so the extension can apply shields
         if let data = block.selectionData {
             defaults.set(data, forKey: "blockShield-\(blockID)")
+            defaults.set(block.type, forKey: "blockType-\(blockID)")
+            if block.type == "lock" {
+                defaults.set(block.opensAllowed, forKey: "lockOpensAllowed-\(blockID)")
+                defaults.set(block.unlockDurationMinutes, forKey: "lockUnlockDuration-\(blockID)")
+                updateActiveLockBlockIDs(add: blockID)
+            }
             defaults.synchronize()
         }
 
@@ -519,7 +525,7 @@ final class ScreenTimeManager {
         // includesPastActivity: if the user was already on a blocked app when the
         // interval started, that prior usage counts toward the threshold — so the
         // event fires almost immediately instead of waiting for 1 fresh minute.
-        if block.type == "schedule" || block.type == "blockNow" || block.type == "lock" {
+        if block.type == "schedule" || block.type == "blockNow" {
             let eventName = DeviceActivityEvent.Name("shield-\(blockID)")
             events[eventName] = DeviceActivityEvent(
                 applications: selection.applicationTokens,
@@ -545,7 +551,11 @@ final class ScreenTimeManager {
 
         // Apply shield immediately for blockNow, lock, and currently-active schedules.
         // For future schedules, the extension's intervalDidStart handles it.
-        if block.type == "blockNow" || block.type == "lock" {
+        if block.type == "lock" {
+            // Clear old per-block named store (migration from old approach)
+            ManagedSettingsStore(named: .init("block-\(blockID)")).clearAllSettings()
+            LockShieldReconciler.reconcile()
+        } else if block.type == "blockNow" {
             applyShield(blockID: blockID, selection: selection)
         } else if block.type == "schedule" {
             if isScheduleCurrentlyActive(block) {
@@ -600,10 +610,35 @@ final class ScreenTimeManager {
 
     func unregisterBlock(_ block: ScreenBlock) {
         let blockID = block.id.uuidString
-        let activityName = DeviceActivityName("block-\(blockID)")
-        activityCenter.stopMonitoring([activityName])
-        removeShield(blockID: blockID)
+        activityCenter.stopMonitoring([
+            DeviceActivityName("block-\(blockID)"),
+            DeviceActivityName("unlock-\(blockID)")
+        ])
+
+        if block.type == "lock" {
+            // Clear old per-block named store (migration)
+            ManagedSettingsStore(named: .init("block-\(blockID)")).clearAllSettings()
+            updateActiveLockBlockIDs(remove: blockID)
+        } else {
+            removeShield(blockID: blockID)
+        }
+
+        clearLockBlockDefaults(blockID: blockID)
+
+        if block.type == "lock" {
+            LockShieldReconciler.reconcile()
+        }
+    }
+
+    private func clearLockBlockDefaults(blockID: String) {
         defaults.removeObject(forKey: "blockShield-\(blockID)")
+        defaults.removeObject(forKey: "blockType-\(blockID)")
+        defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
+        defaults.removeObject(forKey: "lockUnlockExpiry-\(blockID)")
+        defaults.removeObject(forKey: "lockOpensUsed-\(blockID)")
+        defaults.removeObject(forKey: "lockLastReset-\(blockID)")
+        defaults.removeObject(forKey: "lockOpensAllowed-\(blockID)")
+        defaults.removeObject(forKey: "lockUnlockDuration-\(blockID)")
     }
 
     /// Called on foreground as a safety net. Reconciles shield state based on
@@ -617,14 +652,29 @@ final class ScreenTimeManager {
             let blockID = block.id.uuidString
             let activityName = "block-\(blockID)"
 
+            // Ensure lock config is always in UserDefaults for the ShieldAction extension
+            if block.type == "lock", let data = block.selectionData {
+                defaults.set(data, forKey: "blockShield-\(blockID)")
+                defaults.set(block.type, forKey: "blockType-\(blockID)")
+                defaults.set(block.opensAllowed, forKey: "lockOpensAllowed-\(blockID)")
+                defaults.set(block.unlockDurationMinutes, forKey: "lockUnlockDuration-\(blockID)")
+                updateActiveLockBlockIDs(add: blockID)
+                // Clear old per-block named store (migration)
+                ManagedSettingsStore(named: .init("block-\(blockID)")).clearAllSettings()
+                defaults.synchronize()
+            }
+
+            // Skip re-registration for actively unlocked lock blocks
+            let isUnlockedLock = block.type == "lock" && isBlockUnlocked(blockID: blockID)
+
             // Only re-register if the system lost the monitor
-            if !monitoredActivities.contains(activityName) {
+            if !monitoredActivities.contains(activityName) && !isUnlockedLock {
                 registerBlock(block)
             }
 
             guard let selection = block.selection else { continue }
 
-            // Reconcile shield state based on current time
+            // Reconcile shield state for non-lock blocks
             switch block.type {
             case "blockNow":
                 if block.startedAt != nil && block.endedAt == nil {
@@ -639,15 +689,49 @@ final class ScreenTimeManager {
                     removeShield(blockID: blockID)
                 }
             case "lock":
-                applyShield(blockID: blockID, selection: selection)
+                let now = Date().timeIntervalSince1970
+                // Clean up stale countdowns (past TTL)
+                let countdownStart = defaults.double(forKey: "lockCountdownStartedAt-\(blockID)")
+                if countdownStart > 0 && now - countdownStart >= LockRuntime.countdownTTL + LockRuntime.countdownSeconds {
+                    defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
+                    defaults.synchronize()
+                }
+                // Clean up expired unlocks past time's-up window
+                let expiry = defaults.double(forKey: "lockUnlockExpiry-\(blockID)")
+                if expiry > 0 && now - expiry >= LockRuntime.timesUpWindow {
+                    defaults.removeObject(forKey: "lockUnlockExpiry-\(blockID)")
+                    activityCenter.stopMonitoring([DeviceActivityName("unlock-\(blockID)")])
+                    defaults.synchronize()
+                    logDiagnostic("reconcile: lock \(block.name) expiry cleaned (past time's-up window)")
+                }
+                // Reconciler handles all lock shields below
             default:
                 break // appLimit handled by threshold events
             }
         }
+
+        // Rebuild activeLockBlockIDs from live blocks to remove stale entries
+        let liveLockIDs = Set(blocks.filter { $0.type == "lock" && !$0.isPast }.map { $0.id.uuidString })
+        let storedLockIDs = defaults.stringArray(forKey: "activeLockBlockIDs") ?? []
+        let staleIDs = storedLockIDs.filter { !liveLockIDs.contains($0) }
+        if !staleIDs.isEmpty {
+            for staleID in staleIDs {
+                clearLockBlockDefaults(blockID: staleID)
+            }
+            defaults.set(Array(liveLockIDs), forKey: "activeLockBlockIDs")
+            defaults.synchronize()
+            logDiagnostic("reconcile: cleaned \(staleIDs.count) stale lock IDs")
+        }
+
+        // Single reconcile call handles ALL lock blocks at once
+        LockShieldReconciler.reconcile()
+        triggerRefresh()
     }
 
     // MARK: - Shield Management
 
+    /// Apply shield for non-lock blocks using per-block named store.
+    /// Lock blocks use LockShieldReconciler instead.
     func applyShield(blockID: String, selection: FamilyActivitySelection) {
         let store = ManagedSettingsStore(named: .init("block-\(blockID)"))
         store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
@@ -655,9 +739,141 @@ final class ScreenTimeManager {
         store.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
     }
 
+    /// Remove shield for non-lock blocks.
     func removeShield(blockID: String) {
         let store = ManagedSettingsStore(named: .init("block-\(blockID)"))
         store.clearAllSettings()
+    }
+
+    // MARK: - Lock Unlock Management
+
+    func unlockBlock(_ block: ScreenBlock) {
+        guard block.type == "lock" else { return }
+        let blockID = block.id.uuidString
+        guard block.selection != nil else { return }
+
+        let used = lockOpensUsedToday(blockID: blockID)
+        guard used < block.opensAllowed else { return }
+
+        // Clear any stale countdown, save unlock state — reconciler reads this to skip shielding
+        defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
+        let expiry = Date().addingTimeInterval(TimeInterval(block.unlockDurationMinutes * 60))
+        defaults.set(expiry.timeIntervalSince1970, forKey: "lockUnlockExpiry-\(blockID)")
+        defaults.set(used + 1, forKey: "lockOpensUsed-\(blockID)")
+        defaults.synchronize()
+
+        // Reconciler removes shield for this block immediately
+        LockShieldReconciler.reconcile()
+
+        // Start temporary monitor — its intervalDidStart fires at expiry to re-shield
+        startUnlockMonitor(blockID: blockID, expiryDate: expiry)
+
+        triggerRefresh()
+        logDiagnostic("unlockBlock: \(block.name) opens=\(used + 1)/\(block.opensAllowed)")
+    }
+
+    func relockBlock(_ block: ScreenBlock) {
+        guard block.type == "lock" else { return }
+        let blockID = block.id.uuidString
+
+        // Stop unlock monitor if running
+        activityCenter.stopMonitoring([DeviceActivityName("unlock-\(blockID)")])
+
+        defaults.removeObject(forKey: "lockUnlockExpiry-\(blockID)")
+        defaults.synchronize()
+
+        // Reconciler re-applies shield for this block
+        LockShieldReconciler.reconcile()
+
+        // Re-register monitor for daily callbacks
+        registerBlock(block)
+        triggerRefresh()
+        logDiagnostic("relockBlock: \(block.name)")
+    }
+
+    private func startUnlockMonitor(blockID: String, expiryDate: Date) {
+        let cal = Calendar.current
+        // Add 60 seconds so the monitor fires AFTER the actual expiry.
+        // DeviceActivitySchedule uses DateComponents(hour:minute:) which
+        // truncates seconds — without this offset the monitor can fire
+        // before the expiry and the reconciler sees the block as still unlocked.
+        let relockTime = expiryDate.addingTimeInterval(60)
+        let endHour = cal.component(.hour, from: relockTime)
+        let endMinute = cal.component(.minute, from: relockTime)
+
+        // Skip if too close to midnight
+        if endHour == 23 && endMinute >= 58 { return }
+
+        let schedule = DeviceActivitySchedule(
+            intervalStart: DateComponents(hour: endHour, minute: endMinute),
+            intervalEnd: DateComponents(hour: 23, minute: 59),
+            repeats: false
+        )
+
+        do {
+            try activityCenter.startMonitoring(
+                DeviceActivityName("unlock-\(blockID)"),
+                during: schedule
+            )
+            logDiagnostic("startUnlockMonitor: \(blockID) relock at \(endHour):\(String(format: "%02d", endMinute))")
+        } catch {
+            logDiagnostic("startUnlockMonitor FAILED: \(blockID) error=\(error)")
+        }
+    }
+
+    func isBlockUnlocked(_ block: ScreenBlock) -> Bool {
+        _ = refreshTick
+        return isBlockUnlocked(blockID: block.id.uuidString)
+    }
+
+    private func isBlockUnlocked(blockID: String) -> Bool {
+        defaults.synchronize()
+        let expiryTS = defaults.double(forKey: "lockUnlockExpiry-\(blockID)")
+        guard expiryTS > 0 else { return false }
+        return Date().timeIntervalSince1970 < expiryTS
+    }
+
+    func lockUnlockExpiryDate(_ block: ScreenBlock) -> Date? {
+        _ = refreshTick
+        let expiryTS = defaults.double(forKey: "lockUnlockExpiry-\(block.id.uuidString)")
+        guard expiryTS > 0 else { return nil }
+        let date = Date(timeIntervalSince1970: expiryTS)
+        return date > Date() ? date : nil
+    }
+
+    func lockOpensRemaining(_ block: ScreenBlock) -> Int {
+        _ = refreshTick
+        let used = lockOpensUsedToday(blockID: block.id.uuidString)
+        return max(0, block.opensAllowed - used)
+    }
+
+    private func updateActiveLockBlockIDs(add blockID: String) {
+        var ids = defaults.stringArray(forKey: "activeLockBlockIDs") ?? []
+        if !ids.contains(blockID) { ids.append(blockID) }
+        defaults.set(ids, forKey: "activeLockBlockIDs")
+        defaults.synchronize()
+    }
+
+    private func updateActiveLockBlockIDs(remove blockID: String) {
+        var ids = defaults.stringArray(forKey: "activeLockBlockIDs") ?? []
+        ids.removeAll { $0 == blockID }
+        defaults.set(ids, forKey: "activeLockBlockIDs")
+        defaults.synchronize()
+    }
+
+    private func lockOpensUsedToday(blockID: String) -> Int {
+        let lastResetDate = defaults.object(forKey: "lockLastReset-\(blockID)") as? Date
+        if let lastReset = lastResetDate, !Calendar.current.isDateInToday(lastReset) {
+            defaults.set(0, forKey: "lockOpensUsed-\(blockID)")
+            defaults.set(Date(), forKey: "lockLastReset-\(blockID)")
+            defaults.synchronize()
+            return 0
+        }
+        if lastResetDate == nil {
+            defaults.set(Date(), forKey: "lockLastReset-\(blockID)")
+            defaults.synchronize()
+        }
+        return defaults.integer(forKey: "lockOpensUsed-\(blockID)")
     }
 
     // MARK: - Diagnostics
@@ -714,6 +930,118 @@ final class ScreenTimeManager {
             return "EMBEDDED but bundle unreadable"
         }
         return "MISSING from PlugIns"
+    }
+
+    /// Check ShieldAction extension embedding
+    var shieldActionBundleStatus: String {
+        guard let plugInsURL = Bundle.main.builtInPlugInsURL else {
+            return "NO PlugIns directory"
+        }
+        let extURL = plugInsURL.appendingPathComponent("TamaGoosieShieldAction.appex")
+        let exists = FileManager.default.fileExists(atPath: extURL.path)
+        if exists {
+            if let bundle = Bundle(url: extURL) {
+                let nsExt = bundle.infoDictionary?["NSExtension"] as? [String: Any]
+                let pointID = (nsExt?["NSExtensionPointIdentifier"] as? String) ?? "unknown"
+                let className = (nsExt?["NSExtensionPrincipalClass"] as? String) ?? "unknown"
+                let bundleID = bundle.bundleIdentifier ?? "unknown"
+                return "EMBEDDED. ID: \(bundleID) Point: \(pointID) Principal: \(className)"
+            }
+            return "EMBEDDED but bundle unreadable"
+        }
+        return "MISSING from PlugIns"
+    }
+
+    /// Check ShieldConfig extension embedding
+    var shieldConfigBundleStatus: String {
+        guard let plugInsURL = Bundle.main.builtInPlugInsURL else {
+            return "NO PlugIns directory"
+        }
+        let extURL = plugInsURL.appendingPathComponent("TamaGoosieShield.appex")
+        let exists = FileManager.default.fileExists(atPath: extURL.path)
+        if exists {
+            if let bundle = Bundle(url: extURL) {
+                let nsExt = bundle.infoDictionary?["NSExtension"] as? [String: Any]
+                let pointID = (nsExt?["NSExtensionPointIdentifier"] as? String) ?? "unknown"
+                let className = (nsExt?["NSExtensionPrincipalClass"] as? String) ?? "unknown"
+                let bundleID = bundle.bundleIdentifier ?? "unknown"
+                return "EMBEDDED. ID: \(bundleID) Point: \(pointID) Principal: \(className)"
+            }
+            return "EMBEDDED but bundle unreadable"
+        }
+        return "MISSING from PlugIns"
+    }
+
+    /// Per-lock-block debug info for the diagnostics screen
+    func lockDebugInfo(for block: ScreenBlock) -> [String: String] {
+        defaults.synchronize()
+        let blockID = block.id.uuidString
+        var info: [String: String] = [:]
+
+        let opensUsed = lockOpensUsedToday(blockID: blockID)
+        info["opensUsed"] = "\(opensUsed)"
+        info["opensAllowed"] = "\(block.opensAllowed)"
+        info["remaining"] = "\(max(0, block.opensAllowed - opensUsed))"
+
+        // Raw UserDefaults values (what the extension reads)
+        let udOpensAllowed = defaults.integer(forKey: "lockOpensAllowed-\(blockID)")
+        info["ud_opensAllowed"] = "\(udOpensAllowed)"
+        let udDuration = defaults.integer(forKey: "lockUnlockDuration-\(blockID)")
+        info["ud_unlockDuration"] = "\(udDuration)m"
+
+        let expiryTS = defaults.double(forKey: "lockUnlockExpiry-\(blockID)")
+        if expiryTS > 0 {
+            let expiry = Date(timeIntervalSince1970: expiryTS)
+            let isActive = Date() < expiry
+            info["unlockExpiry"] = "\(expiry.formatted(date: .omitted, time: .standard)) (\(isActive ? "ACTIVE" : "EXPIRED"))"
+        } else {
+            info["unlockExpiry"] = "(none)"
+        }
+
+        info["isUnlocked"] = "\(isBlockUnlocked(blockID: blockID))"
+
+        let countdownTS = defaults.double(forKey: "lockCountdownStartedAt-\(blockID)")
+        info["countdownStartedAt"] = countdownTS > 0 ? Date(timeIntervalSince1970: countdownTS).formatted(date: .omitted, time: .standard) : "(none)"
+
+        let now = Date().timeIntervalSince1970
+        let state = LockRuntime.state(blockID: blockID, now: now, defaults: defaults)
+        switch state {
+        case .locked: info["runtimeState"] = "locked"
+        case .countdown: info["runtimeState"] = "countdown"
+        case .unlocked(let until): info["runtimeState"] = "unlocked (until \(Date(timeIntervalSince1970: until).formatted(date: .omitted, time: .standard)))"
+        case .recentlyExpired: info["runtimeState"] = "recentlyExpired"
+        }
+
+        let hasShieldData = defaults.data(forKey: "blockShield-\(blockID)") != nil
+        info["shieldDataStored"] = "\(hasShieldData)"
+        info["blockType_ud"] = defaults.string(forKey: "blockType-\(blockID)") ?? "(missing)"
+
+        return info
+    }
+
+    /// Global lock debug info
+    var lockGlobalDebugInfo: [String: String] {
+        defaults.synchronize()
+        var info: [String: String] = [:]
+        let active = defaults.stringArray(forKey: "activeLockBlockIDs") ?? []
+        let now = Date().timeIntervalSince1970
+        let countdownIDs = active.filter { defaults.double(forKey: "lockCountdownStartedAt-\($0)") > 0 && now - defaults.double(forKey: "lockCountdownStartedAt-\($0)") < LockRuntime.countdownTTL }
+        info["activeCountdowns"] = countdownIDs.isEmpty ? "(none)" : countdownIDs.map { String($0.prefix(8)) }.joined(separator: ", ")
+        info["activeLockBlockIDs"] = active.isEmpty ? "(none)" : active.joined(separator: "\n")
+
+        // Count ShieldAction breadcrumbs to verify extension is being invoked
+        let breadcrumbs = defaults.stringArray(forKey: "extensionBreadcrumbs") ?? []
+        let shieldActionEntries = breadcrumbs.filter { $0.contains("ShieldAction") || $0.contains("SHIELD ACTION") }
+        info["shieldActionCrumbs"] = "\(shieldActionEntries.count) of \(breadcrumbs.count) total"
+        if let last = shieldActionEntries.last {
+            info["lastShieldAction"] = String(last.suffix(80))
+        }
+
+        // Probe: did ShieldActionHandler even init?
+        let probe = defaults.stringArray(forKey: "shieldActionProbe") ?? []
+        info["shieldActionProbe"] = probe.isEmpty ? "NEVER LOADED" : probe.first ?? "?"
+
+        return info
     }
 
     /// Clear all diagnostic breadcrumbs
