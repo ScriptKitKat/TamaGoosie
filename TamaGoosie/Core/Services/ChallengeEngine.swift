@@ -39,6 +39,12 @@ final class ChallengeEngine {
         }
     }
 
+    /// For `cumulative`, target is the metric target (e.g. 50_000 steps).
+    /// For `dailyCeiling`, target is `windowDays` (number of in-window days required under ceiling).
+    static func reached(progress: Double, target: Double, shape: ChallengeShape) -> Bool {
+        progress >= target
+    }
+
     private static func value(of metric: ChallengeMetric, in log: DailyLog) -> Double {
         switch metric {
         case .steps:           return Double(log.steps)

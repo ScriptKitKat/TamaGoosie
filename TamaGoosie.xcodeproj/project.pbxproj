@@ -142,6 +142,7 @@
 		C88DC6083737B7DE13732DBE /* GooseSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 849E37EA66128E6400098165 /* GooseSyncService.swift */; };
 		CDAF335945CE87E15B12DC13 /* ScreenTimeScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34650552DDC9F69B45F2BB7 /* ScreenTimeScheduleView.swift */; };
 		CF2A2DA87AA6A0F57E753A5E /* DistractionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE71510B695CABD03828F0D4 /* DistractionOverlay.swift */; };
+		CFCF5579D982A61A5B0068FF /* ChallengeEngineReachedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CBC37A8278F7CBA4D5BF199 /* ChallengeEngineReachedTests.swift */; };
 		D063DF4E981F3BAD10E45193 /* ChallengeMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 183D98D56CA9BF5A351267AB /* ChallengeMetric.swift */; };
 		D0DDD308DD96993F2E9DE905 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C031B61EC6D7BE366BE5676 /* SettingsView.swift */; };
 		D3AABE326679EAF4948FB8E2 /* WatchSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16C84C36F09317E8C15BBCC /* WatchSyncService.swift */; };
@@ -348,6 +349,7 @@
 		68D2178CE7A9ECC8AF740E74 /* WeeklyHeatMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyHeatMap.swift; sourceTree = "<group>"; };
 		6A1CD1FB33CE72E4D48E8EA0 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		6BCA0686348168B60F7AB827 /* GoalListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalListView.swift; sourceTree = "<group>"; };
+		6CBC37A8278F7CBA4D5BF199 /* ChallengeEngineReachedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngineReachedTests.swift; sourceTree = "<group>"; };
 		737D9D9590B52AD6B590C972 /* TamaGoosieShield.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieShield.entitlements; sourceTree = "<group>"; };
 		7381076FD00EB7CA9B59C0E6 /* GoalTabPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalTabPicker.swift; sourceTree = "<group>"; };
 		7BCCD8F66DA7FD994B77CB86 /* TamaGoosieDeviceActivity.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TamaGoosieDeviceActivity.entitlements; sourceTree = "<group>"; };
@@ -731,6 +733,7 @@
 			isa = PBXGroup;
 			children = (
 				4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */,
+				6CBC37A8278F7CBA4D5BF199 /* ChallengeEngineReachedTests.swift */,
 				8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */,
 				DA5121AC95426E42B580756F /* SyncPayloadTests.swift */,
 			);
@@ -1193,6 +1196,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */,
+				CFCF5579D982A61A5B0068FF /* ChallengeEngineReachedTests.swift in Sources */,
 				3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */,
 				BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */,
 			);
