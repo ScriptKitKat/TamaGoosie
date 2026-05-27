@@ -175,6 +175,7 @@
 		F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */; };
 		F32D8A7DDC42308BF62CF4A2 /* FriendRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */; };
 		F4C4B2DA6ECFB1897B0141DE /* QuickLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623B6AAB6F88CC9EAE2E0A37 /* QuickLogView.swift */; };
+		F5E5E5E07295647A979A6169 /* ChallengeEngineRecomputeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B47175E3D25A9747EFE3DA8 /* ChallengeEngineRecomputeTests.swift */; };
 		F5F423CF6403344DEF0857A4 /* EscalationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484BBB124DE9BDCACB850932 /* EscalationTracker.swift */; };
 		F5F770EBC685C351BAD13695 /* FocusSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8DFE5F2C68892AC91BD06E5 /* FocusSession.swift */; };
 		F6C6021D531FFFD909D9207A /* TamaGoosieWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -340,6 +341,7 @@
 		594C6090F567DB0B8782D5D2 /* TamaGoosieWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TamaGoosieWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A65DE90A614D98222821F2F /* QuestsGoalsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestsGoalsTab.swift; sourceTree = "<group>"; };
 		5B241B291EB0D8B96FB0E635 /* OnboardingNotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingNotificationsView.swift; sourceTree = "<group>"; };
+		5B47175E3D25A9747EFE3DA8 /* ChallengeEngineRecomputeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngineRecomputeTests.swift; sourceTree = "<group>"; };
 		5B47951E494EC28E765569B2 /* GooseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseView.swift; sourceTree = "<group>"; };
 		5C031B61EC6D7BE366BE5676 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		5C5DAEE872C2EA648F35EE33 /* AppLimitSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLimitSheet.swift; sourceTree = "<group>"; };
@@ -740,6 +742,7 @@
 				4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */,
 				BDFF284803BC491BA5623DC6 /* ChallengeEngineCooldownTests.swift */,
 				6CBC37A8278F7CBA4D5BF199 /* ChallengeEngineReachedTests.swift */,
+				5B47175E3D25A9747EFE3DA8 /* ChallengeEngineRecomputeTests.swift */,
 				8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */,
 				DA5121AC95426E42B580756F /* SyncPayloadTests.swift */,
 			);
@@ -1205,6 +1208,7 @@
 				F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */,
 				5DD7F35CBF1F87E0BE203389 /* ChallengeEngineCooldownTests.swift in Sources */,
 				CFCF5579D982A61A5B0068FF /* ChallengeEngineReachedTests.swift in Sources */,
+				F5E5E5E07295647A979A6169 /* ChallengeEngineRecomputeTests.swift in Sources */,
 				3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */,
 				BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */,
 			);

@@ -102,4 +102,47 @@ extension ChallengeEngine {
         context.insert(run)
         return run
     }
+
+    /// Idempotent. Returns the runs that transitioned `active → completed` on this call.
+    @MainActor
+    @discardableResult
+    static func recomputeActive(
+        state: GooseState,
+        logs: [DailyLog],
+        runs: [ChallengeRun],
+        now: Date = Date()
+    ) -> [ChallengeRun] {
+        var newlyCompleted: [ChallengeRun] = []
+
+        for run in runs where run.statusEnum == .active {
+            let progress = aggregate(
+                shape: run.shapeEnum,
+                metric: run.metricEnum,
+                target: run.targetSnapshot,
+                logs: logs,
+                windowStart: run.startedAt,
+                now: now
+            )
+
+            // Effective target for completion check: for dailyCeiling, target is windowDays (day count).
+            let effectiveTarget: Double = run.shapeEnum == .dailyCeiling
+                ? Double(run.windowDaysSnapshot)
+                : run.targetSnapshot
+
+            // Target check runs BEFORE expiry check — completion wins on the boundary tick.
+            if reached(progress: progress, target: effectiveTarget, shape: run.shapeEnum) {
+                run.status = ChallengeStatus.completed.rawValue
+                run.completedAt = now
+                run.coinsAwarded = run.rewardSnapshot
+                state.coins += run.rewardSnapshot
+                newlyCompleted.append(run)
+                continue
+            }
+
+            if now >= run.expiresAt {
+                run.status = ChallengeStatus.expired.rawValue
+            }
+        }
+        return newlyCompleted
+    }
 }
