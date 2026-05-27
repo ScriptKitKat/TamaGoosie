@@ -67,6 +67,7 @@
 		5AFCF8E96FB304949AEC57D9 /* GooseNotificationSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185BE99737792706D702BBC9 /* GooseNotificationSystem.swift */; };
 		5CB990EC96834DA7D4AC15A3 /* ManagedSettingsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96C669629DBA7BD7DC35FFDB /* ManagedSettingsUI.framework */; };
 		5DB11E1A6531567ADBF33AF4 /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CB4CACEEBC80172D8086631A /* DeviceActivity.framework */; };
+		5DD7F35CBF1F87E0BE203389 /* ChallengeEngineCooldownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFF284803BC491BA5623DC6 /* ChallengeEngineCooldownTests.swift */; };
 		5DEEE3963993DDE521A990BE /* LockRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2621805D6B8803AF62F4E438 /* LockRuntime.swift */; };
 		601C0BC4F1BCD2C082CCE95C /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C941261ED0B28E591F0DF5D /* OnboardingContainerView.swift */; };
 		61483D81D4953EC606CB3B7A /* TamaGoosieShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = ECBE51BB2A27147F330BFF59 /* TamaGoosieShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -395,6 +396,7 @@
 		B7CF87934086F92D2BD04457 /* ScreenTimeStatsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeStatsTab.swift; sourceTree = "<group>"; };
 		B922DD91F0DE3DB923769BD1 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
+		BDFF284803BC491BA5623DC6 /* ChallengeEngineCooldownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngineCooldownTests.swift; sourceTree = "<group>"; };
 		C076B212CBBAA2070AB8230D /* ChallengeRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeRun.swift; sourceTree = "<group>"; };
 		C08817E670018B0128A419CD /* ScreenBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenBlock.swift; sourceTree = "<group>"; };
 		C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiAPIClient.swift; sourceTree = "<group>"; };
@@ -733,6 +735,7 @@
 			isa = PBXGroup;
 			children = (
 				4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */,
+				BDFF284803BC491BA5623DC6 /* ChallengeEngineCooldownTests.swift */,
 				6CBC37A8278F7CBA4D5BF199 /* ChallengeEngineReachedTests.swift */,
 				8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */,
 				DA5121AC95426E42B580756F /* SyncPayloadTests.swift */,
@@ -1196,6 +1199,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */,
+				5DD7F35CBF1F87E0BE203389 /* ChallengeEngineCooldownTests.swift in Sources */,
 				CFCF5579D982A61A5B0068FF /* ChallengeEngineReachedTests.swift in Sources */,
 				3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */,
 				BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */,

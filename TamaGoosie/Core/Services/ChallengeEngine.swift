@@ -45,6 +45,15 @@ final class ChallengeEngine {
         progress >= target
     }
 
+    /// A template is in cooldown if any expired run for it ended within its own snapshotted window.
+    static func isInCooldown(templateId: String, runs: [ChallengeRun], now: Date) -> Bool {
+        runs.contains { run in
+            run.templateId == templateId
+            && run.statusEnum == .expired
+            && run.expiresAt.addingTimeInterval(Double(run.windowDaysSnapshot) * 86_400) >= now
+        }
+    }
+
     private static func value(of metric: ChallengeMetric, in log: DailyLog) -> Double {
         switch metric {
         case .steps:           return Double(log.steps)
