@@ -104,6 +104,7 @@
 		8C53B0EA1FA080395F5865B4 /* OnboardingUsernameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059C65D5074E896A7DE5CD4E /* OnboardingUsernameView.swift */; };
 		8FCE49D307A4F3661286DBDD /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47A9B7B550DD4EC4C0957A5 /* Constants.swift */; };
 		8FD395960A763EAE1FC89815 /* ChallengesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A004F556DB773317B1C60A9D /* ChallengesView.swift */; };
+		9273C25E5BA7869D740FBF7C /* ChallengeSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCB0CC10FF867A2970E8858 /* ChallengeSyncService.swift */; };
 		932428714B941E4DB24F0DE5 /* GoosePhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05A4B225F077A7D0D7DE4511 /* GoosePhase.swift */; };
 		93EEF44A63EECD9EB9BF28D9 /* WeeklyHeatMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68D2178CE7A9ECC8AF740E74 /* WeeklyHeatMap.swift */; };
 		9A59252343D4DAFFA8EEED20 /* GooseStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4D75B6A0457EE19E0EAA93 /* GooseStats.swift */; };
@@ -400,6 +401,7 @@
 		B7CF87934086F92D2BD04457 /* ScreenTimeStatsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeStatsTab.swift; sourceTree = "<group>"; };
 		B922DD91F0DE3DB923769BD1 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		BB8F1C6B9F2D7555455DC325 /* ScreenTimeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeManager.swift; sourceTree = "<group>"; };
+		BBCB0CC10FF867A2970E8858 /* ChallengeSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeSyncService.swift; sourceTree = "<group>"; };
 		BDFF284803BC491BA5623DC6 /* ChallengeEngineCooldownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngineCooldownTests.swift; sourceTree = "<group>"; };
 		C076B212CBBAA2070AB8230D /* ChallengeRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeRun.swift; sourceTree = "<group>"; };
 		C08817E670018B0128A419CD /* ScreenBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenBlock.swift; sourceTree = "<group>"; };
@@ -712,6 +714,7 @@
 			children = (
 				DA9950FF3C0746D604E8C756 /* AuthService.swift */,
 				11762287BFE96250C1CB6397 /* ChallengeEngine.swift */,
+				BBCB0CC10FF867A2970E8858 /* ChallengeSyncService.swift */,
 				F364D3304C552899B83259F9 /* ConvexManager.swift */,
 				E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */,
 				C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */,
@@ -1260,6 +1263,7 @@
 				E5886834041EC6AFFC662454 /* ChallengeEngine.swift in Sources */,
 				6C47EF261F563E41C3F96B03 /* ChallengeMetric.swift in Sources */,
 				AD21403F8DF35FF517DC98B4 /* ChallengeRun.swift in Sources */,
+				9273C25E5BA7869D740FBF7C /* ChallengeSyncService.swift in Sources */,
 				BC4B7BC4CA3446747CFE6F23 /* ChallengeTemplate.swift in Sources */,
 				8FD395960A763EAE1FC89815 /* ChallengesView.swift in Sources */,
 				C1E5E811E25DFADD5A40E1D5 /* CoinAnimationView.swift in Sources */,
