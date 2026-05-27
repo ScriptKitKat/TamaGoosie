@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as challengeTemplates from "../challengeTemplates.js";
 import type * as dailyLogs from "../dailyLogs.js";
 import type * as friends from "../friends.js";
 import type * as geese from "../geese.js";
@@ -21,6 +22,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  challengeTemplates: typeof challengeTemplates;
   dailyLogs: typeof dailyLogs;
   friends: typeof friends;
   geese: typeof geese;
