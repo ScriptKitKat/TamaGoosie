@@ -69,4 +69,12 @@ public enum GoosieConstants {
 
     // MARK: - Live Activity
     public static let liveActivityMaxHours: Double = 8
+
+    // MARK: - Challenges
+    public static let challengeActiveCap: Int = 3
+    public static let challengeCategoriesV1: [String] = ["health"]
+    // Fallbacks — only used if a template omits explicit tier rewards
+    public static let defaultBronzeReward: Int = 25
+    public static let defaultSilverReward: Int = 60
+    public static let defaultGoldReward: Int = 120
 }
