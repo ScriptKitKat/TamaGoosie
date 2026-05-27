@@ -78,4 +78,50 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_userId_and_date", ["userId", "date"]),
+
+  challengeTemplates: defineTable({
+    templateId: v.string(),
+    title: v.string(),
+    blurb: v.string(),
+    category: v.literal("health"),
+    shape: v.union(v.literal("cumulative"), v.literal("dailyCeiling")),
+    metric: v.union(
+      v.literal("steps"),
+      v.literal("exerciseMinutes"),
+      v.literal("sleepHours"),
+      v.literal("outsideMinutes"),
+      v.literal("sittingHours"),
+      v.literal("standHours"),
+    ),
+    windowDays: v.number(),
+    tiers: v.object({
+      bronze: v.object({ target: v.number(), coinReward: v.number() }),
+      silver: v.object({ target: v.number(), coinReward: v.number() }),
+      gold:   v.object({ target: v.number(), coinReward: v.number() }),
+    }),
+    active: v.boolean(),
+    sortHint: v.number(),
+  })
+    .index("by_templateId", ["templateId"])
+    .index("by_active", ["active", "sortHint"]),
+
+  challengeRuns: defineTable({
+    runId: v.string(),
+    userId: v.id("users"),
+    templateId: v.string(),
+    tier: v.union(v.literal("bronze"), v.literal("silver"), v.literal("gold")),
+    startedAt: v.number(),
+    expiresAt: v.number(),
+    status: v.union(v.literal("active"), v.literal("completed"), v.literal("expired")),
+    completedAt: v.union(v.number(), v.null()),
+    coinsAwarded: v.union(v.number(), v.null()),
+    targetSnapshot: v.number(),
+    rewardSnapshot: v.number(),
+    metricSnapshot: v.string(),
+    shapeSnapshot: v.string(),
+    windowDaysSnapshot: v.number(),
+  })
+    .index("by_runId", ["runId"])
+    .index("by_user_status", ["userId", "status"])
+    .index("by_user_template", ["userId", "templateId"]),
 });
