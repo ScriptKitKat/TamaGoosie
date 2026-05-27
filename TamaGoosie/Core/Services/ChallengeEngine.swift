@@ -65,3 +65,41 @@ final class ChallengeEngine {
         }
     }
 }
+
+enum ChallengeError: Error, Equatable {
+    case capReached
+    case inCooldown
+    case templateDisabled
+}
+
+extension ChallengeEngine {
+    @discardableResult
+    static func accept(
+        template: ChallengeTemplate,
+        tier: ChallengeTier,
+        existingRuns: [ChallengeRun],
+        context: ModelContext,
+        now: Date
+    ) throws(ChallengeError) -> ChallengeRun {
+        guard template.isActive else { throw .templateDisabled }
+
+        let activeCount = existingRuns.filter { $0.statusEnum == .active }.count
+        guard activeCount < GoosieConstants.challengeActiveCap else { throw .capReached }
+
+        guard !isInCooldown(templateId: template.templateId, runs: existingRuns, now: now)
+        else { throw .inCooldown }
+
+        let run = ChallengeRun(
+            templateId: template.templateId,
+            tier: tier,
+            startedAt: now,
+            windowDays: template.windowDays,
+            targetSnapshot: template.target(for: tier),
+            rewardSnapshot: template.reward(for: tier),
+            metricSnapshot: ChallengeMetric(rawValue: template.metric) ?? .steps,
+            shapeSnapshot: ChallengeShape(rawValue: template.shape) ?? .cumulative
+        )
+        context.insert(run)
+        return run
+    }
+}

@@ -114,6 +114,7 @@
 		9F654D0DA550DDAC7A817EE6 /* SyncPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4E8216FE4F12721B999D82 /* SyncPayload.swift */; };
 		A07D96450F3E9A494C35A911 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94FB212D9417DF655E2DFA09 /* OnboardingCompleteView.swift */; };
 		A170EA4629B0B9AB0FE98D63 /* GoalEditorHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB038A3D390625A5285E78AE /* GoalEditorHelpers.swift */; };
+		A3851928789FAE6E63DC1522 /* ChallengeEngineAcceptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815911AB8C0B2E50D6DC77CC /* ChallengeEngineAcceptTests.swift */; };
 		A3D514E4572D517AD6575F58 /* DuckFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138F5488540DB4113C8BBD66 /* DuckFaceView.swift */; };
 		A3E852704226CEBBE8258083 /* ScreenTimeBlocksTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = B619FF7999A1CF24EC31389D /* ScreenTimeBlocksTab.swift */; };
 		A414B526CEBEEB3D3E52B857 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 254B5C8EA4051942ABEC8C35 /* Assets.xcassets */; };
@@ -360,6 +361,7 @@
 		7E0C3B783E1A0DEB45F3A005 /* OnboardingTutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingTutorialView.swift; sourceTree = "<group>"; };
 		7E44C8076495B92B17387492 /* GoalEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorView.swift; sourceTree = "<group>"; };
 		7E8C068355FAD069E4C521A1 /* GoalEditFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditFormView.swift; sourceTree = "<group>"; };
+		815911AB8C0B2E50D6DC77CC /* ChallengeEngineAcceptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngineAcceptTests.swift; sourceTree = "<group>"; };
 		81B8E5ADC29570EB791E3601 /* GoalFrequencySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalFrequencySheet.swift; sourceTree = "<group>"; };
 		81E1E1EF01F2B29A4E6DB9B2 /* OnboardingCreateAccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCreateAccountView.swift; sourceTree = "<group>"; };
 		849E37EA66128E6400098165 /* GooseSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseSyncService.swift; sourceTree = "<group>"; };
@@ -734,6 +736,7 @@
 		A8819B930C83700E791EA1EA /* TamaGoosieTests */ = {
 			isa = PBXGroup;
 			children = (
+				815911AB8C0B2E50D6DC77CC /* ChallengeEngineAcceptTests.swift */,
 				4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */,
 				BDFF284803BC491BA5623DC6 /* ChallengeEngineCooldownTests.swift */,
 				6CBC37A8278F7CBA4D5BF199 /* ChallengeEngineReachedTests.swift */,
@@ -1198,6 +1201,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A3851928789FAE6E63DC1522 /* ChallengeEngineAcceptTests.swift in Sources */,
 				F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */,
 				5DD7F35CBF1F87E0BE203389 /* ChallengeEngineCooldownTests.swift in Sources */,
 				CFCF5579D982A61A5B0068FF /* ChallengeEngineReachedTests.swift in Sources */,
