@@ -158,6 +158,7 @@
 		E13FDE8FD4B3A6316F5F2863 /* Slackey-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2AECAF502C61E260F38867D4 /* Slackey-Regular.ttf */; };
 		E1A6A88DA02F72BB24473B59 /* GooseAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB12647F1E88BD490B83716 /* GooseAccessory.swift */; };
 		E52794FF653860AE226F500B /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9ED139D6A88C4B71AFFEDF /* HealthKitManager.swift */; };
+		E5886834041EC6AFFC662454 /* ChallengeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11762287BFE96250C1CB6397 /* ChallengeEngine.swift */; };
 		E5B1E33B43611E47CB7ADCE6 /* GeminiAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */; };
 		E5F081F904F54922DD854774 /* WatchStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12045A2BE5E70B44DB753553 /* WatchStatsView.swift */; };
 		E6F65C8144632F05D5335F42 /* FoundationModels.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C815E45F6F181C73BBDBA8D4 /* FoundationModels.framework */; };
@@ -168,6 +169,7 @@
 		EC3A9A6788B8BDB6B35B8689 /* FriendsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F940A793A67DA6F08E61AE86 /* FriendsViewModel.swift */; };
 		EDBC407257F0215A0414D3DE /* FamilyControls.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5026E30DB88C09161C315739 /* FamilyControls.framework */; };
 		EE4C9C8159F689332A7F8B11 /* GooseGlanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B880E96B410E34DD097D19C /* GooseGlanceView.swift */; };
+		F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */; };
 		F32D8A7DDC42308BF62CF4A2 /* FriendRequestViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DB90535E19E51BB602E7BF /* FriendRequestViewModel.swift */; };
 		F4C4B2DA6ECFB1897B0141DE /* QuickLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 623B6AAB6F88CC9EAE2E0A37 /* QuickLogView.swift */; };
 		F5F423CF6403344DEF0857A4 /* EscalationTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484BBB124DE9BDCACB850932 /* EscalationTracker.swift */; };
@@ -278,6 +280,7 @@
 		0A130090E818B89BA7564E7C /* ScreenTimePageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimePageView.swift; sourceTree = "<group>"; };
 		0D59F30ADA27A66E78D15370 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0F9F686670F7CA74D19AB1BD /* WatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchApp.swift; sourceTree = "<group>"; };
+		11762287BFE96250C1CB6397 /* ChallengeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngine.swift; sourceTree = "<group>"; };
 		117B204C5AA42A37727CDF30 /* GooseState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseState.swift; sourceTree = "<group>"; };
 		12045A2BE5E70B44DB753553 /* WatchStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStatsView.swift; sourceTree = "<group>"; };
 		12D195FD88B740CD55107803 /* WeeklyReportScenes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReportScenes.swift; sourceTree = "<group>"; };
@@ -320,6 +323,7 @@
 		497F92C8C33F54CCA7A58FD1 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
 		49E51C01ED06EAC9365F5849 /* DayOfWeekPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayOfWeekPicker.swift; sourceTree = "<group>"; };
 		4CD70675B1AF33FA2DA7BCF2 /* TamaGoosieReport.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = TamaGoosieReport.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengeEngineAggregationTests.swift; sourceTree = "<group>"; };
 		4EB12647F1E88BD490B83716 /* GooseAccessory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GooseAccessory.swift; sourceTree = "<group>"; };
 		4EF850327AD57669A486CA88 /* BlockCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockCardView.swift; sourceTree = "<group>"; };
 		5026E30DB88C09161C315739 /* FamilyControls.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FamilyControls.framework; path = System/Library/Frameworks/FamilyControls.framework; sourceTree = SDKROOT; };
@@ -699,6 +703,7 @@
 			isa = PBXGroup;
 			children = (
 				DA9950FF3C0746D604E8C756 /* AuthService.swift */,
+				11762287BFE96250C1CB6397 /* ChallengeEngine.swift */,
 				F364D3304C552899B83259F9 /* ConvexManager.swift */,
 				E0D1521B6BF121E029FA8B51 /* DailyLogHistoryProvider.swift */,
 				C0E45453C79CF82F3FFF8982 /* GeminiAPIClient.swift */,
@@ -725,6 +730,7 @@
 		A8819B930C83700E791EA1EA /* TamaGoosieTests */ = {
 			isa = PBXGroup;
 			children = (
+				4D221A2FA446FA41B6066ABC /* ChallengeEngineAggregationTests.swift */,
 				8F0AACFDB6E06365F7B6764C /* GooseEngineTests.swift */,
 				DA5121AC95426E42B580756F /* SyncPayloadTests.swift */,
 			);
@@ -1186,6 +1192,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F253445FB797995E2B236ED7 /* ChallengeEngineAggregationTests.swift in Sources */,
 				3C2C3C45771B5231BBD4A79A /* GooseEngineTests.swift in Sources */,
 				BF5DD0E43CB955F8B53473ED /* SyncPayloadTests.swift in Sources */,
 			);
@@ -1234,6 +1241,7 @@
 				EBB9880751116991E8464909 /* AuthService.swift in Sources */,
 				D5C14399BBBF5C57CE726040 /* BlockCardView.swift in Sources */,
 				61B66545A6F3411AD3008413 /* BlockNowSheet.swift in Sources */,
+				E5886834041EC6AFFC662454 /* ChallengeEngine.swift in Sources */,
 				6C47EF261F563E41C3F96B03 /* ChallengeMetric.swift in Sources */,
 				AD21403F8DF35FF517DC98B4 /* ChallengeRun.swift in Sources */,
 				BC4B7BC4CA3446747CFE6F23 /* ChallengeTemplate.swift in Sources */,
