@@ -4,10 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "convex": "^1.39.1",
+    "convex-test": "^0.0.53",
+    "vitest": "^4.1.7"
+  }
 }
