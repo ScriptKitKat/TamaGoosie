@@ -80,11 +80,12 @@ struct FriendRequestSheetView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(GoosieTheme.charcoalOutline.opacity(0.4))
+                    .foregroundStyle(.secondary)
                 TextField("Search by username...", text: $viewModel.searchQuery)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .font(GoosieTheme.bodyFont(14))
+                    .foregroundStyle(.primary)
 
                 if viewModel.isSearching {
                     ProgressView()
@@ -94,7 +95,7 @@ struct FriendRequestSheetView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(GoosieTheme.creamWhite)
+                    .fill(Color(.secondarySystemBackground))
             )
             .onChange(of: viewModel.searchQuery) { _, newValue in
                 viewModel.onSearchChanged(newValue)
