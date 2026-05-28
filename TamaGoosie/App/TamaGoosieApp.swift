@@ -90,6 +90,8 @@ struct TamaGoosieApp: App {
             DailyLog.self,
             UserProfile.self,
             ScreenBlock.self,
+            ChallengeTemplate.self,
+            ChallengeRun.self,
         ])
 
         // Try to open the persistent store. If the schema is incompatible with the

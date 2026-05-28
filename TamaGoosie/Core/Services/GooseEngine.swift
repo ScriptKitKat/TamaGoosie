@@ -28,7 +28,14 @@ final class GooseEngine {
 
     // MARK: - Core Update Loop
 
-    func update(state: GooseState, log: DailyLog?, profile: UserProfile?, goals: [Goal]) {
+    func update(
+        state: GooseState,
+        log: DailyLog?,
+        profile: UserProfile?,
+        goals: [Goal],
+        challengeRuns: [ChallengeRun] = [],
+        challengeLogs: [DailyLog] = []
+    ) {
         guard !isUpdating else { return }
         isUpdating = true
         defer { isUpdating = false }
@@ -39,6 +46,23 @@ final class GooseEngine {
         if let log, log.hasAnyData {
             state.happiness = RewardEngine.computeHappiness(log: log, goals: goals)
         }
+
+        // Recompute challenge progress; awarded coins land on state.coins.
+        // SwiftData mutations in the existing pre-challenge code path already
+        // assume MainActor; we use assumeIsolated rather than rewiring callers.
+        let newlyCompleted = MainActor.assumeIsolated {
+            ChallengeEngine.recomputeActive(
+                state: state, logs: challengeLogs, runs: challengeRuns
+            )
+        }
+        for run in newlyCompleted {
+            Task { await ChallengeSyncService.shared.pushComplete(run) }
+        }
+        for run in challengeRuns where run.statusEnum == .expired && run.completedAt == nil {
+            // Expiry transition just happened in this call.
+            Task { await ChallengeSyncService.shared.pushExpire(run) }
+        }
+
         state.updateMood()
         state.lastUpdated = .now
         saveStatsToAppGroup(state.toSyncPayload())
