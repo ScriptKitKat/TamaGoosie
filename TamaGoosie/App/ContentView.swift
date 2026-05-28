@@ -391,44 +391,18 @@ struct ContentView: View {
     // MARK: - HealthKit Auto-Sync
 
     private func syncHealthData() async {
-        let hk = HealthKitManager.shared
-        if !hk.isAuthorized {
-            try? await hk.requestAuthorization()
-        }
-        guard hk.isAuthorized else { return }
-
-        guard let state = gooseStates.first else { return }
-        guard let snapshot = try? await hk.fetchTodayStats() else { return }
-
         let log = fetchOrCreateTodayLog()
-
-        if !healthProcessedThisSession {
-            GooseEngine.shared.processHealthData(
-                steps: snapshot.steps,
-                exerciseMinutes: snapshot.exerciseMinutes,
-                sleepHours: snapshot.sleepHours,
-                activeCalories: snapshot.activeCalories,
-                standHours: snapshot.standHours,
-                outsideMinutes: snapshot.outsideMinutes,
-                state: state,
-                dailyLog: log,
-                profile: profiles.first,
-                goals: goals
-            )
+        let shouldRecompute = !healthProcessedThisSession
+        let applied = await GooseEngine.shared.syncFromHealthKit(
+            state: gooseStates.first,
+            profile: profiles.first,
+            log: log,
+            goals: goals,
+            recomputeStats: shouldRecompute
+        )
+        if applied && shouldRecompute {
             healthProcessedThisSession = true
-        } else {
-            GooseEngine.shared.refreshHealthCache(
-                steps: snapshot.steps,
-                exerciseMinutes: snapshot.exerciseMinutes,
-                sleepHours: snapshot.sleepHours,
-                activeCalories: snapshot.activeCalories,
-                standHours: snapshot.standHours,
-                outsideMinutes: snapshot.outsideMinutes,
-                dailyLog: log
-            )
         }
-
-        GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
 
         // Sync distraction minutes from Screen Time extension
         let stDefaults = UserDefaults(suiteName: GoosieConstants.appGroupID)

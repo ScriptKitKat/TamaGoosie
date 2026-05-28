@@ -11,8 +11,15 @@ struct GoalListView: View {
     @Query private var profiles: [UserProfile]
 
     private var goals: [Goal] {
-        let active   = allGoals.filter { $0.isActive }
-        return active.sorted { $0.sortOrder < $1.sortOrder }
+        let active = allGoals.filter { $0.isActive }
+        // Pin auto-created built-in health goals (walk / sleep / exercise / outside)
+        // to the top; user goals follow, each group sorted by sortOrder.
+        return active.sorted { lhs, rhs in
+            let lhsBuiltin = lhs.type == "builtin"
+            let rhsBuiltin = rhs.type == "builtin"
+            if lhsBuiltin != rhsBuiltin { return lhsBuiltin }
+            return lhs.sortOrder < rhs.sortOrder
+        }
     }
 
     private var habits: [Goal] {
@@ -105,53 +112,38 @@ struct GoalListView: View {
                 showInitialGoalPicker = true
             }
         }
+        .task {
+            // Pull fresh HealthKit data every time the Goals tab is opened so
+            // step / sleep / exercise / outside progress reflects the latest
+            // Apple Health values, not just the cache populated at app launch.
+            await GooseEngine.shared.syncFromHealthKit(
+                state: gooseState,
+                profile: profiles.first,
+                log: ensureTodayLogExists(),
+                goals: goals
+            )
+        }
         .sheet(isPresented: $showInitialGoalPicker) {
             InitialGoalPickerSheet()
         }
         .onChange(of: goals) { _, newGoals in
             GooseEngine.shared.refreshGoals(newGoals)
+            runAutoComplete()
         }
-        .onChange(of: GooseEngine.shared.cachedSteps) { _, steps in
-            if let state = gooseState {
-                viewModel.autoCompleteHealthKitGoals(
-                    goals: goals,
-                    steps: steps,
-                    sleepHours: GooseEngine.shared.cachedSleepHours,
-                    state: state
-                )
-            }
-        }
-        .onChange(of: GooseEngine.shared.cachedSleepHours) { _, hours in
-            if let state = gooseState {
-                viewModel.autoCompleteHealthKitGoals(
-                    goals: goals,
-                    steps: GooseEngine.shared.cachedSteps,
-                    sleepHours: hours,
-                    state: state
-                )
-            }
-        }
-        .onChange(of: GooseEngine.shared.cachedExerciseMinutes) { _, _ in
-            if let state = gooseState {
-                viewModel.autoCompleteHealthKitGoals(
-                    goals: goals,
-                    steps: GooseEngine.shared.cachedSteps,
-                    sleepHours: GooseEngine.shared.cachedSleepHours,
-                    state: state
-                )
-            }
-        }
-        .onChange(of: GooseEngine.shared.cachedOutsideMinutes) { _, _ in
-            if let state = gooseState {
-                viewModel.autoCompleteHealthKitGoals(
-                    goals: goals,
-                    steps: GooseEngine.shared.cachedSteps,
-                    sleepHours: GooseEngine.shared.cachedSleepHours,
-                    state: state
-                )
-            }
-        }
-        .onChange(of: GooseEngine.shared.cachedDistractMinutes) { _, _ in }
+        .onChange(of: GooseEngine.shared.cachedSteps) { _, _ in runAutoComplete() }
+        .onChange(of: GooseEngine.shared.cachedSleepHours) { _, _ in runAutoComplete() }
+        .onChange(of: GooseEngine.shared.cachedExerciseMinutes) { _, _ in runAutoComplete() }
+        .onChange(of: GooseEngine.shared.cachedOutsideMinutes) { _, _ in runAutoComplete() }
+    }
+
+    private func runAutoComplete() {
+        guard let state = gooseState else { return }
+        viewModel.autoCompleteHealthKitGoals(
+            goals: goals,
+            steps: GooseEngine.shared.cachedSteps,
+            sleepHours: GooseEngine.shared.cachedSleepHours,
+            state: state
+        )
     }
 
     // MARK: - Helpers

@@ -200,6 +200,56 @@ final class GooseEngine {
         }
     }
 
+    /// Single entry point for HealthKit → goose sync.
+    /// Fetches today's stats, refreshes the cache + DailyLog, syncs built-in
+    /// goal progress, and (when `recomputeStats` is set) re-runs the full
+    /// stats pipeline so Watch/Convex/Live Activity get pushed.
+    /// Returns `true` if HealthKit was reachable and the snapshot applied.
+    @MainActor
+    @discardableResult
+    func syncFromHealthKit(
+        state: GooseState?,
+        profile: UserProfile?,
+        log: DailyLog,
+        goals: [Goal],
+        recomputeStats: Bool = false
+    ) async -> Bool {
+        let hk = HealthKitManager.shared
+        if !hk.isAuthorized {
+            try? await hk.requestAuthorization()
+        }
+        guard hk.isAuthorized,
+              let snapshot = try? await hk.fetchTodayStats()
+        else { return false }
+
+        if recomputeStats, let state {
+            processHealthData(
+                steps: snapshot.steps,
+                exerciseMinutes: snapshot.exerciseMinutes,
+                sleepHours: snapshot.sleepHours,
+                activeCalories: snapshot.activeCalories,
+                standHours: snapshot.standHours,
+                outsideMinutes: snapshot.outsideMinutes,
+                state: state,
+                dailyLog: log,
+                profile: profile,
+                goals: goals
+            )
+        } else {
+            refreshHealthCache(
+                steps: snapshot.steps,
+                exerciseMinutes: snapshot.exerciseMinutes,
+                sleepHours: snapshot.sleepHours,
+                activeCalories: snapshot.activeCalories,
+                standHours: snapshot.standHours,
+                outsideMinutes: snapshot.outsideMinutes,
+                dailyLog: log
+            )
+        }
+        syncBuiltinGoalProgress(goals)
+        return true
+    }
+
     /// Sync built-in goal currentCount from cached HealthKit values so progress
     /// persists across app restarts.
     func syncBuiltinGoalProgress(_ goals: [Goal]) {
