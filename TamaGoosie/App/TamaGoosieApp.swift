@@ -226,6 +226,7 @@ struct TamaGoosieApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(notificationDelegate)
+                .preferredColorScheme(.light)
                 .onAppear {
                     UNUserNotificationCenter.current().delegate = notificationDelegate
                     // Restore previous Google session silently

@@ -10,6 +10,8 @@ struct DistractionReportScene: DeviceActivityReportScene {
         let hour: Int
         var totalSeconds: TimeInterval = 0
         var distractingSeconds: TimeInterval = 0
+        var neutralSeconds: TimeInterval = 0
+        var productiveSeconds: TimeInterval = 0
     }
 
     struct ReportData {
@@ -32,6 +34,8 @@ struct DistractionReportScene: DeviceActivityReportScene {
         var appDurations: [(key: String, token: ApplicationToken, duration: TimeInterval)] = []
         var hourlyTotal: [Int: TimeInterval] = [:]
         var hourlyDistracting: [Int: TimeInterval] = [:]
+        var hourlyNeutral: [Int: TimeInterval] = [:]
+        var hourlyProductive: [Int: TimeInterval] = [:]
 
         for await activityData in data {
             for await segment in activityData.activitySegments {
@@ -54,8 +58,12 @@ struct DistractionReportScene: DeviceActivityReportScene {
                             let key = (try? JSONEncoder().encode(token))?.base64EncodedString() ?? "\(token.hashValue)"
                             appDurations.append((key: key, token: token, duration: duration))
 
-                            let cat = appCategoryMap[key] ?? "distracting"
-                            if cat == "distracting" {
+                            switch appCategoryMap[key] ?? "distracting" {
+                            case "productive":
+                                hourlyProductive[hour, default: 0] += duration
+                            case "neutral":
+                                hourlyNeutral[hour, default: 0] += duration
+                            default:
                                 hourlyDistracting[hour, default: 0] += duration
                             }
                         }
@@ -92,7 +100,9 @@ struct DistractionReportScene: DeviceActivityReportScene {
             HourlyBucket(
                 hour: hour,
                 totalSeconds: hourlyTotal[hour, default: 0],
-                distractingSeconds: hourlyDistracting[hour, default: 0]
+                distractingSeconds: hourlyDistracting[hour, default: 0],
+                neutralSeconds: hourlyNeutral[hour, default: 0],
+                productiveSeconds: hourlyProductive[hour, default: 0]
             )
         }
 
@@ -117,12 +127,18 @@ struct DistractionReportScene: DeviceActivityReportScene {
         let offlinePct = Int(round(Double(offlineMinutes) / Double(awakeMinutes) * 100))
 
         let accentGreen = Color(red: 0.29, green: 0.56, blue: 0.29)
-        let focusGreen = Color(red: 0.40, green: 0.73, blue: 0.42)
+        let productiveGreen = Color(red: 0.40, green: 0.73, blue: 0.42)
+        let neutralGray = Color(red: 0.62, green: 0.62, blue: 0.62)
         let distractedRed = Color(red: 0.90, green: 0.45, blue: 0.45)
+        let offlineGreen = Color(red: 0.70, green: 0.85, blue: 0.72)
         let lightGreen = Color(red: 0.91, green: 0.96, blue: 0.91)
         let charcoal = Color(red: 0.18, green: 0.18, blue: 0.18)
+        let mutedFill = charcoal.opacity(0.08)
 
         let graphHours = Array(9...22)
+        let currentHour = Calendar.current.component(.hour, from: Date())
+        let elapsedInCurrentHour = TimeInterval(Calendar.current.component(.minute, from: Date()) * 60
+            + Calendar.current.component(.second, from: Date()))
 
         return AnyView(
             VStack(spacing: 14) {
@@ -189,54 +205,42 @@ struct DistractionReportScene: DeviceActivityReportScene {
 
                 // Timeline graph card
                 VStack(spacing: 12) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: 12) {
                         Spacer()
-                        HStack(spacing: 4) {
-                            Circle().fill(focusGreen).frame(width: 8, height: 8)
-                            Text("Focused")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundStyle(charcoal.opacity(0.5))
-                        }
-                        HStack(spacing: 4) {
-                            Circle().fill(distractedRed).frame(width: 8, height: 8)
-                            Text("Distracted")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                .foregroundStyle(charcoal.opacity(0.5))
+                        ForEach([
+                            (productiveGreen, "Productive"),
+                            (neutralGray, "Neutral"),
+                            (distractedRed, "Distracting"),
+                            (offlineGreen, "Offline")
+                        ], id: \.1) { color, label in
+                            HStack(spacing: 4) {
+                                Circle().fill(color).frame(width: 8, height: 8)
+                                Text(label)
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(charcoal.opacity(0.5))
+                            }
                         }
                     }
 
+                    let barHeight: CGFloat = 60
                     HStack(alignment: .bottom, spacing: 3) {
                         ForEach(graphHours, id: \.self) { hour in
-                            let bucket = config.hourlyBuckets.first { $0.hour == hour }
-                            let totalSec = bucket?.totalSeconds ?? 0
-                            let distractSec = bucket?.distractingSeconds ?? 0
-                            let focusedSec = max(0, totalSec - distractSec)
-                            let maxH: CGFloat = 60
-                            let focusedH = CGFloat(focusedSec / 3600) * maxH
-                            let distractH = CGFloat(distractSec / 3600) * maxH
-
-                            VStack(spacing: 2) {
-                                if focusedH > 1 || distractH > 1 {
-                                    if focusedH > 1 {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(focusGreen)
-                                            .frame(height: max(4, focusedH))
-                                    }
-                                    if distractH > 1 {
-                                        RoundedRectangle(cornerRadius: 3)
-                                            .fill(distractedRed)
-                                            .frame(height: max(4, distractH))
-                                    }
-                                } else {
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(charcoal.opacity(0.08))
-                                        .frame(height: 4)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
+                            HourBar(
+                                bucket: config.hourlyBuckets.first { $0.hour == hour },
+                                hour: hour,
+                                currentHour: currentHour,
+                                elapsedInCurrentHour: elapsedInCurrentHour,
+                                isToday: config.isToday,
+                                barHeight: barHeight,
+                                productive: productiveGreen,
+                                neutral: neutralGray,
+                                distracting: distractedRed,
+                                offline: offlineGreen,
+                                muted: mutedFill
+                            )
                         }
                     }
-                    .frame(height: 80)
+                    .frame(height: barHeight)
 
                     HStack {
                         Text("9 AM"); Spacer()
@@ -287,6 +291,97 @@ struct DistractionReportScene: DeviceActivityReportScene {
             }
             .frame(maxWidth: .infinity)
         )
+    }
+}
+
+// MARK: - HourBar
+
+/// One column of the timeline graph. Renders an equal-height stacked bar:
+/// distracting (top) → neutral → productive → offline (bottom). For the
+/// in-progress hour, the not-yet-elapsed portion is rendered as a muted
+/// segment at the top. Future hours and yesterday-only views never have
+/// an unmeasured portion.
+private struct HourBar: View {
+    let bucket: DistractionReportScene.HourlyBucket?
+    let hour: Int
+    let currentHour: Int
+    let elapsedInCurrentHour: TimeInterval
+    let isToday: Bool
+    let barHeight: CGFloat
+    let productive: Color
+    let neutral: Color
+    let distracting: Color
+    let offline: Color
+    let muted: Color
+
+    private static let hourSeconds: TimeInterval = 3600
+    private static let minSegmentPt: CGFloat = 2
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
+                Rectangle()
+                    .fill(seg.color)
+                    .frame(height: seg.height)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 3))
+    }
+
+    private struct Segment { let color: Color; let height: CGFloat }
+
+    /// Segments listed top → bottom.
+    private var segments: [Segment] {
+        // Future hour (today view only): the whole bar is unmeasured.
+        if isToday, hour > currentHour {
+            return [Segment(color: muted, height: barHeight)]
+        }
+
+        let distractingSec = bucket?.distractingSeconds ?? 0
+        let neutralSec = bucket?.neutralSeconds ?? 0
+        let productiveSec = bucket?.productiveSeconds ?? 0
+        let usedSec = distractingSec + neutralSec + productiveSec
+
+        // Capacity for the in-progress hour shrinks; for completed hours it's a full hour.
+        let isCurrentHour = isToday && hour == currentHour
+        let capacity: TimeInterval = isCurrentHour
+            ? max(0, elapsedInCurrentHour)
+            : Self.hourSeconds
+        let offlineSec = max(0, capacity - usedSec)
+        let unmeasuredSec: TimeInterval = isCurrentHour
+            ? max(0, Self.hourSeconds - capacity)
+            : 0
+
+        // Each segment's height = seconds / 3600 * barHeight, so all bars
+        // share the same vertical scale regardless of completeness.
+        func h(_ sec: TimeInterval) -> CGFloat { CGFloat(sec / Self.hourSeconds) * barHeight }
+
+        let raw: [Segment] = [
+            Segment(color: muted, height: h(unmeasuredSec)),
+            Segment(color: distracting, height: h(distractingSec)),
+            Segment(color: neutral, height: h(neutralSec)),
+            Segment(color: productive, height: h(productiveSec)),
+            Segment(color: offline, height: h(offlineSec))
+        ]
+        let merged = Self.mergeBelowMinimum(raw)
+
+        // Empty hour (no data at all) → render a thin muted bar so the column is still visible.
+        if merged.isEmpty {
+            return [Segment(color: muted, height: barHeight)]
+        }
+        return merged
+    }
+
+    /// Drop sub-`minSegmentPt` slices; for slices in `[minSegmentPt, 2*minSegmentPt)`,
+    /// promote to the minimum. This is simpler than walking and merging downward
+    /// and avoids visually invisible 0.5pt slivers.
+    private static func mergeBelowMinimum(_ segments: [Segment]) -> [Segment] {
+        segments.compactMap { seg in
+            if seg.height <= 0.5 { return nil }
+            if seg.height < minSegmentPt { return Segment(color: seg.color, height: minSegmentPt) }
+            return seg
+        }
     }
 }
 
