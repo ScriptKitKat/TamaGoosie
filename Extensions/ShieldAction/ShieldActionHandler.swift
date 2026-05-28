@@ -80,11 +80,23 @@ final class ShieldActionHandler: ShieldActionDelegate {
             return
         }
 
-        // Find blocks that can be unlocked (not currently unlocked + has opens remaining)
+        // Find blocks that can be unlocked (not currently unlocked + has opens remaining +
+        // not suppressed by precedence rules — schedule preempt or appLimit cap).
         let unlockableIDs = matchIDs.filter { id in
             let state = LockRuntime.state(blockID: id, now: now, defaults: defaults)
             if case .unlocked = state { return false }
-            return LockRuntime.opensRemaining(blockID: id, defaults: defaults) > 0
+            guard LockRuntime.opensRemaining(blockID: id, defaults: defaults) > 0 else { return false }
+            let used = LockRuntime.opensUsedToday(blockID: id, defaults: defaults)
+            switch BlockPrecedence.evaluateUnlock(lockID: id, opensUsed: used, in: defaults) {
+            case .schedulePreempts:
+                logBreadcrumb("unlock suppressed by schedule: \(String(id.prefix(8)))")
+                return false
+            case .appLimitPrecedence(let limit):
+                logBreadcrumb("unlock suppressed by appLimit: \(String(id.prefix(8))) used=\(used) limit=\(limit)m")
+                return false
+            case .allow:
+                return true
+            }
         }
 
         guard !unlockableIDs.isEmpty else {

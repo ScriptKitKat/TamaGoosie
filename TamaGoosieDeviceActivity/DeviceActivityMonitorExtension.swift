@@ -67,6 +67,14 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         if let blockID = extractBlockID(from: activity) {
             let blockType = defaults.string(forKey: "blockType-\(blockID)") ?? ""
 
+            // Schedule blocks: flag the schedule as active so Rule A precedence
+            // checks can see it from this process and from the main app.
+            if blockType == "schedule" {
+                defaults.set(true, forKey: "scheduleActive-\(blockID)")
+                defaults.synchronize()
+                logBreadcrumb("intervalDidStart: schedule block \(blockID) — flagged active")
+            }
+
             // App limits: wait for threshold, don't shield now
             if blockType == "appLimit" {
                 logBreadcrumb("intervalDidStart: appLimit block \(blockID) — skipping shield (waiting for threshold)")
@@ -125,6 +133,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         if let blockID = extractBlockID(from: activity) {
             let blockType = defaults.string(forKey: "blockType-\(blockID)") ?? ""
 
+            // Schedule blocks: clear active flag so precedence checks stop matching.
+            if blockType == "schedule" {
+                defaults.set(false, forKey: "scheduleActive-\(blockID)")
+                defaults.synchronize()
+            }
+
             // Lock blocks: reconciler handles shield state, just log
             if blockType == "lock" {
                 logBreadcrumb("intervalDidEnd: lock block \(blockID) — reconciler manages shield")
@@ -153,6 +167,14 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         // Per-block app limit threshold
         if event.rawValue.hasPrefix("limit-") {
             let blockID = String(event.rawValue.dropFirst("limit-".count))
+            // Rule A v1 simplification: if this limit's tokens are fully covered
+            // by an active schedule, skip the redundant shield. The schedule already
+            // shields these apps; applying a duplicate appLimit shield complicates
+            // teardown.
+            if BlockPrecedence.limitFullyCoveredByActiveSchedule(limitID: blockID, in: defaults) {
+                logBreadcrumb("limit-\(blockID) shield skipped — fully covered by active schedule")
+                return
+            }
             applyBlockShield(blockID: blockID)
             return
         }

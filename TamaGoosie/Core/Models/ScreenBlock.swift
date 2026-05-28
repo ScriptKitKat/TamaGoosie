@@ -71,6 +71,47 @@ final class ScreenBlock {
         return completedAt != nil
     }
 
+    /// Pure helper: is a schedule window active right now, treating wrap
+    /// schedules (end < start) as windows attributed to their start day?
+    ///
+    /// - `weekday` / `nowMins`: derived from `Date.now` (1-based weekday).
+    /// - `startMins` / `endMins`: start and end of the window in minutes-of-day.
+    /// - `activeDays`: 1-based weekdays the block runs on (start-day semantics).
+    ///
+    /// Returns `false` for malformed `start == end` blocks (see plan D-3.2).
+    static func isInScheduleWindow(
+        weekday: Int,
+        nowMins: Int,
+        startMins: Int,
+        endMins: Int,
+        activeDays: Set<Int>
+    ) -> Bool {
+        guard startMins != endMins else { return false }
+        let yesterday = ((weekday - 2 + 7) % 7) + 1
+        if endMins < startMins {
+            // Wrap: same-day half checks today; wrapped half checks yesterday.
+            if nowMins >= startMins, activeDays.contains(weekday) { return true }
+            if nowMins < endMins, activeDays.contains(yesterday) { return true }
+            return false
+        }
+        return activeDays.contains(weekday) && nowMins >= startMins && nowMins < endMins
+    }
+
+    /// Convenience: is this `schedule`-type block currently inside its window?
+    func isScheduleActive(now: Date = .now) -> Bool {
+        guard type == "schedule", !isVacationMode else { return false }
+        let cal = Calendar.current
+        let weekday = cal.component(.weekday, from: now)
+        let nowMins = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
+        return Self.isInScheduleWindow(
+            weekday: weekday,
+            nowMins: nowMins,
+            startMins: scheduleStartHour * 60 + scheduleStartMinute,
+            endMins: scheduleEndHour * 60 + scheduleEndMinute,
+            activeDays: activeDaysSet
+        )
+    }
+
     /// Decode the stored FamilyActivitySelection
     var selection: FamilyActivitySelection? {
         get {
@@ -118,16 +159,13 @@ final class ScreenBlock {
         }
         if isVacationMode { return "Disabled" }
         if type == "schedule" {
+            if isScheduleActive() { return "Active" }
             let now = Date()
             let cal = Calendar.current
             let weekday = cal.component(.weekday, from: now)
-            guard activeDaysSet.contains(weekday) else { return "Off today" }
-            let hour = cal.component(.hour, from: now)
-            let minute = cal.component(.minute, from: now)
-            let nowMins = hour * 60 + minute
+            let nowMins = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
             let startMins = scheduleStartHour * 60 + scheduleStartMinute
-            let endMins = scheduleEndHour * 60 + scheduleEndMinute
-            if nowMins >= startMins && nowMins < endMins { return "Active" }
+            guard activeDaysSet.contains(weekday) else { return "Off today" }
             if nowMins < startMins {
                 let diff = startMins - nowMins
                 return "Starting in \(diff / 60)h \(diff % 60)m"

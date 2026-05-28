@@ -463,6 +463,11 @@ final class ScreenTimeManager {
                 defaults.set(block.unlockDurationMinutes, forKey: "lockUnlockDuration-\(blockID)")
                 updateActiveLockBlockIDs(add: blockID)
             }
+            if block.type == "appLimit" {
+                // Needed by BlockPrecedence (Rule B) in the Shield extensions, which
+                // can't access SwiftData but need to know the appLimit's minute cap.
+                defaults.set(block.timeLimitMinutes, forKey: "appLimitMinutes-\(blockID)")
+            }
             defaults.synchronize()
         }
 
@@ -478,7 +483,14 @@ final class ScreenTimeManager {
             guard !block.isVacationMode else { return }
             let startMins = block.scheduleStartHour * 60 + block.scheduleStartMinute
             let endMins = block.scheduleEndHour * 60 + block.scheduleEndMinute
-            let interval = endMins > startMins ? endMins - startMins : endMins + 1440 - startMins
+            let interval: Int
+            if startMins == endMins {
+                interval = 0  // malformed — falls through to the < 15 skip below
+            } else if endMins > startMins {
+                interval = endMins - startMins
+            } else {
+                interval = endMins + 1440 - startMins  // wrap (e.g. 22:00 → 08:00)
+            }
             if interval < 15 {
                 logDiagnostic("registerBlock SKIPPED: \(block.name) interval \(interval)m < 15m minimum")
                 // Still apply shield if currently active (foreground safety net)
@@ -558,7 +570,14 @@ final class ScreenTimeManager {
         } else if block.type == "blockNow" {
             applyShield(blockID: blockID, selection: selection)
         } else if block.type == "schedule" {
-            if isScheduleCurrentlyActive(block) {
+            // Keep `scheduleActive-<id>` in sync with reality. The extension also
+            // writes this on intervalDidStart/End, but for a schedule registered
+            // mid-window the extension hasn't fired yet — set it here so
+            // BlockPrecedence sees the schedule as active immediately.
+            let active = isScheduleCurrentlyActive(block)
+            defaults.set(active, forKey: "scheduleActive-\(blockID)")
+            defaults.synchronize()
+            if active {
                 logDiagnostic("registerBlock: schedule currently active, applying shield now")
                 applyShield(blockID: blockID, selection: selection)
             } else {
@@ -569,42 +588,48 @@ final class ScreenTimeManager {
         }
     }
 
-    /// Schedule a BGAppRefreshTask to apply/remove shields at block boundaries.
+    /// Schedule a BGAppRefreshTask at the next start-or-end boundary for this block.
+    /// For wrap blocks (end < start), the end time lives on the day AFTER an active day.
     private func scheduleBackgroundReconcile(for block: ScreenBlock) {
         let cal = Calendar.current
         let now = Date()
+        let startMins = block.scheduleStartHour * 60 + block.scheduleStartMinute
+        let endMins = block.scheduleEndHour * 60 + block.scheduleEndMinute
+        let isWrap = endMins < startMins
 
-        // Find the next start or end time for this block
-        for dayOffset in 0...1 {
+        for dayOffset in 0...7 {
             guard let baseDate = cal.date(byAdding: .day, value: dayOffset, to: now) else { continue }
             let weekday = cal.component(.weekday, from: baseDate)
-            guard block.activeDaysSet.contains(weekday) else { continue }
+            let yesterday = ((weekday - 2 + 7) % 7) + 1
 
-            if let startDate = cal.date(bySettingHour: block.scheduleStartHour, minute: block.scheduleStartMinute, second: 0, of: baseDate),
+            if block.activeDaysSet.contains(weekday),
+               let startDate = cal.date(bySettingHour: block.scheduleStartHour, minute: block.scheduleStartMinute, second: 0, of: baseDate),
                startDate > now {
-                let request = BGAppRefreshTaskRequest(identifier: "com.tamagoosie.app.block-reconcile")
-                request.earliestBeginDate = startDate.addingTimeInterval(5)
-                do {
-                    try BGTaskScheduler.shared.submit(request)
-                    logDiagnostic("BGTask scheduled for \(startDate.formatted(date: .omitted, time: .standard))")
-                } catch {
-                    logDiagnostic("BGTask schedule failed: \(error)")
-                }
+                submitBlockReconcileBGTask(at: startDate)
                 return
             }
 
-            if let endDate = cal.date(bySettingHour: block.scheduleEndHour, minute: block.scheduleEndMinute, second: 0, of: baseDate),
+            // End-time check: for wrap, the window started yesterday; for non-wrap, today.
+            let endDayActive = isWrap
+                ? block.activeDaysSet.contains(yesterday)
+                : block.activeDaysSet.contains(weekday)
+            if endDayActive,
+               let endDate = cal.date(bySettingHour: block.scheduleEndHour, minute: block.scheduleEndMinute, second: 0, of: baseDate),
                endDate > now {
-                let request = BGAppRefreshTaskRequest(identifier: "com.tamagoosie.app.block-reconcile")
-                request.earliestBeginDate = endDate.addingTimeInterval(5)
-                do {
-                    try BGTaskScheduler.shared.submit(request)
-                    logDiagnostic("BGTask scheduled for \(endDate.formatted(date: .omitted, time: .standard))")
-                } catch {
-                    logDiagnostic("BGTask schedule failed: \(error)")
-                }
+                submitBlockReconcileBGTask(at: endDate)
                 return
             }
+        }
+    }
+
+    private func submitBlockReconcileBGTask(at date: Date) {
+        let request = BGAppRefreshTaskRequest(identifier: "com.tamagoosie.app.block-reconcile")
+        request.earliestBeginDate = date.addingTimeInterval(5)
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            logDiagnostic("BGTask scheduled for \(date.formatted(date: .omitted, time: .standard))")
+        } catch {
+            logDiagnostic("BGTask schedule failed: \(error)")
         }
     }
 
@@ -633,6 +658,8 @@ final class ScreenTimeManager {
     private func clearLockBlockDefaults(blockID: String) {
         defaults.removeObject(forKey: "blockShield-\(blockID)")
         defaults.removeObject(forKey: "blockType-\(blockID)")
+        defaults.removeObject(forKey: "scheduleActive-\(blockID)")
+        defaults.removeObject(forKey: "appLimitMinutes-\(blockID)")
         defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
         defaults.removeObject(forKey: "lockUnlockExpiry-\(blockID)")
         defaults.removeObject(forKey: "lockOpensUsed-\(blockID)")
@@ -683,7 +710,9 @@ final class ScreenTimeManager {
                     removeShield(blockID: blockID)
                 }
             case "schedule":
-                if !block.isVacationMode && isScheduleCurrentlyActive(block) {
+                let active = !block.isVacationMode && isScheduleCurrentlyActive(block)
+                defaults.set(active, forKey: "scheduleActive-\(blockID)")
+                if active {
                     applyShield(blockID: blockID, selection: selection)
                 } else {
                     removeShield(blockID: blockID)
@@ -754,6 +783,17 @@ final class ScreenTimeManager {
 
         let used = lockOpensUsedToday(blockID: blockID)
         guard used < block.opensAllowed else { return }
+
+        switch BlockPrecedence.evaluateUnlock(lockID: blockID, opensUsed: used, in: defaults) {
+        case .schedulePreempts:
+            logDiagnostic("unlock suppressed by active schedule: \(block.name)")
+            return
+        case .appLimitPrecedence(let limit):
+            logDiagnostic("unlock suppressed by appLimit precedence: \(block.name) used=\(used) limit=\(limit)m")
+            return
+        case .allow:
+            break
+        }
 
         // Clear any stale countdown, save unlock state — reconciler reads this to skip shielding
         defaults.removeObject(forKey: "lockCountdownStartedAt-\(blockID)")
@@ -1053,15 +1093,6 @@ final class ScreenTimeManager {
     }
 
     private func isScheduleCurrentlyActive(_ block: ScreenBlock) -> Bool {
-        let cal = Calendar.current
-        let now = Date()
-        let weekday = cal.component(.weekday, from: now)
-        guard block.activeDaysSet.contains(weekday) else { return false }
-        let hour = cal.component(.hour, from: now)
-        let minute = cal.component(.minute, from: now)
-        let nowMins = hour * 60 + minute
-        let startMins = block.scheduleStartHour * 60 + block.scheduleStartMinute
-        let endMins = block.scheduleEndHour * 60 + block.scheduleEndMinute
-        return nowMins >= startMins && nowMins < endMins
+        block.isScheduleActive()
     }
 }
