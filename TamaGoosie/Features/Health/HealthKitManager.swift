@@ -39,6 +39,19 @@ final class HealthKitManager {
         isAuthorized = true
     }
 
+    /// Returns `true` only when iOS has never shown the HK auth prompt for our
+    /// read set. After the user has responded once, `requestAuthorization` is a
+    /// no-op (no UI) — callers should deep-link to the Health app instead.
+    func needsAuthorizationPrompt() async -> Bool {
+        guard isAvailable else { return false }
+        do {
+            let status = try await store.statusForAuthorizationRequest(toShare: [], read: Self.readTypes)
+            return status == .shouldRequest
+        } catch {
+            return false
+        }
+    }
+
     // MARK: - Fetch Stats
 
     func fetchTodayStats() async throws -> HealthSnapshot {
@@ -52,14 +65,18 @@ final class HealthKitManager {
         let end = isToday ? .now : (calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? .now)
         let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: end, options: .strictStartDate)
 
-        async let stepSum = sum(of: Self.stepType, matching: predicate, unit: .count())
-        async let calorieSum = sum(of: Self.calorieType, matching: predicate, unit: .kilocalorie())
-        async let exerciseSum = sum(of: Self.exerciseType, matching: predicate, unit: .minute())
-        async let daylightSum = sum(of: Self.daylightType, matching: predicate, unit: .minute())
-        async let stand = standHours(matching: predicate)
-        async let sleep = sleepHours(relativeTo: date)
+        // Each metric is fetched independently — iOS 17+ throws `HKError.noData`
+        // when a type has no samples in range OR when read access is denied, and
+        // Apple deliberately makes those indistinguishable. A single denial must
+        // not discard the rest of the snapshot, so per-type failures degrade to 0.
+        async let stepSum = sumOrZero(of: Self.stepType, matching: predicate, unit: .count())
+        async let calorieSum = sumOrZero(of: Self.calorieType, matching: predicate, unit: .kilocalorie())
+        async let exerciseSum = sumOrZero(of: Self.exerciseType, matching: predicate, unit: .minute())
+        async let daylightSum = sumOrZero(of: Self.daylightType, matching: predicate, unit: .minute())
+        async let stand = standHoursOrZero(matching: predicate)
+        async let sleep = sleepHoursOrZero(relativeTo: date)
 
-        return try await HealthSnapshot(
+        return await HealthSnapshot(
             date: date,
             steps: Int(stepSum),
             activeCalories: calorieSum,
@@ -76,6 +93,37 @@ final class HealthKitManager {
         guard isAvailable else { return }
         store.enableBackgroundDelivery(for: Self.stepType, frequency: .hourly) { _, _ in }
         store.enableBackgroundDelivery(for: Self.calorieType, frequency: .hourly) { _, _ in }
+    }
+
+    // MARK: - Resilient per-metric wrappers
+    //
+    // Each metric is fetched in isolation so one denied/empty type cannot
+    // discard the rest of the snapshot. `HKError.noData` (returned by iOS 17+
+    // both for genuinely empty ranges and for silently-denied read access)
+    // collapses to 0 here.
+
+    private func sumOrZero(of type: HKQuantityType, matching predicate: NSPredicate, unit: HKUnit) async -> Double {
+        do {
+            return try await sum(of: type, matching: predicate, unit: unit)
+        } catch {
+            return 0
+        }
+    }
+
+    private func standHoursOrZero(matching predicate: NSPredicate) async -> Int {
+        do {
+            return try await standHours(matching: predicate)
+        } catch {
+            return 0
+        }
+    }
+
+    private func sleepHoursOrZero(relativeTo reference: Date) async -> Double {
+        do {
+            return try await sleepHours(relativeTo: reference)
+        } catch {
+            return 0
+        }
     }
 
     // MARK: - Helpers

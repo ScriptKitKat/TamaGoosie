@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import FamilyControls
+import HealthKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -24,6 +25,7 @@ struct SettingsView: View {
     @State private var screenTimeManager = ScreenTimeManager.shared
     @State private var showScreenTimePicker = false
     @State private var draftScreenTimeSelection = FamilyActivitySelection(includeEntireCategory: true)
+    @State private var showHealthPermissionsGuidance = false
 
     private var gooseState: GooseState? { gooseStates.first }
     private var profile: UserProfile? { profiles.first }
@@ -84,6 +86,32 @@ struct SettingsView: View {
         } message: {
             Text("This will sign you out and return to the welcome screen. Your local data will be cleared.")
         }
+        .alert("Manage in the Health app", isPresented: $showHealthPermissionsGuidance) {
+            Button("Open Health App") {
+                if let url = URL(string: "x-apple-health://") {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("iOS only shows the HealthKit prompt once. To change permissions afterwards, open Health → your profile (top right) → Privacy → Apps and Services → TamaGoosie, and toggle each metric on.")
+        }
+    }
+
+    // MARK: - HealthKit Permissions Helpers
+
+    /// First-time taps trigger the iOS prompt (`requestAuthorization` only shows
+    /// UI when `getRequestStatusForAuthorization` says `.shouldRequest`). All
+    /// subsequent taps deep-link to the Health app, because iOS exposes no API
+    /// to programmatically open the per-app HK permission screen.
+    @MainActor
+    private func handleManageHealthPermissionsTap() async {
+        let needsPrompt = await HealthKitManager.shared.needsAuthorizationPrompt()
+        if needsPrompt {
+            try? await HealthKitManager.shared.requestAuthorization()
+            return
+        }
+        showHealthPermissionsGuidance = true
     }
 
     // MARK: - Profile Header
@@ -311,7 +339,7 @@ struct SettingsView: View {
             // Health card
             VStack(alignment: .leading, spacing: 8) {
                 Button {
-                    Task { try? await HealthKitManager.shared.requestAuthorization() }
+                    Task { await handleManageHealthPermissionsTap() }
                 } label: {
                     HStack(spacing: 10) {
                         Image(systemName: "heart.text.square.fill")
