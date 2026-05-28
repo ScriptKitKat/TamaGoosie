@@ -158,37 +158,35 @@ struct HealthDashboard: View {
         isLoading = true
         defer { isLoading = false }
 
-        if let data = try? await healthManager.fetchTodayStats() {
-            snapshot = data
-            let log = fetchOrCreateTodayLog()
-            if let state = gooseState, !data.wasProcessed {
-                GooseEngine.shared.processHealthData(
-                    steps: data.steps,
-                    exerciseMinutes: data.exerciseMinutes,
-                    sleepHours: data.sleepHours,
-                    activeCalories: data.activeCalories,
-                    standHours: data.standHours,
-                    outsideMinutes: data.outsideMinutes,
-                    state: state,
-                    dailyLog: log,
-                    profile: profile,
-                    goals: allGoals
-                )
-                data.wasProcessed = true
-            } else {
-                // Already processed; just refresh the cache + DailyLog
-                GooseEngine.shared.refreshHealthCache(
-                    steps: data.steps,
-                    exerciseMinutes: data.exerciseMinutes,
-                    sleepHours: data.sleepHours,
-                    activeCalories: data.activeCalories,
-                    standHours: data.standHours,
-                    outsideMinutes: data.outsideMinutes,
-                    dailyLog: log
-                )
-            }
-            GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
+        guard let data = try? await healthManager.fetchTodayStats() else { return }
+        snapshot = data
+        let log = fetchOrCreateTodayLog()
+
+        if let state = gooseState {
+            GooseEngine.shared.processHealthData(
+                steps: data.steps,
+                exerciseMinutes: data.exerciseMinutes,
+                sleepHours: data.sleepHours,
+                activeCalories: data.activeCalories,
+                standHours: data.standHours,
+                outsideMinutes: data.outsideMinutes,
+                state: state,
+                dailyLog: log,
+                profile: profile,
+                goals: allGoals
+            )
+        } else {
+            GooseEngine.shared.refreshHealthCache(
+                steps: data.steps,
+                exerciseMinutes: data.exerciseMinutes,
+                sleepHours: data.sleepHours,
+                activeCalories: data.activeCalories,
+                standHours: data.standHours,
+                outsideMinutes: data.outsideMinutes,
+                dailyLog: log
+            )
         }
+        GooseEngine.shared.syncBuiltinGoalProgress(allGoals)
     }
 
     private func fetchOrCreateTodayLog() -> DailyLog {

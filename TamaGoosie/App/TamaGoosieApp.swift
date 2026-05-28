@@ -86,7 +86,6 @@ struct TamaGoosieApp: App {
             GoalProgress.self,
             GoalCompletionEvent.self,
             FocusSession.self,
-            HealthSnapshot.self,
             DailyLog.self,
             UserProfile.self,
             ScreenBlock.self,
