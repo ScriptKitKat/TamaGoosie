@@ -5,3 +5,10 @@ When working on Convex code, **always read `convex/_generated/ai/guidelines.md` 
 
 Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
 <!-- convex-ai-end -->
+
+- Keep schema changes compatible with Swift DTOs and client calls in
+  `../TamaGoosie/Core/Services/ConvexManager.swift` and sync services.
+- Swift `Int` values are deliberately converted to `Double` where the schema
+  uses `v.number()`; update both sides together if that contract changes.
+- Run `npm test` and add focused coverage under `__tests__/` for backend
+  behavior changes.
